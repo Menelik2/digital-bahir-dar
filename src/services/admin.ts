@@ -4,6 +4,25 @@ import type { Place } from '@/types/place'
 import type { Review } from '@/types/social'
 import type { PlaceClaim, BusinessProfile } from '@/types/business'
 
+export type PlaceEditInput = {
+  name: string
+  slug?: string
+  description?: string | null
+  short_description?: string | null
+  address?: string | null
+  latitude?: number
+  longitude?: number
+  phone?: string | null
+  email?: string | null
+  website?: string | null
+  price_level?: number | null
+  entrance_fee?: number | null
+  status?: string
+  verified?: boolean
+  featured?: boolean
+  staff_notes?: string | null
+}
+
 export async function fetchMyRole(userId: string): Promise<string | null> {
   const { data, error } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle()
   if (error) {
@@ -27,7 +46,7 @@ export async function fetchAdminMetrics(): Promise<AdminMetrics> {
   }
   try {
     const [places, reviews, claims, businesses, reports, profiles] = await Promise.all([
-      supabase.from('places').select('id, status', { count: 'exact' }),
+      supabase.from('places').select('id, status, deleted_at', { count: 'exact' }),
       supabase.from('reviews').select('id, status', { count: 'exact' }),
       supabase.from('place_claims').select('id', { count: 'exact' }).eq('status', 'pending'),
       supabase.from('business_profiles').select('id', { count: 'exact' }).eq('status', 'pending'),
@@ -35,11 +54,11 @@ export async function fetchAdminMetrics(): Promise<AdminMetrics> {
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
     ])
 
-    const placeRows = places.data ?? []
+    const placeRows = (places.data ?? []).filter((p) => !p.deleted_at)
     const reviewRows = reviews.data ?? []
 
     return {
-      placesTotal: places.count ?? placeRows.length,
+      placesTotal: placeRows.length || places.count || 0,
       placesPublished: placeRows.filter((p) => p.status === 'published').length,
       placesPending: placeRows.filter((p) => p.status === 'pending').length,
       reviewsTotal: reviews.count ?? reviewRows.length,
@@ -55,7 +74,7 @@ export async function fetchAdminMetrics(): Promise<AdminMetrics> {
   }
 }
 
-export async function fetchPlacesForModeration(limit = 100): Promise<Place[]> {
+export async function fetchPlacesForModeration(limit = 100): Promise<(Place & { staff_notes?: string | null; deleted_at?: string | null })[]> {
   const { data, error } = await supabase
     .from('places')
     .select('*, category:categories(name)')
@@ -68,7 +87,7 @@ export async function fetchPlacesForModeration(limit = 100): Promise<Place[]> {
   return (data ?? []).map((p) => ({
     ...p,
     category: Array.isArray(p.category) ? p.category[0] : p.category,
-  })) as Place[]
+  })) as (Place & { staff_notes?: string | null; deleted_at?: string | null })[]
 }
 
 export async function setPlaceStatus(
@@ -79,6 +98,55 @@ export async function setPlaceStatus(
   const patch: Record<string, unknown> = { status }
   if (verified !== undefined) patch.verified = verified
   const { error } = await supabase.from('places').update(patch).eq('id', placeId)
+  return { error: error?.message ?? null }
+}
+
+export async function updatePlace(
+  placeId: string,
+  input: PlaceEditInput
+): Promise<{ error: string | null }> {
+  const patch: Record<string, unknown> = {}
+  if (input.name != null) patch.name = input.name.trim()
+  if (input.slug != null && input.slug.trim()) patch.slug = input.slug.trim()
+  if (input.description !== undefined) patch.description = input.description
+  if (input.short_description !== undefined) patch.short_description = input.short_description
+  if (input.address !== undefined) patch.address = input.address
+  if (input.latitude != null && Number.isFinite(input.latitude)) patch.latitude = input.latitude
+  if (input.longitude != null && Number.isFinite(input.longitude)) patch.longitude = input.longitude
+  if (input.phone !== undefined) patch.phone = input.phone
+  if (input.email !== undefined) patch.email = input.email
+  if (input.website !== undefined) patch.website = input.website
+  if (input.price_level !== undefined) patch.price_level = input.price_level
+  if (input.entrance_fee !== undefined) patch.entrance_fee = input.entrance_fee
+  if (input.status != null) patch.status = input.status
+  if (input.verified !== undefined) patch.verified = input.verified
+  if (input.featured !== undefined) patch.featured = input.featured
+  if (input.staff_notes !== undefined) patch.staff_notes = input.staff_notes
+
+  const { error } = await supabase.from('places').update(patch).eq('id', placeId)
+  return { error: error?.message ?? null }
+}
+
+/** Soft delete — sets deleted_at, hides from public */
+export async function softDeletePlace(placeId: string): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from('places')
+    .update({ deleted_at: new Date().toISOString(), status: 'archived' })
+    .eq('id', placeId)
+  return { error: error?.message ?? null }
+}
+
+export async function restorePlace(placeId: string): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from('places')
+    .update({ deleted_at: null, status: 'pending' })
+    .eq('id', placeId)
+  return { error: error?.message ?? null }
+}
+
+/** Permanent delete — requires staff DELETE policy */
+export async function hardDeletePlace(placeId: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.from('places').delete().eq('id', placeId)
   return { error: error?.message ?? null }
 }
 
@@ -106,11 +174,19 @@ export async function bulkSetPlaceStatus(
   if (placeIds.length === 0) return { error: null, count: 0 }
   const patch: Record<string, unknown> = { status }
   if (verified !== undefined) patch.verified = verified
-  const { error, count } = await supabase
-    .from('places')
-    .update(patch)
-    .in('id', placeIds)
+  const { error, count } = await supabase.from('places').update(patch).in('id', placeIds)
   return { error: error?.message ?? null, count: count ?? placeIds.length }
+}
+
+export async function bulkSoftDeletePlaces(
+  placeIds: string[]
+): Promise<{ error: string | null }> {
+  if (placeIds.length === 0) return { error: null }
+  const { error } = await supabase
+    .from('places')
+    .update({ deleted_at: new Date().toISOString(), status: 'archived' })
+    .in('id', placeIds)
+  return { error: error?.message ?? null }
 }
 
 export async function fetchReviewsForModeration(limit = 100): Promise<Review[]> {
@@ -131,6 +207,19 @@ export async function fetchReviewsForModeration(limit = 100): Promise<Review[]> 
 
 export async function setReviewStatus(reviewId: string, status: string): Promise<{ error: string | null }> {
   const { error } = await supabase.from('reviews').update({ status }).eq('id', reviewId)
+  return { error: error?.message ?? null }
+}
+
+export async function updateReview(
+  reviewId: string,
+  patch: { rating?: number; title?: string | null; comment?: string | null; status?: string }
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.from('reviews').update(patch).eq('id', reviewId)
+  return { error: error?.message ?? null }
+}
+
+export async function deleteReview(reviewId: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.from('reviews').delete().eq('id', reviewId)
   return { error: error?.message ?? null }
 }
 
@@ -238,12 +327,22 @@ export async function fetchAdminUsers(limit = 100): Promise<AdminUserRow[]> {
   return (data ?? []) as AdminUserRow[]
 }
 
+/** Roles must match DB enum user_role */
+export const PROFILE_ROLES = [
+  'visitor',
+  'business_owner',
+  'tour_guide',
+  'moderator',
+  'admin',
+] as const
+
 export async function setUserRole(
   userId: string,
   role: string
 ): Promise<{ error: string | null }> {
-  const allowed = ['visitor', 'user', 'business', 'moderator', 'admin']
-  if (!allowed.includes(role)) return { error: 'Invalid role' }
+  if (!(PROFILE_ROLES as readonly string[]).includes(role)) {
+    return { error: `Invalid role. Use: ${PROFILE_ROLES.join(', ')}` }
+  }
   const { error } = await supabase.from('profiles').update({ role }).eq('id', userId)
   return { error: error?.message ?? null }
 }
