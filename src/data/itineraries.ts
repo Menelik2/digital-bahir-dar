@@ -48,7 +48,6 @@ export interface GuideItinerary {
   tags: ItineraryTag[]
   bestFor: string
   pace: 'relaxed' | 'moderate' | 'active'
-  /** Rough total per person excluding long-distance flights */
   budgetPerPersonEtb: { min: number; typical: number; max: number }
   highlights: string[]
   tips: string[]
@@ -61,7 +60,7 @@ export const BAHIR_DAR_ITINERARIES: GuideItinerary[] = [
     title: 'Perfect 1 Day in Bahir Dar',
     subtitle: 'Lake shore, viewpoint, market energy, and a proper Ethiopian dinner',
     days: 1,
-    tags: ['first-visit', 'weekend', 'moderate'],
+    tags: ['first-visit', 'weekend'],
     bestFor: 'Transit stops, first-timers, short layovers',
     pace: 'moderate',
     budgetPerPersonEtb: { min: 1500, typical: 3500, max: 7000 },
@@ -144,11 +143,7 @@ export const BAHIR_DAR_ITINERARIES: GuideItinerary[] = [
     tags: ['first-visit', 'nature', 'culture', 'weekend'],
     bestFor: 'The classic Bahir Dar combination most travelers want',
     pace: 'moderate',
-    budgetPerPersonEtb: {
-      min: 4000,
-      typical: 9000,
-      max: 18000,
-    },
+    budgetPerPersonEtb: { min: 4000, typical: 9000, max: 18000 },
     highlights: ['Lake Tana monastery boat', 'Tis Issat (Blue Nile Falls)', 'Lakeside evenings'],
     tips: [
       'Book boats at the pier; agree shared vs private price before boarding.',
@@ -234,7 +229,7 @@ export const BAHIR_DAR_ITINERARIES: GuideItinerary[] = [
     title: 'Complete Bahir Dar (3 Days)',
     subtitle: 'City immersion + monasteries + falls — the balanced trip',
     days: 3,
-    tags: ['first-visit', 'nature', 'culture', 'moderate'],
+    tags: ['first-visit', 'nature', 'culture'],
     bestFor: 'Most visitors with a long weekend',
     pace: 'moderate',
     budgetPerPersonEtb: {
@@ -327,11 +322,7 @@ export const BAHIR_DAR_ITINERARIES: GuideItinerary[] = [
     tags: ['budget', 'first-visit'],
     bestFor: 'Backpackers and students',
     pace: 'active',
-    budgetPerPersonEtb: {
-      min: 2500,
-      typical: 5000,
-      max: 8000,
-    },
+    budgetPerPersonEtb: { min: 2500, typical: 5000, max: 8000 },
     highlights: ['Guesthouse lodging', 'Injera meals', 'Shared falls transport', 'Walking tours'],
     tips: [
       `Aim ~${HOTEL_NIGHT_ETB.budget.typical} ETB/night or less for beds.`,
@@ -400,13 +391,13 @@ export const BAHIR_DAR_ITINERARIES: GuideItinerary[] = [
     tags: ['culture', 'slow', 'comfort', 'family'],
     bestFor: 'Couples, families, return visitors',
     pace: 'relaxed',
-    budgetPerPersonEtb: {
-      min: 8000,
-      typical: 16000,
-      max: 35000,
-    },
-    highlights: ['Two lighter boat outings', 'Market & coffee culture', 'Optional second monastery',
-      'Falls without dawn alarm'],
+    budgetPerPersonEtb: { min: 8000, typical: 16000, max: 35000 },
+    highlights: [
+      'Two lighter boat outings',
+      'Market & coffee culture',
+      'Optional second monastery',
+      'Falls without dawn alarm',
+    ],
     tips: [
       'Book a lakeside hotel if budget allows — sunsets are the show.',
       'One full rest afternoon prevents heat fatigue.',
@@ -464,7 +455,7 @@ export const BAHIR_DAR_ITINERARIES: GuideItinerary[] = [
     title: 'Nature Focus (2 Days)',
     subtitle: 'Birds, lake edges, falls — less shopping, more outdoors',
     days: 2,
-    tags: ['nature', 'weekend', 'active'],
+    tags: ['nature', 'weekend'],
     bestFor: 'Photographers and outdoor travelers',
     pace: 'active',
     budgetPerPersonEtb: { min: 3500, typical: 8000, max: 15000 },
@@ -511,7 +502,6 @@ export function getItinerary(id: string): GuideItinerary | undefined {
   return BAHIR_DAR_ITINERARIES.find((x) => x.id === id)
 }
 
-/** Convert a guide pack into a Trip-shaped object for detail UI */
 export function itineraryToTrip(guide: GuideItinerary, userId = 'guide'): Trip {
   const now = new Date().toISOString()
   const days: TripDay[] = guide.dayPlans.map((d) => ({
