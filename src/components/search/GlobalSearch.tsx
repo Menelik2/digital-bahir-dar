@@ -7,11 +7,12 @@ import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
 
 const QUICK = [
+  { to: '/discover', label: 'Discover (live map)' },
   { to: '/hotels', labelKey: 'hotels' as const },
   { to: '/restaurants', labelKey: 'restaurants' as const },
   { to: '/attractions', labelKey: 'attractions' as const },
+  { to: '/transport', labelKey: 'transport' as const },
   { to: '/map', labelKey: 'map' as const },
-  { to: '/events', labelKey: 'events' as const },
   { to: '/ai-guide', labelKey: 'aiGuide' as const },
 ]
 
@@ -112,7 +113,9 @@ export function GlobalSearch({ className }: { className?: string }) {
                         onClick={() => setOpen(false)}
                         className="rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-sky-50 dark:text-slate-200 dark:hover:bg-slate-800"
                       >
-                        {t.nav[item.labelKey]}
+                        {'label' in item && item.label
+                          ? item.label
+                          : t.nav[item.labelKey!]}
                       </Link>
                     ))}
                   </div>
@@ -142,7 +145,7 @@ export function GlobalSearch({ className }: { className?: string }) {
                 </Link>
               ))}
 
-              {q.trim() && results.length > 0 && (
+              {q.trim() && (
                 <button
                   type="button"
                   onClick={goExplore}

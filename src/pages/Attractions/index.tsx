@@ -4,14 +4,10 @@ export default function AttractionsPage() {
   return (
     <PlaceListPage
       title="Attractions"
-      subtitle="Things to do and see in Bahir Dar"
+      subtitle="Lake Tana, Blue Nile Falls, monasteries & city sights"
       categorySlug="attraction"
-      filters={[
-        { id: 'nature', label: 'Nature' },
-        { id: 'culture', label: 'Culture' },
-        { id: 'history', label: 'History' },
-      ]}
-      emptyMessage="No attractions listed yet. Lake Tana and Blue Nile Falls will appear once verified."
+      osmCategories={['attraction']}
+      emptyMessage="No attractions listed yet. Use Discover or Wikivoyage for travel ideas."
     />
   )
 }

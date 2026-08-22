@@ -6,6 +6,7 @@ export type Strings = {
   nav: {
     home: string
     explore: string
+    discover: string
     map: string
     hotels: string
     restaurants: string
@@ -56,6 +57,7 @@ const en: Strings = {
   nav: {
     home: 'Home',
     explore: 'Explore',
+    discover: 'Discover',
     map: 'Map',
     hotels: 'Hotels',
     restaurants: 'Restaurants',
@@ -106,6 +108,7 @@ const am: Strings = {
   nav: {
     home: 'መነሻ',
     explore: 'አስስ',
+    discover: 'አግኝ',
     map: 'ካርታ',
     hotels: 'ሆቴሎች',
     restaurants: 'ምግብ ቤቶች',

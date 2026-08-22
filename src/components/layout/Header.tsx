@@ -15,12 +15,12 @@ export function Header() {
   const navItems = [
     { path: '/', label: t.nav.home },
     { path: '/explore', label: t.nav.explore },
+    { path: '/discover', label: t.nav.discover },
     { path: '/map', label: t.nav.map },
     { path: '/hotels', label: t.nav.hotels },
     { path: '/restaurants', label: t.nav.restaurants },
     { path: '/attractions', label: t.nav.attractions },
-    { path: '/events', label: t.nav.events },
-    { path: '/guides', label: t.nav.guides },
+    { path: '/transport', label: t.nav.transport },
     { path: '/trips', label: t.nav.trips },
     { path: '/ai-guide', label: t.nav.aiGuide },
   ]
@@ -109,11 +109,11 @@ export function Header() {
               {t.nav.directory}
             </Link>
             <Link
-              to="/transport"
+              to="/events"
               onClick={() => setMobileOpen(false)}
               className="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300"
             >
-              {t.nav.transport}
+              {t.nav.events}
             </Link>
           </nav>
         </div>
