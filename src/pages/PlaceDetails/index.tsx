@@ -11,6 +11,7 @@ import { useAppStore } from '@/store'
 import { distanceMeters, formatDistance, walkingMinutes, drivingMinutes } from '@/utils/geo'
 import { openGoogleMapsDirections } from '@/components/map/MapView'
 import { FavoriteButton } from '@/components/places/FavoriteButton'
+import { isOsmPlaceId } from '@/services/osmPlaces'
 import { StarRating } from '@/components/reviews/StarRating'
 import { ReviewCard } from '@/components/reviews/ReviewCard'
 import { ReviewForm } from '@/components/reviews/ReviewForm'
@@ -46,12 +47,18 @@ export default function PlaceDetailsPage() {
   }
 
   if (error || !place) {
+    const isOsmSlug = !!slug?.startsWith('osm-')
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
         <AlertCircle className="mx-auto mb-3 h-10 w-10 text-red-400" />
         <h1 className="mb-2 text-xl font-semibold">Place not found</h1>
-        <p className="mb-6 text-slate-500">This place may not exist or is not published yet.</p>
-        <div className="flex justify-center gap-3">
+        <p className="mb-6 text-slate-500">
+          {isOsmSlug
+            ? 'This OpenStreetMap listing is only available after loading Discover or a category list. Open Discover and try again, or search on Google Maps.'
+            : 'This place may not exist or is not published yet.'}
+        </p>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link to="/discover"><Button variant="outline">Discover</Button></Link>
           <Link to="/explore"><Button variant="outline">Explore</Button></Link>
           <Button onClick={() => refetch()}>Retry</Button>
         </div>
@@ -60,6 +67,7 @@ export default function PlaceDetailsPage() {
   }
 
   const isDemo = place.name.includes('(DEMO)')
+  const isOsm = isOsmPlaceId(place.id)
   const name = place.name.replace(' (DEMO)', '')
 
   const share = async () => {
@@ -94,6 +102,9 @@ export default function PlaceDetailsPage() {
               </span>
             )}
             {isDemo && <span className="rounded-full bg-amber-400 px-2.5 py-0.5 text-xs font-bold text-amber-950">DEMO</span>}
+            {isOsm && !isDemo && (
+              <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-medium text-slate-800">OpenStreetMap</span>
+            )}
           </div>
           <h1 className="mx-auto mt-2 max-w-3xl text-2xl font-bold text-white sm:text-3xl">{name}</h1>
         </div>
@@ -112,7 +123,7 @@ export default function PlaceDetailsPage() {
               <Navigation className="h-4 w-4" /> Directions
             </Button>
             <Button size="sm" variant="outline" onClick={share}><Share2 className="h-4 w-4" /> Share</Button>
-            <FavoriteButton placeId={place.id} size="sm" />
+            {!isOsm && <FavoriteButton placeId={place.id} size="sm" />}
           </div>
         </div>
 
@@ -214,41 +225,43 @@ export default function PlaceDetailsPage() {
           </section>
         )}
 
-        <section className="mb-8">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">
-              Reviews
+        {!isOsm && (
+          <section className="mb-8">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">
+                Reviews
+                {ratingSummary && ratingSummary.count > 0 && (
+                  <span className="ml-2 text-sm font-normal text-slate-500">
+                    {ratingSummary.avg}★ · {ratingSummary.count}
+                  </span>
+                )}
+              </h2>
               {ratingSummary && ratingSummary.count > 0 && (
-                <span className="ml-2 text-sm font-normal text-slate-500">
-                  {ratingSummary.avg}★ · {ratingSummary.count}
-                </span>
+                <StarRating value={Math.round(ratingSummary.avg)} readonly size="sm" />
               )}
-            </h2>
-            {ratingSummary && ratingSummary.count > 0 && (
-              <StarRating value={Math.round(ratingSummary.avg)} readonly size="sm" />
-            )}
-          </div>
-          {!showReviewForm && (
-            <Button variant="outline" size="sm" className="mb-4" onClick={() => setShowReviewForm(true)}>
-              {myReview ? 'Edit your review' : 'Write a review'}
-            </Button>
-          )}
-          {showReviewForm && (
-            <div className="mb-4">
-              <ReviewForm placeId={place.id} existing={myReview} onDone={() => setShowReviewForm(false)} />
-              <Button variant="ghost" size="sm" className="mt-2" onClick={() => setShowReviewForm(false)}>Cancel</Button>
             </div>
-          )}
-          {reviewsLoading && <p className="text-sm text-slate-500">Loading reviews…</p>}
-          {!reviewsLoading && reviews.length === 0 && !showReviewForm && (
-            <p className="text-sm text-slate-500">No reviews yet. Be the first to share your experience.</p>
-          )}
-          <div className="space-y-3">
-            {reviews.map((r) => (
-              <ReviewCard key={r.id} review={r} placeId={place.id} />
-            ))}
-          </div>
-        </section>
+            {!showReviewForm && (
+              <Button variant="outline" size="sm" className="mb-4" onClick={() => setShowReviewForm(true)}>
+                {myReview ? 'Edit your review' : 'Write a review'}
+              </Button>
+            )}
+            {showReviewForm && (
+              <div className="mb-4">
+                <ReviewForm placeId={place.id} existing={myReview} onDone={() => setShowReviewForm(false)} />
+                <Button variant="ghost" size="sm" className="mt-2" onClick={() => setShowReviewForm(false)}>Cancel</Button>
+              </div>
+            )}
+            {reviewsLoading && <p className="text-sm text-slate-500">Loading reviews…</p>}
+            {!reviewsLoading && reviews.length === 0 && !showReviewForm && (
+              <p className="text-sm text-slate-500">No reviews yet. Be the first to share your experience.</p>
+            )}
+            <div className="space-y-3">
+              {reviews.map((r) => (
+                <ReviewCard key={r.id} review={r} placeId={place.id} />
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="mb-8">
           <h2 className="mb-3 text-lg font-semibold">Location & contact</h2>
