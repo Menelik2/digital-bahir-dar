@@ -3,6 +3,7 @@ import { Search, X, AlertCircle, Layers } from 'lucide-react'
 import { MapView, openGoogleMapsDirections } from '@/components/map/MapView'
 import { MapFilter } from '@/components/map/MapFilter'
 import { LocationButton } from '@/components/map/LocationButton'
+import { LocationStatus } from '@/components/map/LocationStatus'
 import { PlaceBottomSheet } from '@/components/map/PlaceBottomSheet'
 import { DirectionsPanel } from '@/components/map/DirectionsPanel'
 import { useFilteredPlaces } from '@/hooks/usePlaces'
@@ -29,7 +30,8 @@ function mergePlaces(primary: Place[], secondary: Place[]): Place[] {
 
 export default function MapPage() {
   const { location, setMapCenter, mapCenter, selectedPlaceId, setSelectedPlaceId } = useAppStore()
-  const { request: requestLocation } = useGeolocation(true)
+  // Auto-request once + continuous watch while on Map
+  const { request: requestLocation, hasFix } = useGeolocation({ autoRequest: true, watch: true })
   const mapboxOn = !!getMapboxToken()
 
   const [search, setSearch] = useState('')
@@ -86,7 +88,9 @@ export default function MapPage() {
   )
 
   const userPos =
-    location.permission === 'granted' && location.latitude != null && location.longitude != null
+    (location.permission === 'granted' || hasFix) &&
+    location.latitude != null &&
+    location.longitude != null
       ? { lat: location.latitude, lng: location.longitude }
       : null
 
@@ -101,9 +105,10 @@ export default function MapPage() {
     return distanceMeters(BAHIR_DAR_CENTER.lat, BAHIR_DAR_CENTER.lng, directionsPlace.latitude, directionsPlace.longitude)
   }, [directionsPlace, userPos])
 
+  // Follow user when first fix arrives
   useEffect(() => {
     if (userPos) setMapCenter(userPos)
-  }, [location.permission]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [location.lastUpdated]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePlaceSelect = useCallback(
     (place: Place) => {
@@ -118,10 +123,19 @@ export default function MapPage() {
     setDirectionsPlace(place)
   }, [])
 
-  const handleLocate = useCallback(() => {
-    requestLocation()
-    if (userPos) setMapCenter(userPos)
-  }, [requestLocation, userPos, setMapCenter])
+  const handleLocate = useCallback(
+    (lat?: number, lng?: number) => {
+      if (lat != null && lng != null) {
+        setMapCenter({ lat, lng })
+        return
+      }
+      void requestLocation().then((pos) => {
+        if (pos) setMapCenter({ lat: pos.latitude, lng: pos.longitude })
+        else if (userPos) setMapCenter(userPos)
+      })
+    },
+    [requestLocation, userPos, setMapCenter]
+  )
 
   return (
     <div className="relative h-[calc(100dvh-4rem)] overflow-hidden bg-slate-200">
@@ -143,10 +157,11 @@ export default function MapPage() {
               </button>
             )}
           </div>
-          <LocationButton onLocated={() => handleLocate()} />
+          <LocationButton onLocated={(lat, lng) => handleLocate(lat, lng)} />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <LocationStatus />
           <span
             className={`rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm ${
               mapboxOn
@@ -236,13 +251,11 @@ export default function MapPage() {
         <MapFilter active={filter} onChange={setFilter} />
         <p className="mt-2 text-center text-[10px] text-slate-700 drop-shadow-sm dark:text-slate-200">
           {mapboxOn ? (
-            <>
-              © Mapbox · Bahir Dar city only · Layers: Streets / Outdoors / Satellite
-            </>
+            <>© Mapbox · Bahir Dar city only · Geolocation live on this page</>
           ) : (
             <>
-              Add <code className="rounded bg-black/10 px-1">VITE_MAPBOX_ACCESS_TOKEN</code> on Vercel for
-              Mapbox. OSM fallback active. Map locked to Bahir Dar city.
+              Add <code className="rounded bg-black/10 px-1">VITE_MAPBOX_ACCESS_TOKEN</code> for Mapbox.
+              Geolocation + OSM active. Map locked to Bahir Dar.
             </>
           )}
         </p>
