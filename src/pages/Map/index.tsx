@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
-import { Search, X, AlertCircle, ExternalLink, Layers } from 'lucide-react'
+import { Search, X, AlertCircle, Layers } from 'lucide-react'
 import { MapView, openGoogleMapsDirections } from '@/components/map/MapView'
 import { MapFilter } from '@/components/map/MapFilter'
 import { LocationButton } from '@/components/map/LocationButton'
@@ -10,7 +10,7 @@ import { useOsmPlaces } from '@/hooks/useOsmPlaces'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useAppStore } from '@/store'
 import { BAHIR_DAR_CENTER } from '@/constants'
-import { MAPCARTA_BAHIR_DAR, openMapcarta } from '@/constants/guideSites'
+import { getMapboxToken } from '@/constants/map'
 import { distanceMeters } from '@/utils/geo'
 import type { Place } from '@/types/place'
 import { Button } from '@/components/ui/button'
@@ -30,6 +30,7 @@ function mergePlaces(primary: Place[], secondary: Place[]): Place[] {
 export default function MapPage() {
   const { location, setMapCenter, mapCenter, selectedPlaceId, setSelectedPlaceId } = useAppStore()
   const { request: requestLocation } = useGeolocation(true)
+  const mapboxOn = !!getMapboxToken()
 
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<string | null>(null)
@@ -49,7 +50,6 @@ export default function MapPage() {
     verifiedOnly,
   })
 
-  // Same open data Mapcarta uses (OpenStreetMap via Overpass)
   const osmCategories = useMemo(() => {
     if (categorySlug === 'hotel') return ['hotel'] as const
     if (categorySlug === 'restaurant' || categorySlug === 'cafe') return ['restaurant', 'cafe'] as const
@@ -125,7 +125,6 @@ export default function MapPage() {
 
   return (
     <div className="relative h-[calc(100dvh-4rem)] overflow-hidden bg-slate-200">
-      {/* Search + tools */}
       <div className="absolute left-4 right-4 top-4 z-[1000] flex flex-col gap-2 lg:right-auto lg:w-[400px]">
         <div className="flex gap-2">
           <div className="flex flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-lg dark:border-slate-700 dark:bg-slate-900">
@@ -134,7 +133,7 @@ export default function MapPage() {
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search Bahir Dar places…"
+              placeholder="Search Bahir Dar…"
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
               aria-label="Search places"
             />
@@ -148,6 +147,15 @@ export default function MapPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <span
+            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm ${
+              mapboxOn
+                ? 'bg-sky-600 text-white'
+                : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-100'
+            }`}
+          >
+            {mapboxOn ? 'Mapbox · Bahir Dar only' : 'Set VITE_MAPBOX_ACCESS_TOKEN'}
+          </span>
           <button
             type="button"
             onClick={() => setIncludeOsm((v) => !v)}
@@ -161,21 +169,12 @@ export default function MapPage() {
             Live OSM {includeOsm ? 'on' : 'off'}
             {osmFetching && includeOsm ? '…' : ''}
           </button>
-          <button
-            type="button"
-            onClick={() => openMapcarta()}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-sky-700 shadow-sm hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-sky-300"
-          >
-            <ExternalLink className="h-3.5 w-3.5" /> Mapcarta site
-          </button>
           <span className="rounded-full bg-white/90 px-2.5 py-1 text-[11px] text-slate-500 shadow-sm dark:bg-slate-900/90">
             {places.length} pins
-            {includeOsm && osmPlaces.length > 0 ? ` · ${osmPlaces.length} OSM` : ''}
           </span>
         </div>
       </div>
 
-      {/* Always-on interactive map — never depends on Mapcarta iframe */}
       <MapView
         places={places}
         selectedPlaceId={selectedPlaceId}
@@ -235,12 +234,17 @@ export default function MapPage() {
 
       <div className="absolute bottom-24 left-0 right-0 z-[1000] px-4 lg:bottom-6">
         <MapFilter active={filter} onChange={setFilter} />
-        <p className="mt-2 text-center text-[10px] text-slate-600 drop-shadow-sm dark:text-slate-300">
-          Map data © OpenStreetMap · Same open sources as{' '}
-          <a href={MAPCARTA_BAHIR_DAR} target="_blank" rel="noopener noreferrer" className="underline">
-            Mapcarta
-          </a>
-          {' · '}Layers (top-right): Streets / Satellite / Terrain
+        <p className="mt-2 text-center text-[10px] text-slate-700 drop-shadow-sm dark:text-slate-200">
+          {mapboxOn ? (
+            <>
+              © Mapbox · Bahir Dar city only · Layers: Streets / Outdoors / Satellite
+            </>
+          ) : (
+            <>
+              Add <code className="rounded bg-black/10 px-1">VITE_MAPBOX_ACCESS_TOKEN</code> on Vercel for
+              Mapbox. OSM fallback active. Map locked to Bahir Dar city.
+            </>
+          )}
         </p>
       </div>
     </div>

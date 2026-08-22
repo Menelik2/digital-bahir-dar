@@ -9,14 +9,24 @@ import {
   LayersControl,
   ScaleControl,
   ZoomControl,
+  useMapEvents,
 } from 'react-leaflet'
 import L from 'leaflet'
 import type { Place } from '@/types/place'
-import { BAHIR_DAR_CENTER, DEFAULT_MAP_ZOOM } from '@/constants'
+import { BAHIR_DAR_CENTER } from '@/constants'
+import {
+  BAHIR_DAR_MAX_BOUNDS,
+  BAHIR_DAR_MIN_ZOOM,
+  BAHIR_DAR_MAX_ZOOM,
+  BAHIR_DAR_DEFAULT_ZOOM,
+  MAPBOX_STYLES,
+  getMapboxToken,
+  mapboxTileUrl,
+  mapboxAttribution,
+} from '@/constants/map'
 import { placeGuideLinks } from '@/constants/guideSites'
 import 'leaflet/dist/leaflet.css'
 
-/** Category → pin color (Mapcarta-style quick read) */
 function categoryColor(slug?: string | null): string {
   switch (slug) {
     case 'hotel':
@@ -85,28 +95,29 @@ interface MapViewProps {
 function MapCamera({ center }: { center: { lat: number; lng: number } }) {
   const map = useMap()
   useEffect(() => {
-    map.panTo([center.lat, center.lng], { animate: true })
+    const bounds = L.latLngBounds(BAHIR_DAR_MAX_BOUNDS)
+    const target = L.latLng(center.lat, center.lng)
+    if (bounds.contains(target)) {
+      map.panTo(target, { animate: true })
+    } else {
+      map.panTo([BAHIR_DAR_CENTER.lat, BAHIR_DAR_CENTER.lng], { animate: true })
+    }
   }, [map, center.lat, center.lng])
   return null
 }
 
 function MapEvents({ onCenterChange }: { onCenterChange?: (c: { lat: number; lng: number }) => void }) {
   const map = useMap()
-  useEffect(() => {
-    if (!onCenterChange) return
-    const handler = () => {
+  useMapEvents({
+    moveend: () => {
+      if (!onCenterChange) return
       const c = map.getCenter()
       onCenterChange({ lat: c.lat, lng: c.lng })
-    }
-    map.on('moveend', handler)
-    return () => {
-      map.off('moveend', handler)
-    }
-  }, [map, onCenterChange])
+    },
+  })
   return null
 }
 
-/** Invalidate size when container becomes visible (fixes blank map after tab switch) */
 function InvalidateSize() {
   const map = useMap()
   useEffect(() => {
@@ -121,6 +132,30 @@ function InvalidateSize() {
   return null
 }
 
+/** Enforce Bahir Dar-only navigation even if maxBounds is bypassed on some devices */
+function BahirDarLock() {
+  const map = useMap()
+  useEffect(() => {
+    const bounds = L.latLngBounds(BAHIR_DAR_MAX_BOUNDS)
+    map.setMaxBounds(bounds)
+    map.setMinZoom(BAHIR_DAR_MIN_ZOOM)
+    map.setMaxZoom(BAHIR_DAR_MAX_ZOOM)
+    // Keep user inside city
+    const keepIn = () => {
+      if (!bounds.contains(map.getCenter())) {
+        map.panInsideBounds(bounds, { animate: true })
+      }
+    }
+    map.on('drag', keepIn)
+    map.on('zoomend', keepIn)
+    return () => {
+      map.off('drag', keepIn)
+      map.off('zoomend', keepIn)
+    }
+  }, [map])
+  return null
+}
+
 export function MapView({
   places,
   selectedPlaceId,
@@ -129,13 +164,25 @@ export function MapView({
   onPlaceSelect,
   onCenterChange,
 }: MapViewProps) {
-  // Cap markers for performance on dense OSM results
+  const token = getMapboxToken()
+  const useMapbox = !!token
   const markers = useMemo(() => places.slice(0, 400), [places])
+
+  // Clamp user location marker to city (still show if inside)
+  const userInCity =
+    userLocation &&
+    L.latLngBounds(BAHIR_DAR_MAX_BOUNDS).contains(L.latLng(userLocation.lat, userLocation.lng))
+      ? userLocation
+      : null
 
   return (
     <MapContainer
       center={[BAHIR_DAR_CENTER.lat, BAHIR_DAR_CENTER.lng]}
-      zoom={DEFAULT_MAP_ZOOM}
+      zoom={BAHIR_DAR_DEFAULT_ZOOM}
+      minZoom={BAHIR_DAR_MIN_ZOOM}
+      maxZoom={BAHIR_DAR_MAX_ZOOM}
+      maxBounds={BAHIR_DAR_MAX_BOUNDS}
+      maxBoundsViscosity={1.0}
       className="h-full w-full z-0"
       zoomControl={false}
       attributionControl
@@ -144,39 +191,68 @@ export function MapView({
       <ZoomControl position="bottomright" />
       <ScaleControl position="bottomleft" imperial={false} />
       <InvalidateSize />
+      <BahirDarLock />
       <MapCamera center={center} />
       <MapEvents onCenterChange={onCenterChange} />
 
       <LayersControl position="topright">
-        <LayersControl.BaseLayer checked name="Streets">
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            maxZoom={19}
-          />
-        </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="Light">
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-            subdomains="abcd"
-            maxZoom={20}
-          />
-        </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="Satellite">
-          <TileLayer
-            attribution="Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics"
-            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-            maxZoom={19}
-          />
-        </LayersControl.BaseLayer>
-        <LayersControl.BaseLayer name="Terrain">
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://www.opentopomap.org/">OpenTopoMap</a>'
-            url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-            maxZoom={17}
-          />
-        </LayersControl.BaseLayer>
+        {useMapbox && token ? (
+          <>
+            <LayersControl.BaseLayer checked name="Mapbox Streets">
+              <TileLayer
+                attribution={mapboxAttribution()}
+                url={mapboxTileUrl(MAPBOX_STYLES.streets, token)}
+                tileSize={512}
+                zoomOffset={-1}
+                maxZoom={BAHIR_DAR_MAX_ZOOM}
+              />
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="Mapbox Outdoors">
+              <TileLayer
+                attribution={mapboxAttribution()}
+                url={mapboxTileUrl(MAPBOX_STYLES.outdoors, token)}
+                tileSize={512}
+                zoomOffset={-1}
+                maxZoom={BAHIR_DAR_MAX_ZOOM}
+              />
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="Mapbox Satellite">
+              <TileLayer
+                attribution={mapboxAttribution()}
+                url={mapboxTileUrl(MAPBOX_STYLES.satellite, token)}
+                tileSize={512}
+                zoomOffset={-1}
+                maxZoom={BAHIR_DAR_MAX_ZOOM}
+              />
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="Mapbox Light">
+              <TileLayer
+                attribution={mapboxAttribution()}
+                url={mapboxTileUrl(MAPBOX_STYLES.light, token)}
+                tileSize={512}
+                zoomOffset={-1}
+                maxZoom={BAHIR_DAR_MAX_ZOOM}
+              />
+            </LayersControl.BaseLayer>
+          </>
+        ) : (
+          <>
+            <LayersControl.BaseLayer checked name="Streets">
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                maxZoom={BAHIR_DAR_MAX_ZOOM}
+              />
+            </LayersControl.BaseLayer>
+            <LayersControl.BaseLayer name="Satellite">
+              <TileLayer
+                attribution="Tiles &copy; Esri"
+                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                maxZoom={BAHIR_DAR_MAX_ZOOM}
+              />
+            </LayersControl.BaseLayer>
+          </>
+        )}
       </LayersControl>
 
       {markers.map((place) => {
@@ -206,9 +282,6 @@ export function MapView({
                   <a href={links.googleDirections} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12 }}>
                     Directions
                   </a>
-                  <a href={links.mapcarta} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12 }}>
-                    Mapcarta
-                  </a>
                   <a href={links.openStreetMap} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12 }}>
                     OSM
                   </a>
@@ -219,10 +292,10 @@ export function MapView({
         )
       })}
 
-      {userLocation && (
+      {userInCity && (
         <>
           <CircleMarker
-            center={[userLocation.lat, userLocation.lng]}
+            center={[userInCity.lat, userInCity.lng]}
             radius={8}
             pathOptions={{
               color: '#0369a1',
@@ -234,7 +307,7 @@ export function MapView({
             <Popup>You are here</Popup>
           </CircleMarker>
           <CircleMarker
-            center={[userLocation.lat, userLocation.lng]}
+            center={[userInCity.lat, userInCity.lng]}
             radius={22}
             pathOptions={{
               color: '#0ea5e9',
@@ -249,7 +322,6 @@ export function MapView({
   )
 }
 
-/** Opens Google Maps directions in a new tab (no API key required). */
 export function openGoogleMapsDirections(
   dest: Place,
   origin?: { lat: number; lng: number } | null,
