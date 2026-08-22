@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { AdminMetrics } from '@/types/admin'
+import type { AdminMetrics, AdminUserRow } from '@/types/admin'
 import type { Place } from '@/types/place'
 import type { Review } from '@/types/social'
 import type { PlaceClaim, BusinessProfile } from '@/types/business'
@@ -55,7 +55,7 @@ export async function fetchAdminMetrics(): Promise<AdminMetrics> {
   }
 }
 
-export async function fetchPlacesForModeration(limit = 50): Promise<Place[]> {
+export async function fetchPlacesForModeration(limit = 100): Promise<Place[]> {
   const { data, error } = await supabase
     .from('places')
     .select('*, category:categories(name)')
@@ -82,7 +82,38 @@ export async function setPlaceStatus(
   return { error: error?.message ?? null }
 }
 
-export async function fetchReviewsForModeration(limit = 50): Promise<Review[]> {
+export async function setPlaceFeatured(
+  placeId: string,
+  featured: boolean
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.from('places').update({ featured }).eq('id', placeId)
+  return { error: error?.message ?? null }
+}
+
+export async function setPlaceStaffNotes(
+  placeId: string,
+  staff_notes: string
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.from('places').update({ staff_notes }).eq('id', placeId)
+  return { error: error?.message ?? null }
+}
+
+export async function bulkSetPlaceStatus(
+  placeIds: string[],
+  status: string,
+  verified?: boolean
+): Promise<{ error: string | null; count: number }> {
+  if (placeIds.length === 0) return { error: null, count: 0 }
+  const patch: Record<string, unknown> = { status }
+  if (verified !== undefined) patch.verified = verified
+  const { error, count } = await supabase
+    .from('places')
+    .update(patch)
+    .in('id', placeIds)
+  return { error: error?.message ?? null, count: count ?? placeIds.length }
+}
+
+export async function fetchReviewsForModeration(limit = 100): Promise<Review[]> {
   const { data, error } = await supabase
     .from('reviews')
     .select('*, profile:profiles(full_name)')
@@ -172,7 +203,7 @@ export async function setBusinessStatus(
   return { error: error?.message ?? null }
 }
 
-export async function fetchOpenReports(limit = 30) {
+export async function fetchOpenReports(limit = 50) {
   const { data, error } = await supabase
     .from('review_reports')
     .select('*, review:reviews(id, comment, rating, place_id)')
@@ -194,16 +225,37 @@ export async function resolveReport(
   return { error: error?.message ?? null }
 }
 
-export function demoAdminMetrics(): AdminMetrics {
-  return {
-    placesTotal: 12,
-    placesPublished: 10,
-    placesPending: 2,
-    reviewsTotal: 8,
-    reviewsHidden: 1,
-    claimsPending: 3,
-    businessesPending: 2,
-    reportsOpen: 1,
-    usersApprox: 25,
+export async function fetchAdminUsers(limit = 100): Promise<AdminUserRow[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, email, full_name, role, created_at, avatar_url')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) {
+    console.warn('fetchAdminUsers:', error.message)
+    return []
   }
+  return (data ?? []) as AdminUserRow[]
+}
+
+export async function setUserRole(
+  userId: string,
+  role: string
+): Promise<{ error: string | null }> {
+  const allowed = ['visitor', 'user', 'business', 'moderator', 'admin']
+  if (!allowed.includes(role)) return { error: 'Invalid role' }
+  const { error } = await supabase.from('profiles').update({ role }).eq('id', userId)
+  return { error: error?.message ?? null }
+}
+
+export function downloadCsv(filename: string, rows: string[][]) {
+  const esc = (c: string) => `"${String(c).replace(/"/g, '""')}"`
+  const body = rows.map((r) => r.map(esc).join(',')).join('\n')
+  const blob = new Blob([body], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
 }

@@ -11,3 +11,21 @@ export interface AdminMetrics {
 }
 
 export type PlaceModerationStatus = 'published' | 'pending' | 'hidden' | 'draft'
+
+export type ProfileRole = 'visitor' | 'user' | 'business' | 'moderator' | 'admin'
+
+export interface AdminUserRow {
+  id: string
+  email: string | null
+  full_name: string | null
+  role: string
+  created_at: string
+  avatar_url?: string | null
+}
+
+export interface AdminActivityItem {
+  id: string
+  at: string
+  action: string
+  detail: string
+}
