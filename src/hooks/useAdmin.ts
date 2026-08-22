@@ -4,11 +4,18 @@ import {
   fetchAdminMetrics,
   fetchPlacesForModeration,
   setPlaceStatus,
+  updatePlace,
+  softDeletePlace,
+  restorePlace,
+  hardDeletePlace,
   setPlaceFeatured,
   setPlaceStaffNotes,
   bulkSetPlaceStatus,
+  bulkSoftDeletePlaces,
   fetchReviewsForModeration,
   setReviewStatus,
+  updateReview,
+  deleteReview,
   fetchPendingClaims,
   resolveClaim,
   fetchPendingBusinesses,
@@ -17,6 +24,7 @@ import {
   resolveReport,
   fetchAdminUsers,
   setUserRole,
+  type PlaceEditInput,
 } from '@/services/admin'
 import { useAuth } from './useAuth'
 import { useAdminRealtime } from './useRealtimeQueries'
@@ -111,11 +119,44 @@ export function useAdminActions() {
     qc.invalidateQueries({ queryKey: ['admin-businesses'] })
     qc.invalidateQueries({ queryKey: ['admin-reports'] })
     qc.invalidateQueries({ queryKey: ['admin-users'] })
+    qc.invalidateQueries({ queryKey: ['places'] })
   }
 
   const placeStatus = useMutation({
     mutationFn: async (args: { placeId: string; status: string; verified?: boolean }) => {
       const res = await setPlaceStatus(args.placeId, args.status, args.verified)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
+  const placeUpdate = useMutation({
+    mutationFn: async (args: { placeId: string; data: PlaceEditInput }) => {
+      const res = await updatePlace(args.placeId, args.data)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
+  const placeSoftDelete = useMutation({
+    mutationFn: async (placeId: string) => {
+      const res = await softDeletePlace(placeId)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
+  const placeRestore = useMutation({
+    mutationFn: async (placeId: string) => {
+      const res = await restorePlace(placeId)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
+  const placeHardDelete = useMutation({
+    mutationFn: async (placeId: string) => {
+      const res = await hardDeletePlace(placeId)
       if (res.error) throw new Error(res.error)
     },
     onSuccess: invalidate,
@@ -146,9 +187,36 @@ export function useAdminActions() {
     onSuccess: invalidate,
   })
 
+  const bulkDelete = useMutation({
+    mutationFn: async (placeIds: string[]) => {
+      const res = await bulkSoftDeletePlaces(placeIds)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
   const reviewStatus = useMutation({
     mutationFn: async (args: { reviewId: string; status: string }) => {
       const res = await setReviewStatus(args.reviewId, args.status)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
+  const reviewUpdate = useMutation({
+    mutationFn: async (args: {
+      reviewId: string
+      data: { rating?: number; title?: string | null; comment?: string | null; status?: string }
+    }) => {
+      const res = await updateReview(args.reviewId, args.data)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
+  const reviewDelete = useMutation({
+    mutationFn: async (reviewId: string) => {
+      const res = await deleteReview(reviewId)
       if (res.error) throw new Error(res.error)
     },
     onSuccess: invalidate,
@@ -192,10 +260,17 @@ export function useAdminActions() {
 
   return {
     placeStatus,
+    placeUpdate,
+    placeSoftDelete,
+    placeRestore,
+    placeHardDelete,
     placeFeatured,
     placeNotes,
     bulkPlaces,
+    bulkDelete,
     reviewStatus,
+    reviewUpdate,
+    reviewDelete,
     claim,
     business,
     report,
