@@ -1,22 +1,12 @@
 /**
  * Live Bahir Dar places from OpenStreetMap via Overpass API.
- *
- * Query design (speed):
- * - `nwr` instead of separate node/way statements
- * - Regex unions → fewer union branches
- * - Tight city bbox applied once per statement
- * - `out center qt` (quadtile order is faster than default)
- * - Prefer named POIs for tourism/food
- * - Short server timeout + client AbortSignal
- *
- * Attribution: © OpenStreetMap contributors (ODbL)
+ * Real POIs only — no DEMO data.
  */
 
 import { BAHIR_DAR_CENTER } from '@/constants'
 import type { CategorySlug, Place } from '@/types/place'
 import { placeGuideLinks } from '@/constants/guideSites'
 
-/** Tight Bahir Dar city bbox (south, west, north, east) */
 export const BAHIR_DAR_BBOX = {
   south: 11.52,
   west: 37.3,
@@ -24,20 +14,22 @@ export const BAHIR_DAR_BBOX = {
   east: 37.48,
 }
 
+/** Prefer mirrors that respond from more networks */
 const OVERPASS_ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',
+  'https://overpass.openstreetmap.fr/api/interpreter',
   'https://overpass.private.coffee/api/interpreter',
+  'https://overpass-api.de/api/interpreter',
 ]
 
 const APP_USER_AGENT =
-  'DigitalBahirDar/1.2 (https://github.com/Menelik2/digital-bahir-dar; tourism-poi)'
+  'DigitalBahirDar/1.3 (https://github.com/Menelik2/digital-bahir-dar; tourism-poi)'
 
-const MIN_GAP_MS = 600
-const BACKOFF_429_MS = 15_000
+const MIN_GAP_MS = 500
+const BACKOFF_429_MS = 12_000
 const MAX_RETRIES = 1
-const NETWORK_TIMEOUT_MS = 10_000
+const NETWORK_TIMEOUT_MS = 14_000
 const CACHE_TTL_MS = 60 * 60_000
-const LS_PREFIX = 'dbd-osm-v2:' // bump when query shape changes
+const LS_PREFIX = 'dbd-osm-v3:'
 const DETAIL_KEY = 'dbd-osm-detail'
 
 export type OsmCategory =
@@ -52,10 +44,6 @@ export type OsmCategory =
   | 'pharmacy'
   | 'all'
 
-/**
- * Optimized Overpass fragments (no bbox — appended by buildQuery).
- * Uses nwr + regex so one statement replaces many node[...] lines.
- */
 const CATEGORY_UNION: Record<Exclude<OsmCategory, 'all'>, string[]> = {
   hotel: ['nwr["tourism"~"^(hotel|guest_house|hostel|motel)$"]["name"]'],
   restaurant: ['nwr["amenity"~"^(restaurant|fast_food)$"]["name"]'],
@@ -111,20 +99,9 @@ function enqueue<T>(fn: () => Promise<T>): Promise<T> {
 
 function bboxClause(): string {
   const { south, west, north, east } = BAHIR_DAR_BBOX
-  // Overpass order: (south,west,north,east)
   return `(${south},${west},${north},${east})`
 }
 
-/**
- * Build a compact Overpass QL string.
- *
- * Example (hotels):
- * [out:json][timeout:8][maxsize:16777216];
- * (
- *   nwr["tourism"~"^(hotel|guest_house|hostel|motel)$"]["name"](11.52,37.3,11.66,37.48);
- * );
- * out center qt;
- */
 export function buildOverpassQuery(categories: OsmCategory[]): string {
   const keys: Exclude<OsmCategory, 'all'>[] =
     categories.includes('all') || categories.length === 0
@@ -133,25 +110,17 @@ export function buildOverpassQuery(categories: OsmCategory[]): string {
 
   const bb = bboxClause()
   const lines: string[] = []
-
   for (const cat of keys) {
     for (const frag of CATEGORY_UNION[cat]) {
-      // Attach bbox filter once per statement — required for spatial index use
       lines.push(`  ${frag}${bb};`)
     }
   }
 
-  // timeout: server-side budget; maxsize: cap response; qt: faster ordered output
-  return [
-    '[out:json][timeout:8][maxsize:16777216];',
-    '(',
-    ...lines,
-    ');',
-    'out center qt;',
-  ].join('\n')
+  return ['[out:json][timeout:12][maxsize:16777216];', '(', ...lines, ');', 'out center qt;'].join(
+    '\n'
+  )
 }
 
-/** @deprecated use buildOverpassQuery */
 function buildQuery(categories: OsmCategory[]): string {
   return buildOverpassQuery(categories)
 }
@@ -194,7 +163,7 @@ function elementToPlace(el: OverpassElement): Place | null {
   if (lat == null || lon == null) return null
 
   const name = tags.name || tags['name:en'] || tags['name:am']
-  if (!name) return null // skip unnamed nodes (noise)
+  if (!name) return null
 
   const categorySlug = detectCategory(tags)
   const phone = tags.phone || tags['contact:phone'] || null
@@ -253,7 +222,7 @@ function writeLocalCache(key: string, data: Place[]) {
   try {
     localStorage.setItem(LS_PREFIX + key, JSON.stringify({ at: Date.now(), data }))
   } catch {
-    /* quota / private */
+    /* */
   }
 }
 
@@ -269,7 +238,6 @@ async function postToEndpoint(endpoint: string, query: string): Promise<Overpass
     body,
     signal: AbortSignal.timeout(NETWORK_TIMEOUT_MS),
   })
-
   if (res.status === 429) {
     const err = new Error('Overpass 429') as Error & { status?: number }
     err.status = 429
@@ -294,7 +262,7 @@ async function postOverpass(query: string): Promise<OverpassResponse> {
           }
         }
       }
-      if (attempt < MAX_RETRIES) await sleep(500)
+      if (attempt < MAX_RETRIES) await sleep(400)
     }
     throw lastError instanceof Error ? lastError : new Error('Overpass failed')
   })
@@ -340,7 +308,7 @@ export async function fetchOsmPlaces(opts?: {
     writeLocalCache(key, places)
     return opts?.limit ? places.slice(0, opts.limit) : places
   } catch (e) {
-    console.warn('OSM fetch failed (using cache/empty):', e)
+    console.warn('OSM fetch failed:', e)
     const disk = readLocalCache(key)
     if (disk?.length) return disk
     return []

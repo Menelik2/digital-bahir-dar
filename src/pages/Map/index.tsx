@@ -13,6 +13,7 @@ import { useAppStore } from '@/store'
 import { BAHIR_DAR_CENTER } from '@/constants'
 import { getMapboxToken } from '@/constants/map'
 import { distanceMeters } from '@/utils/geo'
+import { filterRealPlaces } from '@/utils/realPlaces'
 import type { Place } from '@/types/place'
 import { Button } from '@/components/ui/button'
 
@@ -30,7 +31,6 @@ function mergePlaces(primary: Place[], secondary: Place[]): Place[] {
 
 export default function MapPage() {
   const { location, setMapCenter, mapCenter, selectedPlaceId, setSelectedPlaceId } = useAppStore()
-  // Track position in background; do NOT re-center map on every GPS tick
   const { request: requestLocation, hasFix } = useGeolocation({ autoRequest: true, watch: true })
   const mapboxOn = !!getMapboxToken()
   const didCenterOnFix = useRef(false)
@@ -39,6 +39,7 @@ export default function MapPage() {
   const [filter, setFilter] = useState<string | null>(null)
   const [directionsPlace, setDirectionsPlace] = useState<Place | null>(null)
   const [travelMode, setTravelMode] = useState<'walking' | 'driving'>('walking')
+  /** Live OSM is the real place source — always on for production map */
   const [includeOsm, setIncludeOsm] = useState(true)
 
   const categorySlug =
@@ -47,7 +48,7 @@ export default function MapPage() {
   const verifiedOnly = filter === 'verified'
 
   const { places: dbPlaces, isLoading, isError, error, refetch } = useFilteredPlaces({
-    search,
+    search: undefined,
     categorySlug,
     nearMe,
     verifiedOnly,
@@ -66,11 +67,18 @@ export default function MapPage() {
   const {
     data: osmPlaces = [],
     isFetching: osmFetching,
+    isError: osmError,
     refetch: refetchOsm,
   } = useOsmPlaces([...osmCategories], includeOsm)
 
+  // Real app: OSM first, then curated landmarks only (no DEMO hotels/restaurants)
   const places = useMemo(() => {
-    let list = includeOsm ? mergePlaces(dbPlaces, osmPlaces) : dbPlaces
+    const base = filterRealPlaces(dbPlaces)
+    let list = includeOsm ? mergePlaces(osmPlaces, base) : base
+    // Prefer OSM density when available
+    if (includeOsm && osmPlaces.length > 0) {
+      list = mergePlaces(osmPlaces, base)
+    }
     if (search.trim()) {
       const q = search.trim().toLowerCase()
       list = list.filter(
@@ -106,7 +114,6 @@ export default function MapPage() {
     return distanceMeters(BAHIR_DAR_CENTER.lat, BAHIR_DAR_CENTER.lng, directionsPlace.latitude, directionsPlace.longitude)
   }, [directionsPlace, userPos])
 
-  // Center map only on the first GPS fix (not on every watch update)
   useEffect(() => {
     if (userPos && !didCenterOnFix.current) {
       didCenterOnFix.current = true
@@ -151,7 +158,7 @@ export default function MapPage() {
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search Bahir Dar…"
+              placeholder="Search real places…"
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
               aria-label="Search places"
             />
@@ -166,30 +173,29 @@ export default function MapPage() {
 
         <div className="flex flex-wrap items-center gap-2">
           <LocationStatus />
-          <span
-            className={`rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm ${
-              mapboxOn
-                ? 'bg-sky-600 text-white'
-                : 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-100'
-            }`}
-          >
-            {mapboxOn ? 'Mapbox · Bahir Dar only' : 'Set VITE_MAPBOX_ACCESS_TOKEN'}
+          <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm">
+            Live map · OpenStreetMap
           </span>
+          {mapboxOn && (
+            <span className="rounded-full bg-sky-600 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm">
+              Mapbox tiles
+            </span>
+          )}
           <button
             type="button"
             onClick={() => setIncludeOsm((v) => !v)}
             className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium shadow-sm ${
               includeOsm
-                ? 'border-sky-500 bg-sky-600 text-white'
+                ? 'border-emerald-600 bg-emerald-600 text-white'
                 : 'border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900'
             }`}
           >
             <Layers className="h-3.5 w-3.5" />
-            Live OSM {includeOsm ? 'on' : 'off'}
+            OSM {includeOsm ? 'on' : 'off'}
             {osmFetching && includeOsm ? '…' : ''}
           </button>
-          <span className="rounded-full bg-white/90 px-2.5 py-1 text-[11px] text-slate-500 shadow-sm dark:bg-slate-900/90">
-            {places.length} pins
+          <span className="rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-medium text-slate-600 shadow-sm dark:bg-slate-900/95">
+            {places.length} places
           </span>
         </div>
       </div>
@@ -203,21 +209,23 @@ export default function MapPage() {
         onCenterChange={setMapCenter}
       />
 
-      {isError && dbPlaces.length === 0 && !includeOsm && (
-        <div className="absolute left-1/2 top-36 z-[1000] flex max-w-sm -translate-x-1/2 items-start gap-2 rounded-xl border border-red-200 bg-white px-3 py-2 text-sm shadow-lg dark:border-red-900 dark:bg-slate-900">
+      {includeOsm && osmError && osmPlaces.length === 0 && (
+        <div className="absolute left-1/2 top-40 z-[1000] max-w-sm -translate-x-1/2 rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm shadow-lg dark:border-amber-900 dark:bg-slate-900">
+          <p className="font-medium text-amber-800 dark:text-amber-200">Live places slow to load</p>
+          <p className="text-xs text-slate-500">Showing landmarks. Retry OpenStreetMap.</p>
+          <Button size="sm" variant="outline" className="mt-2" onClick={() => void refetchOsm()}>
+            Retry OSM
+          </Button>
+        </div>
+      )}
+
+      {isError && places.length === 0 && (
+        <div className="absolute left-1/2 top-40 z-[1000] flex max-w-sm -translate-x-1/2 items-start gap-2 rounded-xl border border-red-200 bg-white px-3 py-2 text-sm shadow-lg">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
           <div>
-            <p className="font-medium text-red-700 dark:text-red-300">Could not load places</p>
-            <p className="text-xs text-slate-500">{error instanceof Error ? error.message : 'Unknown error'}</p>
-            <Button
-              size="sm"
-              variant="outline"
-              className="mt-2"
-              onClick={() => {
-                void refetch()
-                void refetchOsm()
-              }}
-            >
+            <p className="font-medium text-red-700">Could not load places</p>
+            <p className="text-xs text-slate-500">{error instanceof Error ? error.message : 'Error'}</p>
+            <Button size="sm" variant="outline" className="mt-2" onClick={() => { void refetch(); void refetchOsm() }}>
               Retry
             </Button>
           </div>
@@ -225,8 +233,8 @@ export default function MapPage() {
       )}
 
       {isLoading && places.length === 0 && (
-        <div className="absolute left-1/2 top-36 z-[1000] -translate-x-1/2 rounded-full bg-white px-4 py-1.5 text-sm shadow dark:bg-slate-900">
-          Loading map data…
+        <div className="absolute left-1/2 top-40 z-[1000] -translate-x-1/2 rounded-full bg-white px-4 py-1.5 text-sm shadow">
+          Loading map…
         </div>
       )}
 
@@ -254,14 +262,7 @@ export default function MapPage() {
       <div className="absolute bottom-24 left-0 right-0 z-[1000] px-4 lg:bottom-6">
         <MapFilter active={filter} onChange={setFilter} />
         <p className="mt-2 text-center text-[10px] text-slate-700 drop-shadow-sm dark:text-slate-200">
-          {mapboxOn ? (
-            <>© Mapbox · Bahir Dar city only · Tap locate to re-center</>
-          ) : (
-            <>
-              Add <code className="rounded bg-black/10 px-1">VITE_MAPBOX_ACCESS_TOKEN</code> for Mapbox.
-              Guide places load instantly · OSM in background.
-            </>
-          )}
+          Real places from OpenStreetMap · Tap locate for GPS · Layers: Streets / Satellite
         </p>
       </div>
     </div>
