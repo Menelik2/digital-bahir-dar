@@ -1,12 +1,12 @@
 /**
  * Geolocation services for Digital Bahir Dar.
  * Browser Geolocation API + permission helpers + Bahir Dar context.
+ * (No Leaflet import — safe outside map pages.)
  */
 
 import { BAHIR_DAR_CENTER } from '@/constants'
 import { BAHIR_DAR_MAX_BOUNDS } from '@/constants/map'
 import { distanceMeters } from '@/utils/geo'
-import L from 'leaflet'
 
 export type GeoPermission = 'granted' | 'denied' | 'prompt' | 'unsupported'
 
@@ -46,7 +46,6 @@ export function isGeolocationSupported(): boolean {
   return typeof navigator !== 'undefined' && 'geolocation' in navigator
 }
 
-/** Query Permissions API when available (Chrome / Edge / Android) */
 export async function queryGeoPermission(): Promise<GeoPermission> {
   if (!isGeolocationSupported()) return 'unsupported'
   try {
@@ -57,7 +56,7 @@ export async function queryGeoPermission(): Promise<GeoPermission> {
       return 'prompt'
     }
   } catch {
-    /* Safari often throws */
+    /* Safari */
   }
   return 'prompt'
 }
@@ -93,7 +92,6 @@ function toGeoPosition(pos: GeolocationPosition): GeoPosition {
   }
 }
 
-/** One-shot high-accuracy fix */
 export function getCurrentPosition(options?: PositionOptions): Promise<GeoPosition> {
   return new Promise((resolve, reject) => {
     if (!isGeolocationSupported()) {
@@ -108,7 +106,6 @@ export function getCurrentPosition(options?: PositionOptions): Promise<GeoPositi
   })
 }
 
-/** Continuous watch — returns watchId; call clearWatch when done */
 export function watchPosition(
   onUpdate: (pos: GeoPosition) => void,
   onError?: (err: GeoServiceError) => void,
@@ -136,23 +133,16 @@ export function clearWatch(watchId: number) {
   }
 }
 
-/** Distance from user to Bahir Dar center (meters) */
 export function distanceToBahirDarCenter(lat: number, lng: number): number {
   return distanceMeters(lat, lng, BAHIR_DAR_CENTER.lat, BAHIR_DAR_CENTER.lng)
 }
 
-/** True if coordinates fall inside the app’s Bahir Dar city bounds */
+/** Pure bbox check — no Leaflet dependency */
 export function isInsideBahirDar(lat: number, lng: number): boolean {
-  try {
-    return L.latLngBounds(BAHIR_DAR_MAX_BOUNDS).contains(L.latLng(lat, lng))
-  } catch {
-    // Fallback bbox without Leaflet
-    const [[s, w], [n, e]] = BAHIR_DAR_MAX_BOUNDS
-    return lat >= s && lat <= n && lng >= w && lng <= e
-  }
+  const [[s, w], [n, e]] = BAHIR_DAR_MAX_BOUNDS
+  return lat >= s && lat <= n && lng >= w && lng <= e
 }
 
-/** Rough “near city” for travelers approaching (25 km) */
 export function isNearBahirDar(lat: number, lng: number, radiusM = 25_000): boolean {
   return distanceToBahirDarCenter(lat, lng) <= radiusM
 }

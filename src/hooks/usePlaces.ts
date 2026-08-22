@@ -6,7 +6,6 @@ import {
   getCuratedPlaces,
   searchPlaces,
   rankNearby,
-  PlacesFetchError,
 } from '@/services/places'
 import type { Place } from '@/types/place'
 import { useAppStore } from '@/store'
@@ -23,15 +22,12 @@ export function usePlaces(categorySlug?: string) {
       try {
         const data = await fetchPlaces({ categorySlug })
         return data.length > 0 ? data : curated
-      } catch (e) {
-        if (e instanceof PlacesFetchError) throw e
-        // Network failure → still show curated instantly
+      } catch {
+        // Never hard-fail the UI — curated guide data always works offline
         return curated
       }
     },
-    // Paint curated data on first frame — no spinner for empty network
-    initialData: curated,
-    initialDataUpdatedAt: 0,
+    placeholderData: curated,
     staleTime: 10 * 60_000,
     gcTime: 30 * 60_000,
     retry: isSupabaseConfigured ? 1 : 0,
@@ -42,7 +38,13 @@ export function usePlaces(categorySlug?: string) {
 export function usePlace(slug: string | undefined) {
   return useQuery({
     queryKey: qk.places.detail(slug || ''),
-    queryFn: () => fetchPlaceBySlug(slug!),
+    queryFn: async () => {
+      try {
+        return await fetchPlaceBySlug(slug!)
+      } catch {
+        return getCuratedPlaces().find((p) => p.slug === slug) ?? null
+      }
+    },
     enabled: !!slug,
     staleTime: 10 * 60_000,
     placeholderData: () => (slug ? getCuratedPlaces().find((p) => p.slug === slug) : undefined),
@@ -52,7 +54,13 @@ export function usePlace(slug: string | undefined) {
 export function useCategories() {
   return useQuery({
     queryKey: qk.categories.all,
-    queryFn: fetchCategories,
+    queryFn: async () => {
+      try {
+        return await fetchCategories()
+      } catch {
+        return []
+      }
+    },
     staleTime: 30 * 60_000,
   })
 }
@@ -93,7 +101,7 @@ export function useFilteredPlaces(opts: {
     isLoading: isLoading && places.length === 0,
     isFetching,
     error,
-    isError,
+    isError: isError && places.length === 0,
     refetch,
     total: places.length,
   }

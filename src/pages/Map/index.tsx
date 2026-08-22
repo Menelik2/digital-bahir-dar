@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { Search, X, AlertCircle, Layers } from 'lucide-react'
 import { MapView, openGoogleMapsDirections } from '@/components/map/MapView'
 import { MapFilter } from '@/components/map/MapFilter'
@@ -30,9 +30,10 @@ function mergePlaces(primary: Place[], secondary: Place[]): Place[] {
 
 export default function MapPage() {
   const { location, setMapCenter, mapCenter, selectedPlaceId, setSelectedPlaceId } = useAppStore()
-  // Auto-request once + continuous watch while on Map
+  // Track position in background; do NOT re-center map on every GPS tick
   const { request: requestLocation, hasFix } = useGeolocation({ autoRequest: true, watch: true })
   const mapboxOn = !!getMapboxToken()
+  const didCenterOnFix = useRef(false)
 
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<string | null>(null)
@@ -105,10 +106,13 @@ export default function MapPage() {
     return distanceMeters(BAHIR_DAR_CENTER.lat, BAHIR_DAR_CENTER.lng, directionsPlace.latitude, directionsPlace.longitude)
   }, [directionsPlace, userPos])
 
-  // Follow user when first fix arrives
+  // Center map only on the first GPS fix (not on every watch update)
   useEffect(() => {
-    if (userPos) setMapCenter(userPos)
-  }, [location.lastUpdated]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (userPos && !didCenterOnFix.current) {
+      didCenterOnFix.current = true
+      setMapCenter(userPos)
+    }
+  }, [userPos, setMapCenter])
 
   const handlePlaceSelect = useCallback(
     (place: Place) => {
@@ -251,11 +255,11 @@ export default function MapPage() {
         <MapFilter active={filter} onChange={setFilter} />
         <p className="mt-2 text-center text-[10px] text-slate-700 drop-shadow-sm dark:text-slate-200">
           {mapboxOn ? (
-            <>© Mapbox · Bahir Dar city only · Geolocation live on this page</>
+            <>© Mapbox · Bahir Dar city only · Tap locate to re-center</>
           ) : (
             <>
               Add <code className="rounded bg-black/10 px-1">VITE_MAPBOX_ACCESS_TOKEN</code> for Mapbox.
-              Geolocation + OSM active. Map locked to Bahir Dar.
+              Guide places load instantly · OSM in background.
             </>
           )}
         </p>
