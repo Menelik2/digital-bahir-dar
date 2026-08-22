@@ -10,11 +10,11 @@ import {
 import type { Place } from '@/types/place'
 import { useAppStore } from '@/store'
 import { useMemo } from 'react'
+import { qk } from '@/lib/queryKeys'
 
-/** Places list — realtime is mounted once in Layout (usePlacesRealtime), not here. */
 export function usePlaces(categorySlug?: string) {
   return useQuery({
-    queryKey: ['places', categorySlug ?? 'all'],
+    queryKey: qk.places.list(categorySlug),
     queryFn: async () => {
       const data = await fetchPlaces({ categorySlug })
       return placesOrDemo(data, categorySlug)
@@ -25,7 +25,7 @@ export function usePlaces(categorySlug?: string) {
 
 export function usePlace(slug: string | undefined) {
   return useQuery({
-    queryKey: ['place', slug],
+    queryKey: qk.places.detail(slug || ''),
     queryFn: () => fetchPlaceBySlug(slug!),
     enabled: !!slug,
     staleTime: 5 * 60_000,
@@ -34,7 +34,7 @@ export function usePlace(slug: string | undefined) {
 
 export function useCategories() {
   return useQuery({
-    queryKey: ['categories'],
+    queryKey: qk.categories.all,
     queryFn: fetchCategories,
     staleTime: 30 * 60_000,
   })

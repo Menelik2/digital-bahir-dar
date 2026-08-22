@@ -1,13 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchFavorites, isFavorited, addFavorite, removeFavorite } from '@/services/social'
 import { useAuth } from './useAuth'
+import { qk } from '@/lib/queryKeys'
 
-/** Favorites list — realtime mounted once in RealtimeProvider when signed in. */
 export function useFavorites() {
   const { user } = useAuth()
 
   return useQuery({
-    queryKey: ['favorites', user?.id],
+    queryKey: user ? qk.favorites.list(user.id) : ['favorites', 'anon'],
     queryFn: () => fetchFavorites(user!.id),
     enabled: !!user,
     staleTime: 60_000,
@@ -17,7 +17,8 @@ export function useFavorites() {
 export function useIsFavorited(placeId: string | undefined) {
   const { user } = useAuth()
   return useQuery({
-    queryKey: ['favorite', user?.id, placeId],
+    queryKey:
+      user && placeId ? qk.favorites.one(user.id, placeId) : ['favorite', 'anon'],
     queryFn: () => isFavorited(user!.id, placeId!),
     enabled: !!user && !!placeId,
     staleTime: 30_000,
@@ -33,9 +34,22 @@ export function useToggleFavorite(placeId: string) {
       if (currentlyFavorited) return removeFavorite(user.id, placeId)
       return addFavorite(user.id, placeId)
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['favorite', user?.id, placeId] })
-      qc.invalidateQueries({ queryKey: ['favorites', user?.id] })
+    onMutate: async (currentlyFavorited) => {
+      if (!user) return
+      await qc.cancelQueries({ queryKey: qk.favorites.one(user.id, placeId) })
+      const prev = qc.getQueryData<boolean>(qk.favorites.one(user.id, placeId))
+      qc.setQueryData(qk.favorites.one(user.id, placeId), !currentlyFavorited)
+      return { prev }
+    },
+    onError: (_e, _v, ctx) => {
+      if (user && ctx && 'prev' in ctx) {
+        qc.setQueryData(qk.favorites.one(user.id, placeId), ctx.prev)
+      }
+    },
+    onSettled: () => {
+      if (!user) return
+      void qc.invalidateQueries({ queryKey: qk.favorites.one(user.id, placeId) })
+      void qc.invalidateQueries({ queryKey: qk.favorites.list(user.id) })
     },
   })
 }

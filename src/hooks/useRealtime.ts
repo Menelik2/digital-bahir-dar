@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useQueryClient, type QueryKey } from '@tanstack/react-query'
+import type { QueryKey } from '@tanstack/react-query'
 import {
   realtimeHub,
   type RealtimeEvent,
@@ -15,7 +15,6 @@ export interface UseRealtimeOptions {
   table: string
   filter?: string
   event?: RealtimeEvent
-  /** Extra tables on the same shared channel (e.g. trip_days + trip_stops) */
   extraTopics?: TopicSpec[]
   invalidateKeys?: QueryKey[]
   onPayload?: (payload: PostgresChangePayload) => void
@@ -24,8 +23,7 @@ export interface UseRealtimeOptions {
 
 /**
  * Shared, ref-counted Realtime subscription.
- * Multiple components listening to the same table+filter share one channel.
- * Invalidations are debounced (~120ms) and coalesced.
+ * QueryClient is bound once in queryClient.ts — no per-hook setQueryClient.
  */
 export function useRealtimeSubscription(opts: UseRealtimeOptions) {
   const {
@@ -39,7 +37,6 @@ export function useRealtimeSubscription(opts: UseRealtimeOptions) {
     enabled = true,
   } = opts
 
-  const qc = useQueryClient()
   const [status, setStatus] = useState<RealtimeStatus>('idle')
   const [lastEventAt, setLastEventAt] = useState<number | null>(null)
 
@@ -48,13 +45,8 @@ export function useRealtimeSubscription(opts: UseRealtimeOptions) {
   const keysRef = useRef(invalidateKeys)
   keysRef.current = invalidateKeys
 
-  // Stable key string for effect deps (avoid resubscribe on new array identity)
   const keysSig = JSON.stringify(invalidateKeys ?? [])
   const extraSig = JSON.stringify(extraTopics ?? [])
-
-  useEffect(() => {
-    realtimeHub.setQueryClient(qc)
-  }, [qc])
 
   useEffect(() => {
     if (!enabled || !table) {
@@ -62,14 +54,12 @@ export function useRealtimeSubscription(opts: UseRealtimeOptions) {
       return
     }
 
-    const topics: TopicSpec[] = [
-      { schema, table, filter, event },
-      ...(extraTopics || []),
-    ]
+    const topics: TopicSpec[] = [{ schema, table, filter, event }, ...(extraTopics || [])]
 
     setStatus('subscribing')
 
     const unsub = realtimeHub.subscribe(topics, {
+      // Snapshot keys at subscribe; effect re-runs when keysSig changes
       invalidateKeys: keysRef.current,
       onPayload: (payload) => {
         setLastEventAt(Date.now())
@@ -79,9 +69,8 @@ export function useRealtimeSubscription(opts: UseRealtimeOptions) {
     })
 
     return unsub
-    // keysSig/extraSig stand in for array identity
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, table, schema, filter, event, extraSig, keysSig, qc])
+  }, [enabled, table, schema, filter, event, extraSig, keysSig])
 
   return { status, lastEventAt, isLive: status === 'subscribed' }
 }

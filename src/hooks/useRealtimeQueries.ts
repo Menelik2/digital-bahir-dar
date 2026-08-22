@@ -1,19 +1,20 @@
 import { useRealtimeSubscription } from './useRealtime'
 import { useAuth } from './useAuth'
+import { qk } from '@/lib/queryKeys'
 
-/**
- * Global places channel — mount once (e.g. Layout), not inside every usePlaces().
- */
+/** Global places channel — mount once via RealtimeProvider */
 export function usePlacesRealtime(enabled = true) {
   return useRealtimeSubscription({
     table: 'places',
     event: '*',
     enabled,
-    invalidateKeys: [['places'], ['place'], ['categories']],
+    invalidateKeys: [qk.places.all, qk.places.detail(''), qk.categories.all].map((k) =>
+      // detail('') only used as prefix marker — real invalidation uses ['place']
+      k[0] === 'place' ? (['place'] as const) : k
+    ),
   })
 }
 
-/** Reviews for one place — shared channel per place_id */
 export function useReviewsRealtime(placeId: string | undefined) {
   return useRealtimeSubscription({
     table: 'reviews',
@@ -22,9 +23,9 @@ export function useReviewsRealtime(placeId: string | undefined) {
     enabled: !!placeId,
     invalidateKeys: placeId
       ? [
-          ['reviews', placeId],
-          ['my-review', placeId],
-          ['rating-summary', placeId],
+          qk.reviews.list(placeId),
+          qk.reviews.minePrefix(placeId),
+          qk.reviews.summary(placeId),
         ]
       : [],
   })
@@ -37,7 +38,9 @@ export function useFavoritesRealtime() {
     filter: user ? `user_id=eq.${user.id}` : undefined,
     event: '*',
     enabled: !!user,
-    invalidateKeys: user ? [['favorites', user.id], ['favorite', user.id]] : [],
+    invalidateKeys: user
+      ? [qk.favorites.list(user.id), qk.favorites.userPrefix(user.id)]
+      : [],
   })
 }
 
@@ -48,13 +51,12 @@ export function useTripsRealtime() {
     filter: user ? `user_id=eq.${user.id}` : undefined,
     event: '*',
     enabled: !!user,
-    invalidateKeys: user ? [['trips', user.id], ['trip']] : [],
+    invalidateKeys: user
+      ? [qk.trips.list(user.id), qk.trips.detailPrefix]
+      : [],
   })
 }
 
-/**
- * One channel, four table bindings — avoids 4 separate websockets per trip page.
- */
 export function useTripDetailRealtime(tripId: string | undefined) {
   const active = !!tripId && !tripId.startsWith('demo-')
 
@@ -66,17 +68,15 @@ export function useTripDetailRealtime(tripId: string | undefined) {
       ? [
           { table: 'trip_days', filter: `trip_id=eq.${tripId}` },
           { table: 'trip_expenses', filter: `trip_id=eq.${tripId}` },
-          // stops lack trip_id; scoped only while a real trip is open
           { table: 'trip_stops' },
         ]
       : [],
-    invalidateKeys: tripId ? [['trip', tripId], ['trips']] : [],
+    invalidateKeys: tripId
+      ? [qk.trips.detail(tripId), qk.trips.listPrefix]
+      : [],
   })
 }
 
-/**
- * Admin: one shared channel for all moderation tables (not 5 channels).
- */
 export function useAdminRealtime(enabled: boolean) {
   return useRealtimeSubscription({
     table: 'places',
@@ -88,13 +88,13 @@ export function useAdminRealtime(enabled: boolean) {
       { table: 'review_reports' },
     ],
     invalidateKeys: [
-      ['admin-places'],
-      ['admin-reviews'],
-      ['admin-claims'],
-      ['admin-businesses'],
-      ['admin-reports'],
-      ['admin-metrics'],
-      ['places'],
+      qk.admin.places,
+      qk.admin.reviews,
+      qk.admin.claims,
+      qk.admin.businesses,
+      qk.admin.reports,
+      qk.admin.metrics,
+      qk.places.all,
     ],
   })
 }

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from '@/lib/queryClient'
 import { Layout } from '@/components/layout/Layout'
 import { RealtimeProvider } from '@/components/realtime/RealtimeProvider'
 import HomePage from '@/pages/Home'
@@ -22,17 +23,6 @@ import ProfilePage from '@/pages/Profile'
 import BusinessPage from '@/pages/Business'
 import AdminPage from '@/pages/Admin'
 import PlaceDetailsPage from '@/pages/PlaceDetails'
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60_000,
-      retry: 1,
-      // Avoid stampedes when many realtime invalidations fire
-      refetchOnWindowFocus: true,
-    },
-  },
-})
 
 export default function App() {
   return (
