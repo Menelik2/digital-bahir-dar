@@ -4,6 +4,7 @@ import { useIsFavorited, useToggleFavorite } from '@/hooks/useFavorites'
 import { useAuth } from '@/hooks/useAuth'
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { isOsmPlaceId } from '@/services/osmPlaces'
 
 interface Props {
   placeId: string
@@ -13,6 +14,7 @@ interface Props {
 
 export function FavoriteButton({ placeId, className, size = 'default' }: Props) {
   const { isAuthenticated } = useAuth()
+  if (isOsmPlaceId(placeId)) return null
   const { data: favorited, isLoading } = useIsFavorited(placeId)
   const toggle = useToggleFavorite(placeId)
 
