@@ -4,19 +4,18 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { GlobalSearch } from '@/components/search/GlobalSearch'
 import { ThemeLangControls } from '@/components/layout/ThemeLangControls'
-import { useT, useLang } from '@/hooks/useT'
+import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
 
 export function Header() {
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const t = useT()
-  const { isAm } = useLang()
 
   const navItems = [
     { path: '/', label: t.nav.home },
-    { path: '/todo', label: isAm ? 'ተግባራት' : 'To Do' },
-    { path: '/city', label: isAm ? 'ከተማ' : 'City' },
+    { path: '/todo', label: t.nav.todo },
+    { path: '/city', label: t.nav.city },
     { path: '/discover', label: t.nav.discover },
     { path: '/map', label: t.nav.map },
     { path: '/hotels', label: t.nav.hotels },
@@ -63,7 +62,7 @@ export function Header() {
             onClick={() => setMobileOpen(true)}
             aria-label={t.search.globalPlaceholder}
           >
-            <span className="sr-only">Search</span>
+            <span className="sr-only">{t.common.search}</span>
             <GlobalSearch />
           </button>
           <ThemeLangControls />
