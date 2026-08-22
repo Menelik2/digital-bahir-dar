@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
-import { Search, X } from 'lucide-react'
+import { Search, X, AlertCircle } from 'lucide-react'
 import { MapView, openGoogleMapsDirections } from '@/components/map/MapView'
 import { MapFilter } from '@/components/map/MapFilter'
 import { LocationButton } from '@/components/map/LocationButton'
@@ -11,6 +11,7 @@ import { useAppStore } from '@/store'
 import { BAHIR_DAR_CENTER } from '@/constants'
 import { distanceMeters } from '@/utils/geo'
 import type { Place } from '@/types/place'
+import { Button } from '@/components/ui/button'
 
 export default function MapPage() {
   const { location, setMapCenter, mapCenter, selectedPlaceId, setSelectedPlaceId } = useAppStore()
@@ -26,7 +27,7 @@ export default function MapPage() {
   const nearMe = filter === 'near_me'
   const verifiedOnly = filter === 'verified'
 
-  const { places, isLoading } = useFilteredPlaces({
+  const { places, isLoading, isError, error, refetch } = useFilteredPlaces({
     search,
     categorySlug,
     nearMe,
@@ -107,13 +108,26 @@ export default function MapPage() {
         onCenterChange={setMapCenter}
       />
 
+      {isError && (
+        <div className="absolute left-1/2 top-20 z-20 flex max-w-sm -translate-x-1/2 items-start gap-2 rounded-xl border border-red-200 bg-white px-3 py-2 text-sm shadow-lg dark:border-red-900 dark:bg-slate-900">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+          <div>
+            <p className="font-medium text-red-700 dark:text-red-300">Could not load places</p>
+            <p className="text-xs text-slate-500">{error instanceof Error ? error.message : 'Unknown error'}</p>
+            <Button size="sm" variant="outline" className="mt-2" onClick={() => refetch()}>
+              Retry
+            </Button>
+          </div>
+        </div>
+      )}
+
       {isLoading && (
         <div className="absolute left-1/2 top-20 z-10 -translate-x-1/2 rounded-full bg-white px-4 py-1.5 text-sm shadow dark:bg-slate-900">
           Loading places…
         </div>
       )}
 
-      {search && !isLoading && (
+      {search && !isLoading && !isError && (
         <div className="absolute left-1/2 top-20 z-10 -translate-x-1/2 rounded-full bg-white px-3 py-1 text-xs shadow dark:bg-slate-900">
           {places.length} result{places.length !== 1 ? 's' : ''}
         </div>

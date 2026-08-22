@@ -27,6 +27,7 @@ import ProfilePage from '@/pages/Profile'
 import BusinessPage from '@/pages/Business'
 import AdminPage from '@/pages/Admin'
 import PlaceDetailsPage from '@/pages/PlaceDetails'
+import NotFoundPage from '@/pages/NotFound'
 
 export default function App() {
   return (
@@ -59,6 +60,7 @@ export default function App() {
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/places/:slug" element={<PlaceDetailsPage />} />
               <Route path="/auth" element={<AuthPage />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>
         </RealtimeProvider>

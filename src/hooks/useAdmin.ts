@@ -12,7 +12,6 @@ import {
   setBusinessStatus,
   fetchOpenReports,
   resolveReport,
-  demoAdminMetrics,
 } from '@/services/admin'
 import { useAuth } from './useAuth'
 import { useAdminRealtime } from './useRealtimeQueries'
@@ -37,11 +36,7 @@ export function useAdminMetrics(enabled: boolean) {
 
   return useQuery({
     queryKey: ['admin-metrics'],
-    queryFn: async () => {
-      const m = await fetchAdminMetrics()
-      if (m.placesTotal === 0 && m.usersApprox === 0) return demoAdminMetrics()
-      return m
-    },
+    queryFn: () => fetchAdminMetrics(),
     enabled,
     staleTime: 30_000,
   })
