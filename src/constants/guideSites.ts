@@ -12,7 +12,17 @@ export type GuideSite = {
   categories: Array<'hotel' | 'restaurant' | 'cafe' | 'attraction' | 'transport' | 'travel' | 'map' | 'all'>
 }
 
+/** Mapcarta city page — primary external map for POIs */
+export const MAPCARTA_BAHIR_DAR = 'https://mapcarta.com/Bahir_Dar'
+
 export const GUIDE_SITES: GuideSite[] = [
+  {
+    id: 'mapcarta',
+    name: 'Mapcarta — Bahir Dar',
+    description: 'Places of interest map for Bahir Dar (open geo data).',
+    url: MAPCARTA_BAHIR_DAR,
+    categories: ['map', 'attraction', 'travel', 'hotel', 'restaurant', 'cafe', 'transport', 'all'],
+  },
   {
     id: 'wikivoyage',
     name: 'Wikivoyage — Bahir Dar',
@@ -33,13 +43,6 @@ export const GUIDE_SITES: GuideSite[] = [
     description: 'Search hotels, restaurants, cafés, and directions in Bahir Dar.',
     url: 'https://www.google.com/maps/search/Bahir+Dar+Ethiopia',
     categories: ['map', 'hotel', 'restaurant', 'cafe', 'attraction', 'transport', 'all'],
-  },
-  {
-    id: 'mapcarta',
-    name: 'Mapcarta — Bahir Dar',
-    description: 'Places of interest overview built from open geo data.',
-    url: 'https://mapcarta.com/Bahir_Dar',
-    categories: ['attraction', 'map', 'travel', 'all'],
   },
   {
     id: 'traveloethiopia',
@@ -64,8 +67,11 @@ export function placeGuideLinks(place: {
   longitude: number
 }) {
   const q = encodeURIComponent(`${place.name} Bahir Dar`)
+  const nameOnly = encodeURIComponent(place.name.replace(/\s*\(DEMO\)\s*/gi, '').trim())
   const { latitude: lat, longitude: lng } = place
   return {
+    mapcarta: MAPCARTA_BAHIR_DAR,
+    mapcartaSearch: `https://mapcarta.com/?q=${nameOnly}`,
     googleMaps: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,
     googleDirections: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
     openStreetMap: `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=18/${lat}/${lng}`,
@@ -77,7 +83,16 @@ export function placeGuideLinks(place: {
 export function categoryGuideSearch(category: string) {
   const term = encodeURIComponent(`${category} Bahir Dar Ethiopia`)
   return {
+    mapcarta: MAPCARTA_BAHIR_DAR,
     googleMaps: `https://www.google.com/maps/search/${term}`,
     openStreetMap: `https://www.openstreetmap.org/search?query=${term}`,
   }
+}
+
+/** Open Mapcarta Bahir Dar (optionally focused via search query). */
+export function openMapcarta(query?: string) {
+  const url = query?.trim()
+    ? `https://mapcarta.com/?q=${encodeURIComponent(query.trim())}`
+    : MAPCARTA_BAHIR_DAR
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
