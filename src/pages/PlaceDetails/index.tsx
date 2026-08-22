@@ -17,6 +17,7 @@ import { StarRating } from '@/components/reviews/StarRating'
 import { ReviewCard } from '@/components/reviews/ReviewCard'
 import { ReviewForm } from '@/components/reviews/ReviewForm'
 import { useReviews, useMyReview, useRatingSummary } from '@/hooks/useReviews'
+import { placeCoverImage, placeImageAlt } from '@/utils/placeImage'
 import { useMemo, useState } from 'react'
 
 export default function PlaceDetailsPage() {
@@ -29,6 +30,7 @@ export default function PlaceDetailsPage() {
   const { data: myReview } = useMyReview(canSocial ? place?.id : undefined)
   const { data: ratingSummary } = useRatingSummary(canSocial ? place?.id : undefined)
   const [showReviewForm, setShowReviewForm] = useState(false)
+  const [imgFailed, setImgFailed] = useState(false)
 
   const userPos =
     location.permission === 'granted' && location.latitude != null && location.longitude != null
@@ -71,6 +73,7 @@ export default function PlaceDetailsPage() {
   const isDemo = place.name.includes('(DEMO)') || place.id.startsWith('demo-')
   const isOsm = isOsmPlaceId(place.id)
   const name = place.name.replace(' (DEMO)', '')
+  const cover = placeCoverImage(place)
 
   const share = async () => {
     const url = window.location.href
@@ -84,8 +87,18 @@ export default function PlaceDetailsPage() {
 
   return (
     <div className="min-h-full">
-      <div className="relative h-56 bg-gradient-to-br from-sky-500 via-sky-600 to-teal-600 sm:h-72">
-        <div className="absolute inset-0 bg-black/20" />
+      <div className="relative h-56 overflow-hidden bg-slate-800 sm:h-72">
+        {!imgFailed ? (
+          <img
+            src={cover}
+            alt={placeImageAlt(place)}
+            className="absolute inset-0 h-full w-full object-cover"
+            onError={() => setImgFailed(true)}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-sky-500 via-sky-600 to-teal-600" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10" />
         <div className="absolute left-4 top-4 z-10">
           <Link to="/explore">
             <Button size="icon" variant="outline" className="rounded-full bg-white/90 backdrop-blur">
@@ -159,6 +172,12 @@ export default function PlaceDetailsPage() {
                     {place.hotel.check_out && ` · Check-out ${place.hotel.check_out}`}
                   </p>
                 )}
+                {(place.hotel.minimum_price != null || place.hotel.maximum_price != null) && (
+                  <p className="text-sm">
+                    <span className="font-medium text-slate-500">Est. night: </span>
+                    {place.hotel.minimum_price ?? '—'}–{place.hotel.maximum_price ?? '—'} {place.currency}
+                  </p>
+                )}
                 {place.hotel.amenities?.length > 0 && (
                   <div className="sm:col-span-2">
                     <p className="mb-1 text-sm font-medium text-slate-500">Amenities</p>
@@ -188,6 +207,11 @@ export default function PlaceDetailsPage() {
                 {place.restaurant.vegetarian && (
                   <span className="rounded-full bg-green-50 px-3 py-1 text-sm text-green-800">Vegetarian options</span>
                 )}
+                {(place.restaurant.minimum_price != null || place.restaurant.maximum_price != null) && (
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm dark:bg-slate-800">
+                    ~{place.restaurant.minimum_price ?? '—'}-{place.restaurant.maximum_price ?? '—'} {place.currency}/meal
+                  </span>
+                )}
               </CardContent>
             </Card>
           </section>
@@ -203,6 +227,15 @@ export default function PlaceDetailsPage() {
                 )}
                 {place.attraction.recommended_duration && (
                   <p><span className="font-medium text-slate-500">Duration:</span> {place.attraction.recommended_duration}</p>
+                )}
+                {place.attraction.best_time_to_visit && (
+                  <p><span className="font-medium text-slate-500">Best time:</span> {place.attraction.best_time_to_visit}</p>
+                )}
+                {place.attraction.entrance_fee != null && (
+                  <p><span className="font-medium text-slate-500">Entry (est.):</span> {place.attraction.entrance_fee} {place.currency}</p>
+                )}
+                {place.attraction.historical_information && (
+                  <p className="text-slate-600 dark:text-slate-300">{place.attraction.historical_information}</p>
                 )}
                 {place.attraction.safety_information && (
                   <p className="rounded-lg bg-amber-50 p-3 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
