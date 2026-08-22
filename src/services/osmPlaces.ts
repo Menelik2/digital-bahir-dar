@@ -102,6 +102,7 @@ let lastRequestAt = 0
 let chain: Promise<unknown> = Promise.resolve()
 const memoryCache = new Map<string, { at: number; data: Place[] }>()
 const CACHE_TTL_MS = 15 * 60_000 // 15 min — cuts repeat hits while browsing pages
+const DETAIL_KEY = 'dbd-osm-detail'
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms))
@@ -340,11 +341,29 @@ export const fetchOsmCafes = () => fetchOsmPlaces({ categories: ['cafe'] })
 export const fetchOsmAttractions = () => fetchOsmPlaces({ categories: ['attraction'] })
 export const fetchOsmTransport = () => fetchOsmPlaces({ categories: ['transport'] })
 
+/** Persist one OSM place so /places/:slug survives refresh. */
+export function cacheOsmPlaceForDetail(place: Place) {
+  try {
+    sessionStorage.setItem(DETAIL_KEY, JSON.stringify(place))
+  } catch {
+    /* private mode */
+  }
+}
+
 /** Look up a previously fetched OSM place by slug (for detail pages). */
 export function findCachedOsmPlace(slug: string): Place | null {
   for (const entry of memoryCache.values()) {
     const hit = entry.data.find((x) => x.slug === slug || x.id === slug)
     if (hit) return hit
+  }
+  try {
+    const raw = sessionStorage.getItem(DETAIL_KEY)
+    if (raw) {
+      const place = JSON.parse(raw) as Place
+      if (place.slug === slug || place.id === slug) return place
+    }
+  } catch {
+    /* ignore */
   }
   return null
 }
