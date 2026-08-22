@@ -4,10 +4,11 @@ export default function BanksPage() {
   return (
     <PlaceListPage
       title="Banks & ATMs"
-      subtitle="Bank branches and cash points"
+      subtitle="Bank branches and cash points — app listings plus OpenStreetMap"
       categorySlug="bank"
+      osmCategories={['bank', 'atm']}
       filters={[{ id: 'atm', label: 'ATMs' }]}
-      emptyMessage="No bank or ATM listings yet. Verified locations will appear here."
+      emptyMessage="No bank or ATM listings yet. Try Discover or Google Maps for cash points."
     />
   )
 }
