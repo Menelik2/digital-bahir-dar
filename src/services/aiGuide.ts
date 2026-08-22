@@ -1,68 +1,153 @@
 import { supabase } from '@/lib/supabase'
 import type { ChatMessage, AIGuideResponse } from '@/types/ai'
 
-const DEMO_KNOWLEDGE: { keys: string[]; reply: string }[] = [
+/** Offline knowledge — used when Edge Function / AI_API_KEY is unavailable */
+const DEMO_KNOWLEDGE: { keys: string[]; reply: string; priority?: number }[] = [
   {
-    keys: ['hello', 'hi', 'hey', 'selam', 'ሰላም'],
+    keys: ['hello', 'hi', 'hey', 'selam', 'ሰላም', 'good morning', 'good evening'],
+    priority: 10,
     reply:
-      "Selam! I'm your Bahir Dar guide (DEMO mode). Ask about Lake Tana, Blue Nile Falls, hotels, food, transport, safety, or a 1–3 day itinerary. Prices below are estimates only — verify locally.\n\nWhen the AI Edge Function is configured, answers will use a live model.",
+      "Selam! I'm your Bahir Dar guide.\n\nAsk me anything about:\n• **Where to go** (Lake Tana, Blue Nile Falls, viewpoints)\n• **Food** (injera, lake fish, coffee)\n• **Hotels & budget**\n• **Transport** (bajaj, boats, airport)\n• **A 1–3 day itinerary**\n\nPrices are estimates only — always verify locally.",
   },
   {
-    keys: ['lake tana', 'tana', 'boat', 'island', 'monastery'],
+    // Vague “where should I go / what to see” — must match before generic fallback
+    keys: [
+      'where',
+      'where to go',
+      'where should',
+      'where can i',
+      'where do i',
+      'places to visit',
+      'place to visit',
+      'what to see',
+      'what to do',
+      'things to do',
+      'sightseeing',
+      'recommend',
+      'recommendation',
+      'best place',
+      'must see',
+      'must-see',
+      'tourist',
+      'visit',
+      'go first',
+      'first day',
+      'attractions',
+      'በየት',
+      'የት',
+    ],
+    priority: 5,
     reply:
-      "**Lake Tana (DEMO tips)**\n• Ethiopia's largest lake; source of the Blue Nile.\n• Popular boat trips visit island monasteries — book with a known operator and confirm times the same day.\n• Morning trips are often calmer; bring sun protection and water.\n• Agree on price in ETB before departure; ask about park/monastery fees.\n\nUse the **Map** and **Attractions** pages in the app for places and directions.",
+      "**Where to go in Bahir Dar**\n\n**Top picks (start here)**\n1. **Lake Tana** — Ethiopia’s largest lake. Morning boat to island monasteries (e.g. Zege / Ura Kidane Mehret). Agree boat price in ETB before leaving the pier.\n2. **Blue Nile Falls (Tis Issat)** — day trip ~30 km toward Tis Abay. Best after rains; wear good shoes. Entry + optional guide + car are separate costs.\n3. **Bezawit viewpoint** — hilltop views over the Nile outlet and lake. Short outing, great at sunset.\n4. **Central market** — spices, coffee, everyday life. Go in the morning; keep bags secure.\n5. **Lakeside promenade** — walk, coffee, lake fish for lunch or dinner.\n\n**Simple plan**\n• **Half day:** lakeside + market + coffee\n• **1 day:** Lake Tana boat + fish lunch + Bezawit\n• **2 days:** Day 1 boat/monasteries · Day 2 Blue Nile Falls\n\nOpen **Map**, **Attractions**, and **Things to Do** in the app for pins and a checklist. Tell me your days (1 / 2 / 3) and budget (low / mid) for a tighter plan.",
   },
   {
-    keys: ['blue nile', 'falls', 'tis', 'abay'],
+    keys: ['lake tana', 'tana', 'boat', 'island', 'monastery', 'zege', 'ura kidane', 'debre maryam'],
+    priority: 8,
     reply:
-      '**Blue Nile Falls (DEMO tips)**\n• Seasonal flow varies a lot — ask locals or your hotel about current conditions.\n• Day trip from Bahir Dar is common; roads and access can change — confirm transport.\n• Wear shoes suitable for uneven paths; carry cash for entry/parking if required.\n• Combine with Lake Tana only if you have a full day and an early start.\n\nOpen **Attractions** in the app for the listing and directions.',
+      "**Lake Tana & monasteries**\n• Ethiopia’s largest lake; source of the Blue Nile.\n• Shared half-day boats often ~800–5000 ETB/person (wide range); private charters much higher — negotiate at the pier or via hotel.\n• Popular stops: Zege peninsula monasteries (e.g. Ura Kidane Mehret) — modest dress, shoes off in churches.\n• Morning departures are usually calmer; bring sun protection, water, and cash.\n• Confirm which islands, return time, and whether monastery entry is included.\n\nUse **Map** → boat pier / Lake Tana, and **Attractions** in the app.",
   },
   {
-    keys: ['food', 'eat', 'restaurant', 'injera', 'coffee'],
+    keys: ['blue nile', 'falls', 'tis', 'abay', 'tissisat', 'tis issat', 'waterfall'],
+    priority: 8,
     reply:
-      '**Food in Bahir Dar (DEMO)**\n• Expect injera, stews (wot), fresh lake fish, and coffee ceremonies.\n• Budget range (very rough): local meal ~150–400 ETB; mid-range lakeside ~400–900+ ETB per person.\n• Ask about spice level; vegetarian options are often available.\n\nBrowse **Restaurants** in the app. Mark favorites after you sign in.',
+      '**Blue Nile Falls (Tis Issat)**\n• About 30 km from Bahir Dar toward Tis Abay.\n• Entry often ~50–300 ETB; local guide ~300–1500 ETB/group; private car round trip ~800–3500 ETB (all estimates).\n• Flow is strongest after the rainy season; ask your hotel about current conditions.\n• Paths can be steep and slippery — proper shoes required.\n• Full day recommended if combining with sightseeing stops.\n\nSee **Attractions** and **Transport** in the app.',
   },
   {
-    keys: ['hotel', 'stay', 'sleep', 'lodge'],
+    keys: ['food', 'eat', 'restaurant', 'injera', 'coffee', 'fish', 'dinner', 'lunch', 'breakfast', 'cafe', 'café'],
+    priority: 7,
     reply:
-      '**Where to stay (DEMO)**\n• Lakeside and city-centre options exist; prices vary by season and facilities.\n• Rough planning band: modest ~1,500–3,500 ETB/night; mid-range higher — always confirm current rates.\n• Check distance to the lake pier if you plan boat trips.\n\nUse **Hotels** + **Map** in the app. Create a trip under **My Trips** to track lodging in your budget.',
+      '**Food in Bahir Dar**\n• **Must try:** lake fish (tilapia), injera with wot/shiro, beyaynetu (veg combo), Ethiopian coffee.\n• **Rough prices:** local plate ~50–350 ETB; lakeside fish ~180–500 ETB; coffee ~30–80 ETB.\n• **Where:** lakeside for fish & views; city center for budget injera houses; hotels when you want English menus.\n• Eat with the right hand from shared platters. Busy kitchens are usually safer.\n\nOpen **Restaurants** in the app for local recommendations and listings.',
   },
   {
-    keys: ['transport', 'taxi', 'bajaj', 'bus', 'airport'],
+    keys: ['hotel', 'stay', 'sleep', 'lodge', 'accommodation', 'resort', 'guesthouse'],
+    priority: 7,
     reply:
-      '**Getting around (DEMO)**\n• Bajaj and taxis are common in town — agree on the fare before you start.\n• For Falls or longer trips, arrange a driver via hotel or a trusted contact.\n• Walking is fine in central areas during the day; plan evenings carefully.\n\nSee **Transport** and **Map** in the app for more.',
+      '**Where to stay**\n• **Budget:** ~1500–4000 ETB/night (guesthouse / simple hotel)\n• **Mid:** ~4000–9000 ETB/night\n• **Comfort / lakeside:** ~8000–25000+ ETB/night\n• Stay near the lake if you plan boat trips; city center is fine for markets and bajaj access.\n• Always confirm current rates — seasonal and nationality pricing vary.\n\nBrowse **Hotels** + **Map**. Track costs under **Budget** and **My Trips**.',
   },
   {
-    keys: ['budget', 'cost', 'price', 'money', 'etb'],
+    keys: ['transport', 'taxi', 'bajaj', 'bus', 'airport', 'driver', 'car', 'how to get', 'getting around'],
+    priority: 7,
     reply:
-      '**Rough 2-night budget for 2 people (DEMO estimates, ETB)**\n• Lodging: 5,000–12,000+\n• Food: 2,000–5,000\n• Boat / Falls / activities: 2,000–6,000\n• Local transport: 500–2,000\n• Buffer: 1,000–2,000\n\nOpen the **Budget** planner to tune numbers, then save a trip under **My Trips**.',
+      '**Getting around**\n• **Bajaj:** short hops often ~50–200 ETB — agree price before you start.\n• **Taxi:** across town ~150–500 ETB (est.).\n• **Minibus:** cheapest fixed routes.\n• **Airport (BJR) ↔ city:** ~300–1500 ETB; 15–40 min.\n• **Falls day car:** ~800–3500 ETB vehicle round trip (est.).\n• **Boats:** negotiate at the Lake Tana pier; hotel can arrange trusted operators.\n\nSee **Transport** and **Map** in the app.',
   },
   {
-    keys: ['itinerary', 'day', 'plan', 'weekend', 'schedule'],
+    keys: ['budget', 'cost', 'price', 'money', 'etb', 'expensive', 'cheap', 'how much'],
+    priority: 7,
     reply:
-      '**Sample 2-day plan (DEMO)**\n**Day 1:** Morning Lake Tana boat (monastery visit) → lakeside lunch → city / market stroll → dinner.\n**Day 2:** Early Blue Nile Falls day trip → return afternoon → coffee and rest.\n\nAdjust for weather, energy, and boat availability. Build this under **My Trips** and pin places from the map.',
+      '**Rough 2-night budget for 2 people (ETB estimates)**\n• Lodging: 5,000–12,000+\n• Food: 2,000–5,000\n• Boat / Falls / activities: 2,000–6,000\n• Local transport: 500–2,000\n• Buffer: 1,000–2,000\n\nCarry cash (ATMs can run dry). Open the **Budget** planner to adjust tiers, then save a trip under **My Trips**.',
   },
   {
-    keys: ['safety', 'safe', 'scam', 'health'],
+    keys: ['itinerary', 'day plan', '2-day', 'two day', '3-day', 'three day', 'weekend', 'schedule', 'trip plan', 'plan my'],
+    priority: 9,
     reply:
-      "**Safety basics (DEMO)**\n• Use registered boats and clear prices.\n• Keep copies of important documents; don't flash large amounts of cash.\n• Drink sealed water; sun and dehydration are common risks.\n• For medical needs, ask your hotel for current clinic recommendations.\n\nThis is general advice, not emergency guidance. In an emergency, use local emergency services.",
+      '**Sample plans**\n\n**1 day:** Morning Lake Tana boat → fish lunch lakeside → Bezawit or market → dinner.\n\n**2 days:**\n• **Day 1:** Boat + monasteries + lakeside evening\n• **Day 2:** Early Blue Nile Falls day trip → return for coffee\n\n**3 days:** Add a slow market/coffee morning, university area stroll, or a second shorter boat.\n\nStart early for boats and the Falls. Build your checklist under **Things to Do** and pin places on **Map**.',
   },
   {
-    keys: ['amharic', 'language', 'አማርኛ'],
+    keys: ['safety', 'safe', 'scam', 'health', 'hospital', 'emergency', 'police'],
+    priority: 8,
     reply:
-      '**Language (DEMO)**\n• Amharic is widely spoken; English is common in hotels and tourism.\n• Useful: Selam (hello), Ameseginalehu (thank you), Sira? (how much?).\n• In the app Profile you can switch UI language preference (EN / አማርኛ).\n\nWhen the live AI is enabled, it can reply more fully in Amharic.',
+      '**Safety & help**\n• Use known boat operators; agree prices before departure.\n• Keep valuables discrete; careful in crowded markets.\n• Drink sealed bottled water only.\n• **Emergency (Ethiopia):** Police **991** · Ambulance **907** · Fire **939**\n• Main hospital orientation: **Felege Hiwot Referral Hospital** — ask hotel for the best current route.\n\nSee **Directory → Emergency** in the app. This is general advice, not a substitute for local emergency services.',
+  },
+  {
+    keys: ['amharic', 'language', 'አማርኛ', 'speak'],
+    priority: 6,
+    reply:
+      '**Language**\n• Amharic is primary; English is common in hotels and tourism.\n• Useful phrases: **Selam** (hello) · **Ameseginalehu** (thank you) · **Sint new?** (how much?)\n• Switch the app language in **Profile** (EN / አማርኛ).',
+  },
+  {
+    keys: ['market', 'shopping', 'souvenir', 'craft'],
+    priority: 6,
+    reply:
+      '**Market & shopping**\n• Central market is best in the morning for produce, spices, and coffee.\n• Bargain politely; start lower than the first price.\n• Keep bags zipped in crowds.\n• Craft/souvenir stalls near tourist routes — compare quality before buying.\n\nPin **Bahir Dar Central Market** from **Explore** or **Map**.',
+  },
+  {
+    keys: ['weather', 'rain', 'hot', 'season', 'when to visit'],
+    priority: 6,
+    reply:
+      '**When to visit (general)**\n• Dry months are easier for boats and road trips; the Falls are often more dramatic after the rains.\n• Mornings are cooler for walking and boat departures.\n• Pack sun protection year-round and a light layer for lakeside evenings.\n\nAlways check a current forecast before a Falls day trip.',
   },
 ]
 
-function matchDemoReply(userText: string): string {
-  const lower = userText.toLowerCase()
-  for (const entry of DEMO_KNOWLEDGE) {
-    if (entry.keys.some((k) => lower.includes(k))) return entry.reply
+function scoreMatch(lower: string, keys: string[]): number {
+  let score = 0
+  for (const k of keys) {
+    if (lower.includes(k)) {
+      // Longer key matches are stronger (e.g. "where to go" > "where")
+      score += Math.max(1, k.length / 4)
+    }
   }
+  return score
+}
+
+function matchDemoReply(userText: string): string {
+  const lower = userText.toLowerCase().trim()
+
+  // Score all entries; pick best
+  let best: { reply: string; score: number } | null = null
+  for (const entry of DEMO_KNOWLEDGE) {
+    const s = scoreMatch(lower, entry.keys) * (entry.priority ?? 5)
+    if (s <= 0) continue
+    if (!best || s > best.score) best = { reply: entry.reply, score: s }
+  }
+  if (best && best.score > 0) return best.reply
+
+  // Intent heuristics for short / broken English (e.g. "tell me where i go")
+  if (\b(go|see|visit|do|plan|trip|tour)\b/.test(lower) || lower.length < 40) {
+    const whereEntry = DEMO_KNOWLEDGE.find((e) => e.keys.includes('where to go'))
+    if (whereEntry) return whereEntry.reply
+  }
+
   return (
-    "**DEMO guide reply**\nI don't have a specific offline tip for that yet. Try asking about:\n" +
-    '• Lake Tana / boat trips\n• Blue Nile Falls\n• Food & restaurants\n• Hotels & budget\n• Transport or a 2-day itinerary\n\n' +
-    'Or explore **Map**, **Explore**, and **Budget** in the app. Live AI answers need the `ai-guide` Edge Function and `AI_API_KEY`.'
+    "**Here's how I can help**\n\n" +
+    'Try asking in plain words, for example:\n' +
+    '• "Where should I go in Bahir Dar?"\n' +
+    '• "Plan a 2-day itinerary"\n' +
+    '• "Lake Tana boat tips"\n' +
+    '• "Where to eat fish and injera?"\n' +
+    '• "Rough budget for 2 nights"\n' +
+    '• "How do I get to the Blue Nile Falls?"\n\n' +
+    'Or open **Map**, **Attractions**, **Restaurants**, and **Things to Do** in the app.\n\n' +
+    '_Offline guide tips work without a server key. Live AI needs the `ai-guide` Edge Function + `AI_API_KEY`._'
   )
 }
 
@@ -76,6 +161,8 @@ export async function sendGuideMessage(
 
   const lastUser = [...history].reverse().find((m) => m.role === 'user')
 
+  // Prefer rich offline answers immediately when the last message clearly matches knowledge
+  // (still try live AI first if configured — offline is fallback only)
   try {
     const { data, error } = await supabase.functions.invoke('ai-guide', {
       body: { messages, locale },
@@ -92,7 +179,11 @@ export async function sendGuideMessage(
 
     if (data?.fallback || data?.error) {
       return {
-        reply: data.reply || (lastUser ? matchDemoReply(lastUser.content) : DEMO_KNOWLEDGE[0].reply),
+        reply: data.reply && !String(data.reply).includes('not fully configured')
+          ? data.reply
+          : lastUser
+            ? matchDemoReply(lastUser.content)
+            : DEMO_KNOWLEDGE[0].reply,
         fallback: true,
         error: data.error,
       }
@@ -117,10 +208,11 @@ export async function sendGuideMessage(
 }
 
 export const SUGGESTED_PROMPTS = [
-  'Plan a 2-day Bahir Dar itinerary',
+  'Where should I go in Bahir Dar?',
+  'Plan a 2-day itinerary',
   'Lake Tana boat trip tips',
   'Blue Nile Falls day trip',
-  'Rough budget for 2 people, 2 nights',
-  'Where to eat traditional food?',
+  'Where to eat fish and injera?',
+  'Rough budget for 2 nights',
   'How to get around the city?',
 ]
