@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Wallet, Calculator, Users, ArrowRight, Moon, BedDouble } from 'lucide-react'
+import { Wallet, Calculator, Users, ArrowRight, Moon, BedDouble, Receipt } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { EXPENSE_CATEGORIES } from '@/types/trip'
@@ -65,13 +65,20 @@ export default function BudgetPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-6">
-        <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl">
-          <Calculator className="h-7 w-7 text-sky-600" /> Budget planner
-        </h1>
-        <p className="mt-1 text-slate-500">
-          Estimate costs for a Bahir Dar trip. Figures are planning tools only — verify local prices.
-        </p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl">
+            <Calculator className="h-7 w-7 text-sky-600" /> Budget planner
+          </h1>
+          <p className="mt-1 text-slate-500">
+            Estimate costs for a Bahir Dar trip. Figures are planning tools only — verify local prices.
+          </p>
+        </div>
+        <Link to="/expenses">
+          <Button variant="outline" size="sm">
+            <Receipt className="h-4 w-4" /> Track expenses
+          </Button>
+        </Link>
       </div>
 
       <Card className="mb-6">
@@ -202,13 +209,20 @@ export default function BudgetPage() {
 
       <div className="rounded-xl border border-dashed border-slate-300 p-4 text-center dark:border-slate-700">
         <p className="mb-3 text-sm text-slate-500">
-          Save this plan as a trip with a full itinerary and tracked expenses.
+          Log real spending as you go, or save a full trip itinerary.
         </p>
-        <Link to="/trips">
-          <Button>
-            Open My Trips <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Link to="/expenses">
+            <Button variant="outline">
+              <Receipt className="h-4 w-4" /> Expense tracker
+            </Button>
+          </Link>
+          <Link to="/trips">
+            <Button>
+              Open My Trips <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <p className="mt-6 text-center text-xs text-slate-400">

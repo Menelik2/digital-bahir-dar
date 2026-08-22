@@ -20,6 +20,7 @@ import DirectoryPage from '@/pages/Directory'
 import TripsPage from '@/pages/Trips'
 import TripDetailPage from '@/pages/Trips/TripDetail'
 import BudgetPage from '@/pages/Budget'
+import ExpensesPage from '@/pages/Expenses'
 import AIGuidePage from '@/pages/AIGuide'
 import GuidesPage from '@/pages/Guides'
 import ProfilePage from '@/pages/Profile'
@@ -50,6 +51,7 @@ export default function App() {
               <Route path="/trips" element={<TripsPage />} />
               <Route path="/trips/:tripId" element={<TripDetailPage />} />
               <Route path="/budget" element={<BudgetPage />} />
+              <Route path="/expenses" element={<ExpensesPage />} />
               <Route path="/ai-guide" element={<AIGuidePage />} />
               <Route path="/guides" element={<GuidesPage />} />
               <Route path="/profile" element={<ProfilePage />} />
