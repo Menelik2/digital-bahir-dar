@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { Wallet, Calculator, Users, ArrowRight, Moon, BedDouble, Receipt } from 'lucide-react'
+import { Wallet, Calculator, Users, ArrowRight, Moon, BedDouble, Receipt, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { EXPENSE_CATEGORIES } from '@/types/trip'
@@ -74,12 +74,35 @@ export default function BudgetPage() {
             Estimate costs for a Bahir Dar trip. Figures are planning tools only — verify local prices.
           </p>
         </div>
-        <Link to="/expenses">
-          <Button variant="outline" size="sm">
-            <Receipt className="h-4 w-4" /> Track expenses
-          </Button>
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/spend-guide">
+            <Button size="sm" className="bg-gradient-to-r from-sky-500 to-teal-600">
+              <Sparkles className="h-4 w-4" /> Spend Guide
+            </Button>
+          </Link>
+          <Link to="/expenses">
+            <Button variant="outline" size="sm">
+              <Receipt className="h-4 w-4" /> Track expenses
+            </Button>
+          </Link>
+        </div>
       </div>
+
+      <Card className="mb-6 border-dashed border-sky-300 bg-sky-50/50 dark:border-sky-800 dark:bg-sky-950/20">
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+          <div>
+            <p className="font-medium">Have cash and need ideas?</p>
+            <p className="text-sm text-slate-500">
+              Spend Guide picks hotel / food / sights levels from the money you have.
+            </p>
+          </div>
+          <Link to="/spend-guide">
+            <Button size="sm">
+              Open Spend Guide <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
 
       <Card className="mb-6">
         <CardContent className="grid gap-4 p-4 sm:grid-cols-2">
