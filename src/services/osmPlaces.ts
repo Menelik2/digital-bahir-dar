@@ -340,6 +340,19 @@ export const fetchOsmCafes = () => fetchOsmPlaces({ categories: ['cafe'] })
 export const fetchOsmAttractions = () => fetchOsmPlaces({ categories: ['attraction'] })
 export const fetchOsmTransport = () => fetchOsmPlaces({ categories: ['transport'] })
 
+/** Look up a previously fetched OSM place by slug (for detail pages). */
+export function findCachedOsmPlace(slug: string): Place | null {
+  for (const entry of memoryCache.values()) {
+    const hit = entry.data.find((x) => x.slug === slug || x.id === slug)
+    if (hit) return hit
+  }
+  return null
+}
+
+export function isOsmPlaceId(id: string | undefined | null): boolean {
+  return !!id && (id.startsWith('osm-') || id.includes('osm-'))
+}
+
 export function withGuideLinks(place: Place) {
   return {
     place,
