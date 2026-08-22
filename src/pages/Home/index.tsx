@@ -7,8 +7,6 @@ import {
   Car,
   Building2,
   CreditCard,
-  Coffee,
-  ShoppingBag,
   Hospital,
   Calendar,
   AlertTriangle,
