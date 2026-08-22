@@ -1,15 +1,6 @@
 /**
  * Live Bahir Dar places from OpenStreetMap via Overpass API.
- *
- * Rate limits (public overpass-api.de — guideline, not a hard meter):
- * - Stay under ~10,000 queries / day and ~1 GB download / day
- * - Concurrent “slots” per IP (often ~2); extra requests wait or get 429
- * - On HTTP 429: wait ≥30s before retrying (OSM wiki)
- * - Always send a unique User-Agent / Referer identifying the app
- *
- * Docs: https://dev.overpass-api.de/overpass-doc/en/preface/commons.html
- * Wiki: https://wiki.openstreetmap.org/wiki/Overpass_API
- *
+ * Fast path: memory + localStorage cache (1h). Network is background-only.
  * Attribution: © OpenStreetMap contributors (ODbL)
  */
 
@@ -17,28 +8,28 @@ import { BAHIR_DAR_CENTER } from '@/constants'
 import type { CategorySlug, Place } from '@/types/place'
 import { placeGuideLinks } from '@/constants/guideSites'
 
-/** Bounding box around Bahir Dar city + nearby Blue Nile Falls corridor */
 export const BAHIR_DAR_BBOX = {
-  south: 11.48,
-  west: 37.28,
-  north: 11.68,
+  south: 11.52,
+  west: 37.3,
+  north: 11.66,
   east: 37.48,
 }
 
-/** Public instances — try in order. Prefer POST. */
 const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
   'https://overpass.private.coffee/api/interpreter',
-  // legacy alias still seen in docs
-  'https://overpass.kumi.systems/api/interpreter',
 ]
 
 const APP_USER_AGENT =
-  'DigitalBahirDar/1.0 (https://github.com/Menelik2/digital-bahir-dar; tourism-poi; contact: via-github)'
+  'DigitalBahirDar/1.1 (https://github.com/Menelik2/digital-bahir-dar; tourism-poi)'
 
-const MIN_GAP_MS = 1500 // space client requests (protect shared IP / mobile NAT)
-const BACKOFF_429_MS = 30_000
-const MAX_RETRIES = 2
+const MIN_GAP_MS = 800
+const BACKOFF_429_MS = 15_000
+const MAX_RETRIES = 1
+const NETWORK_TIMEOUT_MS = 12_000
+const CACHE_TTL_MS = 60 * 60_000 // 1 hour
+const LS_PREFIX = 'dbd-osm-v1:'
+const DETAIL_KEY = 'dbd-osm-detail'
 
 export type OsmCategory =
   | 'hotel'
@@ -52,37 +43,24 @@ export type OsmCategory =
   | 'pharmacy'
   | 'all'
 
+/** Lean selectors — fewer Overpass clauses = faster */
 const CATEGORY_QL: Record<Exclude<OsmCategory, 'all'>, string[]> = {
-  hotel: [
-    'node["tourism"="hotel"]',
-    'node["tourism"="guest_house"]',
-    'node["tourism"="hostel"]',
-    'way["tourism"="hotel"]',
-  ],
-  restaurant: [
-    'node["amenity"="restaurant"]',
-    'node["amenity"="fast_food"]',
-    'way["amenity"="restaurant"]',
-  ],
-  cafe: ['node["amenity"="cafe"]', 'node["amenity"="coffee_shop"]'],
+  hotel: ['node["tourism"="hotel"]', 'node["tourism"="guest_house"]'],
+  restaurant: ['node["amenity"="restaurant"]'],
+  cafe: ['node["amenity"="cafe"]'],
   attraction: [
     'node["tourism"="attraction"]',
-    'node["tourism"="museum"]',
     'node["tourism"="viewpoint"]',
     'node["historic"]',
-    'node["tourism"="zoo"]',
   ],
   transport: [
     'node["amenity"="bus_station"]',
-    'node["highway"="bus_stop"]',
-    'node["amenity"="taxi"]',
-    'node["railway"="station"]',
     'node["aeroway"="aerodrome"]',
     'node["amenity"="ferry_terminal"]',
   ],
   bank: ['node["amenity"="bank"]'],
   atm: ['node["amenity"="atm"]'],
-  hospital: ['node["amenity"="hospital"]', 'node["amenity"="clinic"]'],
+  hospital: ['node["amenity"="hospital"]'],
   pharmacy: ['node["amenity"="pharmacy"]'],
 }
 
@@ -97,18 +75,14 @@ type OverpassElement = {
 
 type OverpassResponse = { elements: OverpassElement[] }
 
-// --- client-side throttle + short memory cache ---
 let lastRequestAt = 0
 let chain: Promise<unknown> = Promise.resolve()
 const memoryCache = new Map<string, { at: number; data: Place[] }>()
-const CACHE_TTL_MS = 15 * 60_000 // 15 min — cuts repeat hits while browsing pages
-const DETAIL_KEY = 'dbd-osm-detail'
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms))
 }
 
-/** Serialize Overpass calls and enforce a minimum gap between them */
 function enqueue<T>(fn: () => Promise<T>): Promise<T> {
   const run = async () => {
     const wait = Math.max(0, MIN_GAP_MS - (Date.now() - lastRequestAt))
@@ -130,9 +104,10 @@ function bboxFilter() {
 }
 
 function buildQuery(categories: OsmCategory[]): string {
-  const keys =
+  // For "all", only high-value tourism tags — not every bus_stop
+  const keys: Exclude<OsmCategory, 'all'>[] =
     categories.includes('all') || categories.length === 0
-      ? (Object.keys(CATEGORY_QL) as Exclude<OsmCategory, 'all'>[])
+      ? ['hotel', 'restaurant', 'cafe', 'attraction', 'transport', 'bank', 'hospital']
       : (categories.filter((c) => c !== 'all') as Exclude<OsmCategory, 'all'>[])
 
   const lines: string[] = []
@@ -144,7 +119,7 @@ function buildQuery(categories: OsmCategory[]): string {
   }
 
   return `
-[out:json][timeout:25];
+[out:json][timeout:10];
 (
 ${lines.join('\n')}
 );
@@ -187,8 +162,10 @@ function elementToPlace(el: OverpassElement): Place | null {
   const lat = el.lat ?? el.center?.lat
   const lon = el.lon ?? el.center?.lon
   if (lat == null || lon == null) return null
+  // Skip unnamed bus stops etc.
+  if (!tags.name && !tags['name:en'] && tags.highway === 'bus_stop') return null
 
-  const name = tags.name || tags['name:en'] || tags['name:am'] || `OSM place ${el.id}`
+  const name = tags.name || tags['name:en'] || tags['name:am'] || `Place ${el.id}`
   const categorySlug = detectCategory(tags)
   const phone = tags.phone || tags['contact:phone'] || null
   const website = tags.website || tags['contact:website'] || null
@@ -230,6 +207,26 @@ function elementToPlace(el: OverpassElement): Place | null {
   }
 }
 
+function readLocalCache(key: string): Place[] | null {
+  try {
+    const raw = localStorage.getItem(LS_PREFIX + key)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { at: number; data: Place[] }
+    if (Date.now() - parsed.at > CACHE_TTL_MS) return null
+    return parsed.data
+  } catch {
+    return null
+  }
+}
+
+function writeLocalCache(key: string, data: Place[]) {
+  try {
+    localStorage.setItem(LS_PREFIX + key, JSON.stringify({ at: Date.now(), data }))
+  } catch {
+    /* quota / private */
+  }
+}
+
 async function postToEndpoint(endpoint: string, query: string): Promise<OverpassResponse> {
   const body = `data=${encodeURIComponent(query)}`
   const res = await fetch(endpoint, {
@@ -237,57 +234,39 @@ async function postToEndpoint(endpoint: string, query: string): Promise<Overpass
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       Accept: 'application/json',
-      // Identify the app — required for fair use; avoid stock browser-only UA patterns for bots
       'User-Agent': APP_USER_AGENT,
     },
     body,
-    signal: AbortSignal.timeout(28_000),
+    signal: AbortSignal.timeout(NETWORK_TIMEOUT_MS),
   })
 
   if (res.status === 429) {
-    const err = new Error('Overpass rate limited (429). Backing off 30s.') as Error & {
-      status?: number
-      retryAfterMs?: number
-    }
+    const err = new Error('Overpass 429') as Error & { status?: number }
     err.status = 429
-    err.retryAfterMs = BACKOFF_429_MS
     throw err
   }
-
-  if (res.status === 504 || res.status === 502) {
-    throw new Error(`Overpass gateway ${res.status}`)
-  }
-
-  if (!res.ok) {
-    throw new Error(`Overpass HTTP ${res.status}`)
-  }
-
+  if (!res.ok) throw new Error(`Overpass HTTP ${res.status}`)
   return (await res.json()) as OverpassResponse
 }
 
 async function postOverpass(query: string): Promise<OverpassResponse> {
   return enqueue(async () => {
     let lastError: unknown
-
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       for (const endpoint of OVERPASS_ENDPOINTS) {
         try {
           return await postToEndpoint(endpoint, query)
         } catch (e) {
           lastError = e
-          const status = (e as { status?: number }).status
-          if (status === 429) {
-            // Official guidance: pause ~30s after 429; do not hammer
+          if ((e as { status?: number }).status === 429) {
             await sleep(BACKOFF_429_MS)
-            break // retry same / next endpoints after backoff
+            break
           }
-          // try next mirror quickly
         }
       }
-      if (attempt < MAX_RETRIES) await sleep(1000 * (attempt + 1))
+      if (attempt < MAX_RETRIES) await sleep(600)
     }
-
-    throw lastError instanceof Error ? lastError : new Error('Overpass request failed')
+    throw lastError instanceof Error ? lastError : new Error('Overpass failed')
   })
 }
 
@@ -295,44 +274,47 @@ function cacheKey(categories: OsmCategory[]) {
   return categories.slice().sort().join(',')
 }
 
-/**
- * Fetch live POIs for Bahir Dar.
- * Results are cached in memory for 15 minutes to respect Overpass quotas.
- */
 export async function fetchOsmPlaces(opts?: {
   categories?: OsmCategory[]
   limit?: number
-  /** Bypass memory cache (still rate-limited) */
   force?: boolean
 }): Promise<Place[]> {
   const categories = opts?.categories?.length ? opts.categories : (['all'] as OsmCategory[])
   const key = cacheKey(categories)
 
   if (!opts?.force) {
-    const hit = memoryCache.get(key)
-    if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
-      return opts?.limit ? hit.data.slice(0, opts.limit) : hit.data
+    const mem = memoryCache.get(key)
+    if (mem && Date.now() - mem.at < CACHE_TTL_MS) {
+      return opts?.limit ? mem.data.slice(0, opts.limit) : mem.data
+    }
+    const disk = readLocalCache(key)
+    if (disk?.length) {
+      memoryCache.set(key, { at: Date.now(), data: disk })
+      return opts?.limit ? disk.slice(0, opts.limit) : disk
     }
   }
 
-  const query = buildQuery(categories)
-  const data = await postOverpass(query)
-
-  const seen = new Set<string>()
-  const places: Place[] = []
-
-  for (const el of data.elements || []) {
-    const p = elementToPlace(el)
-    if (!p) continue
-    if (seen.has(p.id)) continue
-    seen.add(p.id)
-    places.push(p)
+  try {
+    const query = buildQuery(categories)
+    const data = await postOverpass(query)
+    const seen = new Set<string>()
+    const places: Place[] = []
+    for (const el of data.elements || []) {
+      const p = elementToPlace(el)
+      if (!p || seen.has(p.id)) continue
+      seen.add(p.id)
+      places.push(p)
+    }
+    places.sort((a, b) => a.name.localeCompare(b.name))
+    memoryCache.set(key, { at: Date.now(), data: places })
+    writeLocalCache(key, places)
+    return opts?.limit ? places.slice(0, opts.limit) : places
+  } catch (e) {
+    console.warn('OSM fetch failed (using cache/empty):', e)
+    const disk = readLocalCache(key)
+    if (disk?.length) return disk
+    return []
   }
-
-  places.sort((a, b) => a.name.localeCompare(b.name))
-  memoryCache.set(key, { at: Date.now(), data: places })
-
-  return opts?.limit ? places.slice(0, opts.limit) : places
 }
 
 export const fetchOsmHotels = () => fetchOsmPlaces({ categories: ['hotel'] })
@@ -341,16 +323,14 @@ export const fetchOsmCafes = () => fetchOsmPlaces({ categories: ['cafe'] })
 export const fetchOsmAttractions = () => fetchOsmPlaces({ categories: ['attraction'] })
 export const fetchOsmTransport = () => fetchOsmPlaces({ categories: ['transport'] })
 
-/** Persist one OSM place so /places/:slug survives refresh. */
 export function cacheOsmPlaceForDetail(place: Place) {
   try {
     sessionStorage.setItem(DETAIL_KEY, JSON.stringify(place))
   } catch {
-    /* private mode */
+    /* */
   }
 }
 
-/** Look up a previously fetched OSM place by slug (for detail pages). */
 export function findCachedOsmPlace(slug: string): Place | null {
   for (const entry of memoryCache.values()) {
     const hit = entry.data.find((x) => x.slug === slug || x.id === slug)
@@ -363,7 +343,19 @@ export function findCachedOsmPlace(slug: string): Place | null {
       if (place.slug === slug || place.id === slug) return place
     }
   } catch {
-    /* ignore */
+    /* */
+  }
+  // scan localStorage buckets
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (!k?.startsWith(LS_PREFIX)) continue
+      const parsed = JSON.parse(localStorage.getItem(k) || '{}') as { data?: Place[] }
+      const hit = parsed.data?.find((x) => x.slug === slug || x.id === slug)
+      if (hit) return hit
+    }
+  } catch {
+    /* */
   }
   return null
 }
@@ -378,12 +370,4 @@ export function withGuideLinks(place: Place) {
     guides: placeGuideLinks(place),
     centerHint: BAHIR_DAR_CENTER,
   }
-}
-
-/** Optional: inspect public slot status (debugging only) */
-export async function fetchOverpassStatus() {
-  const res = await fetch('https://overpass-api.de/api/status', {
-    headers: { 'User-Agent': APP_USER_AGENT },
-  })
-  return res.text()
 }
