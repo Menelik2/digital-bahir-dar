@@ -2,95 +2,119 @@
 
 **Explore Bahir Dar. Know Where to Go. Know What It Costs.**
 
-Smart City • Tourism • Navigation • AI Travel • Local Services Platform for Bahir Dar, Ethiopia.
+Production-oriented smart city platform for **Bahir Dar, Ethiopia**: tourism, navigation, AI guide, trips, budgets, business listings, and admin moderation.
+
+**Repo:** https://github.com/Menelik2/digital-bahir-dar  
+**Version:** 1.0.0 (Phases 1–10)
+
+---
 
 ## Stack
 
-- **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS v4
-- **Maps**: Google Maps (`@vis.gl/react-google-maps`)
-- **State**: TanStack Query + Zustand
-- **Backend**: Supabase (PostgreSQL + Auth + RLS + Storage + Edge Functions)
-- **Deploy**: Vercel
+| Layer | Tech |
+|-------|------|
+| Frontend | React 19, TypeScript, Vite 6, Tailwind CSS v4 |
+| UI | shadcn-style components, Lucide icons |
+| Maps | Google Maps (`@vis.gl/react-google-maps`) |
+| Data | TanStack Query, Zustand |
+| Backend | Supabase (Postgres, Auth, RLS, Edge Functions) |
+| PWA | Custom service worker + web manifest |
+| Deploy | Vercel (`vercel.json` SPA rewrites) |
 
-## Current status
+---
 
-### Phase 1 — Foundation ✅
-Scaffold, design system, routing, auth, layout, Home, Supabase schema + RLS, CI
+## Phases (complete)
 
-### Phase 2 — Digital Map ✅
-- Interactive Google Map (Bahir Dar center)
-- GPS / “You are here” marker
-- Place markers (from Supabase or DEMO fallback)
-- Search
-- Category & smart filters (Near Me, Verified, Hotels, Food, …)
-- Place bottom sheet (distance, walk/drive ETA)
-- Directions panel → open in Google Maps
-- Location button
+| Phase | Scope |
+|-------|--------|
+| 1 | Foundation, auth, schema, CI |
+| 2 | Digital map, GPS, filters, directions |
+| 3 | Hotels, restaurants, attractions, banks, place details |
+| 4 | Favorites, reviews, reports, profile |
+| 5 | Trips, itinerary, expenses, budget planner |
+| 6 | AI Guide (Edge Function + DEMO knowledge) |
+| 7 | Business portal (register, claim, listings) |
+| 8 | Admin dashboard (moderation + metrics) |
+| 9 | PWA, offline shell, install prompt, a11y |
+| 10 | Launch docs, seed, CI, production checklist |
+
+See **[LAUNCH.md](./LAUNCH.md)** for the production go-live checklist.
+
+---
 
 ## Quick start
 
 ```bash
 git clone https://github.com/Menelik2/digital-bahir-dar.git
 cd digital-bahir-dar
-git checkout main
 cp .env.example .env.local
-```
+# Edit VITE_SUPABASE_* and VITE_GOOGLE_MAPS_API_KEY
 
-Fill in `.env.local`:
-
-```
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_ANON_KEY=...
-VITE_GOOGLE_MAPS_API_KEY=...   # Maps JavaScript API enabled
-```
-
-```bash
+python3 scripts/generate-pwa-icons.py
 npm install
 npm run dev
 ```
 
-### Google Maps setup
-1. Create a project in [Google Cloud Console](https://console.cloud.google.com/)
-2. Enable **Maps JavaScript API**
-3. Create an API key, restrict by HTTP referrer in production
-4. Put the key in `VITE_GOOGLE_MAPS_API_KEY`
+Open http://localhost:5173
 
-### Supabase setup
-1. Create a project at https://supabase.com
-2. Run `supabase/migrations/20260821000000_init.sql`
-3. Optionally run `supabase/seed.sql` (categories)
-4. Copy URL + anon key into `.env.local`
+### Supabase
 
-> Until real places exist in the database, the map shows **DEMO** markers (clearly labeled) so the UI is usable during development. Never treat DEMO data as verified production information.
+1. Create a project  
+2. Apply SQL files under `supabase/migrations/` in filename order  
+3. Optional: run `supabase/seed.sql` for DEMO places  
+4. Copy project URL + anon key into `.env.local`
+
+### Production build
+
+```bash
+npm run typecheck
+npm run build
+npm run preview
+```
+
+Service worker registers in production builds. In dev, append `?sw=1` to test.
+
+---
+
+## Main routes
+
+| Path | Description |
+|------|-------------|
+| `/` | Home |
+| `/map` | Interactive map |
+| `/explore` | All places |
+| `/hotels` `/restaurants` `/attractions` `/banks` `/transport` | Category lists |
+| `/places/:slug` | Place details, reviews, save |
+| `/trips` `/trips/:id` | Trip planner |
+| `/budget` | Budget calculator |
+| `/ai-guide` | AI travel guide |
+| `/business` | Business portal |
+| `/admin` | Staff moderation |
+| `/profile` `/auth` | Account |
+
+---
+
+## Security notes
+
+- **Never** put `service_role` or `AI_API_KEY` in `VITE_*` variables  
+- RLS enforces user/staff boundaries; admin UI is gated by `profiles.role`  
+- DEMO data is labeled; do not treat it as verified commercial information  
+
+---
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Dev server |
-| `npm run build` | Production build |
-| `npm run typecheck` | TypeScript |
-| `npm run lint` | Lint |
+| Command | Purpose |
+|---------|---------|
+| `npm run dev` | Local Vite server |
+| `npm run build` | Production bundle |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run lint` | oxlint |
+| `npm run smoke` | Post-setup file checks |
+| `npm run icons` | Generate PWA PNG icons |
 
-## Roadmap
+---
 
-1. Phase 1 — Foundation ✅  
-2. Phase 2 — Digital Map ✅  
-3. Phase 3 — City Services (hotels, restaurants, attractions, banks…)  
-4. Phase 4 — Social (favorites, reviews)  
-5. Phase 5 — Trip System + Budget  
-6. Phase 6 — AI Guide  
-7. Phase 7 — Business Portal  
-8. Phase 8 — Admin  
-9. Phase 9 — PWA & Offline  
-10. Phase 10 — Production hardening  
+## License / contribution
 
-## Security
-
-- Never commit `.env` or service-role keys  
-- Frontend is untrusted; RLS enforces access  
-- DEMO data is client-side only and labeled  
-
-## License
-
-Private / All rights reserved for now.
+Private project for Digital Bahir Dar. Coordinate schema and content changes with maintainers before production seed updates.
