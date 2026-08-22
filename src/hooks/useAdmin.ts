@@ -4,6 +4,9 @@ import {
   fetchAdminMetrics,
   fetchPlacesForModeration,
   setPlaceStatus,
+  setPlaceFeatured,
+  setPlaceStaffNotes,
+  bulkSetPlaceStatus,
   fetchReviewsForModeration,
   setReviewStatus,
   fetchPendingClaims,
@@ -12,6 +15,8 @@ import {
   setBusinessStatus,
   fetchOpenReports,
   resolveReport,
+  fetchAdminUsers,
+  setUserRole,
 } from '@/services/admin'
 import { useAuth } from './useAuth'
 import { useAdminRealtime } from './useRealtimeQueries'
@@ -33,7 +38,6 @@ export function useIsStaff() {
 
 export function useAdminMetrics(enabled: boolean) {
   useAdminRealtime(enabled)
-
   return useQuery({
     queryKey: ['admin-metrics'],
     queryFn: () => fetchAdminMetrics(),
@@ -87,6 +91,15 @@ export function useOpenReports(enabled: boolean) {
   })
 }
 
+export function useAdminUsers(enabled: boolean) {
+  return useQuery({
+    queryKey: ['admin-users'],
+    queryFn: () => fetchAdminUsers(),
+    enabled,
+    staleTime: 30_000,
+  })
+}
+
 export function useAdminActions() {
   const { user } = useAuth()
   const qc = useQueryClient()
@@ -97,12 +110,38 @@ export function useAdminActions() {
     qc.invalidateQueries({ queryKey: ['admin-claims'] })
     qc.invalidateQueries({ queryKey: ['admin-businesses'] })
     qc.invalidateQueries({ queryKey: ['admin-reports'] })
+    qc.invalidateQueries({ queryKey: ['admin-users'] })
   }
 
   const placeStatus = useMutation({
     mutationFn: async (args: { placeId: string; status: string; verified?: boolean }) => {
       const res = await setPlaceStatus(args.placeId, args.status, args.verified)
       if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
+  const placeFeatured = useMutation({
+    mutationFn: async (args: { placeId: string; featured: boolean }) => {
+      const res = await setPlaceFeatured(args.placeId, args.featured)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
+  const placeNotes = useMutation({
+    mutationFn: async (args: { placeId: string; notes: string }) => {
+      const res = await setPlaceStaffNotes(args.placeId, args.notes)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
+  const bulkPlaces = useMutation({
+    mutationFn: async (args: { placeIds: string[]; status: string; verified?: boolean }) => {
+      const res = await bulkSetPlaceStatus(args.placeIds, args.status, args.verified)
+      if (res.error) throw new Error(res.error)
+      return res.count
     },
     onSuccess: invalidate,
   })
@@ -143,5 +182,24 @@ export function useAdminActions() {
     onSuccess: invalidate,
   })
 
-  return { placeStatus, reviewStatus, claim, business, report }
+  const userRole = useMutation({
+    mutationFn: async (args: { userId: string; role: string }) => {
+      const res = await setUserRole(args.userId, args.role)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
+  return {
+    placeStatus,
+    placeFeatured,
+    placeNotes,
+    bulkPlaces,
+    reviewStatus,
+    claim,
+    business,
+    report,
+    userRole,
+    invalidate,
+  }
 }
