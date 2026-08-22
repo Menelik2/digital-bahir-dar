@@ -1,17 +1,24 @@
 /**
  * Spend Guide — given cash on hand, suggest what a visitor can afford in Bahir Dar.
- * Estimates are planning defaults in ETB, not live prices.
+ * Rates from src/data/bahirDarPrices.ts (research snapshot).
  */
 
-export type SpendTier = 'budget' | 'mid' | 'comfort'
+import {
+  HOTEL_NIGHT_ETB,
+  FOOD_PERSON_DAY_ETB,
+  ATTRACTION_DAY_ETB,
+  TRANSPORT_DAY_ETB,
+  ATTRACTION_ETB,
+  PRICE_META,
+  type PriceTier,
+} from '@/data/bahirDarPrices'
+
+export type SpendTier = PriceTier
 
 export type SpendGuideInput = {
-  /** Total money available for the trip (ETB) */
   cash: number
-  /** Number of full days in the city */
   days: number
   travelers: number
-  /** Prefer more lodging comfort vs more activities */
   priority?: 'sleep' | 'food' | 'see' | 'balanced'
 }
 
@@ -49,6 +56,7 @@ export type SpendGuideResult = {
   sampleDay: DayPlanItem[]
   warnings: string[]
   summary: string
+  priceMeta: typeof PRICE_META
 }
 
 function n(v: unknown): number {
@@ -56,17 +64,10 @@ function n(v: unknown): number {
   return Number.isFinite(x) && x >= 0 ? x : 0
 }
 
-/** Rough Bahir Dar price bands (ETB) — illustrative */
-const RATES = {
-  hotel: { budget: 800, mid: 2500, comfort: 5000 }, // per room / night
-  foodPerPersonDay: { budget: 350, mid: 800, comfort: 1500 },
-  attractionDay: { budget: 200, mid: 800, comfort: 2000 }, // per person activities
-  localTransportDay: { budget: 100, mid: 300, comfort: 800 }, // bajaj/taxi shared-ish
-}
-
 function pickTier(cashPerPersonPerDay: number): SpendTier {
-  if (cashPerPersonPerDay < 1200) return 'budget'
-  if (cashPerPersonPerDay < 3500) return 'mid'
+  // Aligned with mid Ethiopia daily ~3,500–4,000 ETB/person from travel cost surveys
+  if (cashPerPersonPerDay < 2500) return 'budget'
+  if (cashPerPersonPerDay < 7000) return 'mid'
   return 'comfort'
 }
 
@@ -75,14 +76,13 @@ export function buildSpendGuide(input: SpendGuideInput): SpendGuideResult {
   const days = Math.max(1, Math.floor(n(input.days)) || 1)
   const travelers = Math.max(1, Math.floor(n(input.travelers)) || 1)
   const priority = input.priority ?? 'balanced'
-  const nights = Math.max(1, days) // assume overnight stay for multi-day; 1 day still counts 1 night soft
+  const nights = Math.max(1, days)
 
   const perPersonTotal = cash / travelers
   const dailyBudget = cash / days
   const cashPerPersonPerDay = cash / travelers / days
   const tier = pickTier(cashPerPersonPerDay)
 
-  // Allocation weights by priority
   let w = { lodging: 0.35, food: 0.3, attractions: 0.2, transport: 0.1, buffer: 0.05 }
   if (priority === 'sleep') w = { lodging: 0.45, food: 0.25, attractions: 0.15, transport: 0.1, buffer: 0.05 }
   if (priority === 'food') w = { lodging: 0.28, food: 0.4, attractions: 0.17, transport: 0.1, buffer: 0.05 }
@@ -102,21 +102,21 @@ export function buildSpendGuide(input: SpendGuideInput): SpendGuideResult {
   const attrPerson = allocation.attractions / travelers
 
   const hotelTier: SpendTier =
-    hotelNightBudget >= RATES.hotel.comfort * 0.8
+    hotelNightBudget >= HOTEL_NIGHT_ETB.comfort.typical * 0.7
       ? 'comfort'
-      : hotelNightBudget >= RATES.hotel.mid * 0.7
+      : hotelNightBudget >= HOTEL_NIGHT_ETB.mid.typical * 0.6
         ? 'mid'
         : 'budget'
   const foodTier: SpendTier =
-    foodPersonDay >= RATES.foodPerPersonDay.comfort * 0.7
+    foodPersonDay >= FOOD_PERSON_DAY_ETB.comfort.typical * 0.6
       ? 'comfort'
-      : foodPersonDay >= RATES.foodPerPersonDay.mid * 0.7
+      : foodPersonDay >= FOOD_PERSON_DAY_ETB.mid.typical * 0.6
         ? 'mid'
         : 'budget'
   const attrTier: SpendTier =
-    attrPerson / days >= RATES.attractionDay.comfort * 0.5
+    attrPerson / days >= ATTRACTION_DAY_ETB.comfort.typical * 0.4
       ? 'comfort'
-      : attrPerson / days >= RATES.attractionDay.mid * 0.5
+      : attrPerson / days >= ATTRACTION_DAY_ETB.mid.typical * 0.4
         ? 'mid'
         : 'budget'
 
@@ -129,14 +129,14 @@ export function buildSpendGuide(input: SpendGuideInput): SpendGuideResult {
           ? 'Guesthouse / simple hotel'
           : hotelTier === 'mid'
             ? 'Mid-range lakeside or city hotel'
-            : 'Comfort / lakeside hotel',
-      why: `~${Math.round(hotelNightBudget).toLocaleString()} ETB per room/night from your plan (${rooms} room${rooms > 1 ? 's' : ''}).`,
-      estCostPerUnit: RATES.hotel[hotelTier],
+            : 'Comfort / lakeside resort-style hotel',
+      why: `Your plan allows ~${Math.round(hotelNightBudget).toLocaleString()} ETB per room/night (${rooms} room${rooms > 1 ? 's' : ''}). Typical ${hotelTier}: ${HOTEL_NIGHT_ETB[hotelTier].min.toLocaleString()}–${HOTEL_NIGHT_ETB[hotelTier].max.toLocaleString()} ETB.`,
+      estCostPerUnit: HOTEL_NIGHT_ETB[hotelTier].typical,
       unit: 'room / night',
       tips: [
-        'Ask for room rate including breakfast.',
+        HOTEL_NIGHT_ETB[hotelTier].note,
+        'Ask if breakfast is included; many hotels quote in USD for foreigners.',
         'Confirm Wi‑Fi and hot water before paying.',
-        hotelTier === 'budget' ? 'Shared facilities are common — check reviews locally.' : 'Book lakeside early in peak season.',
       ],
       explorePath: '/hotels',
     },
@@ -147,14 +147,14 @@ export function buildSpendGuide(input: SpendGuideInput): SpendGuideResult {
         foodTier === 'budget'
           ? 'Local kitfo / injera houses & cafés'
           : foodTier === 'mid'
-            ? 'Mix of local restaurants and hotel meals'
-            : 'Hotel restaurants + lakeside dining',
-      why: `~${Math.round(foodPersonDay).toLocaleString()} ETB per person per day for meals.`,
-      estCostPerUnit: RATES.foodPerPersonDay[foodTier],
+            ? 'City restaurants + lake fish plates'
+            : 'Hotel & lakeside fine dining',
+      why: `~${Math.round(foodPersonDay).toLocaleString()} ETB per person/day. Typical band: ${FOOD_PERSON_DAY_ETB[foodTier].min.toLocaleString()}–${FOOD_PERSON_DAY_ETB[foodTier].max.toLocaleString()} ETB.`,
+      estCostPerUnit: FOOD_PERSON_DAY_ETB[foodTier].typical,
       unit: 'person / day',
       tips: [
-        'Try shiro, tibs, lake fish where available.',
-        'Street coffee is cheap; hotel breakfast often fills the morning.',
+        FOOD_PERSON_DAY_ETB[foodTier].note,
+        'Try Lake Tana tilapia / Nile perch where available.',
         'Carry small bills for local places.',
       ],
       explorePath: '/restaurants',
@@ -164,38 +164,42 @@ export function buildSpendGuide(input: SpendGuideInput): SpendGuideResult {
       tier: attrTier,
       title:
         attrTier === 'budget'
-          ? 'City viewpoints, pier walks, free lakeshore'
+          ? 'Lakeshore walks, market, low-fee viewpoints'
           : attrTier === 'mid'
-            ? 'Blue Nile Falls day trip + one boat option'
-            : 'Falls, monasteries boat tour, guided day',
-      why: `~${Math.round(attrPerson).toLocaleString()} ETB per person total for activities.`,
-      estCostPerUnit: RATES.attractionDay[attrTier],
+            ? 'Blue Nile Falls day trip + optional short boat'
+            : 'Private boat monasteries + Falls guided day',
+      why: `~${Math.round(attrPerson).toLocaleString()} ETB per person total for activities. Falls entry often ${ATTRACTION_ETB.blueNileFallsEntry.typical} ETB; boat tours vary widely.`,
+      estCostPerUnit: ATTRACTION_DAY_ETB[attrTier].typical,
       unit: 'person / activity day',
       tips: [
-        'Blue Nile Falls access fees change — confirm on site.',
-        'Boat to monasteries: agree price before boarding.',
-        'Combine nearby stops to save transport.',
+        `Blue Nile Falls entry: ~${ATTRACTION_ETB.blueNileFallsEntry.min}–${ATTRACTION_ETB.blueNileFallsEntry.max} ETB (confirm on site).`,
+        `Monastery entry: ~${ATTRACTION_ETB.monasteryEntry.min}–${ATTRACTION_ETB.monasteryEntry.max} ETB each.`,
+        `Shared Lake Tana boat half-day: often ${ATTRACTION_ETB.lakeTanaBoatSharedHalfDay.min.toLocaleString()}–${ATTRACTION_ETB.lakeTanaBoatSharedHalfDay.max.toLocaleString()} ETB — agree price before boarding.`,
       ],
       explorePath: '/attractions',
     },
     {
       category: 'transport',
       tier,
-      title: tier === 'budget' ? 'Bajaj & walking' : tier === 'mid' ? 'Bajaj + occasional taxi' : 'Taxi / hired car days',
-      why: `~${Math.round(allocation.transport / days).toLocaleString()} ETB / day shared transport budget.`,
-      estCostPerUnit: RATES.localTransportDay[tier],
+      title: tier === 'budget' ? 'Bajaj & walking' : tier === 'mid' ? 'Bajaj + occasional taxi' : 'Taxi / hired car',
+      why: `~${Math.round(allocation.transport / days).toLocaleString()} ETB/day transport share. Typical ${tier}: ${TRANSPORT_DAY_ETB[tier].min}–${TRANSPORT_DAY_ETB[tier].max} ETB.`,
+      estCostPerUnit: TRANSPORT_DAY_ETB[tier].typical,
       unit: 'day (group)',
-      tips: ['Agree bajaj fare before the ride.', 'Walk the lakeshore when safe and daylight.'],
+      tips: [
+        TRANSPORT_DAY_ETB[tier].note,
+        'Agree bajaj fare before the ride.',
+        `Bus Bahir Dar → Tis Abay historically low; private car for Falls ~${ATTRACTION_ETB.privateCarFallsRoundTrip.min}–${ATTRACTION_ETB.privateCarFallsRoundTrip.max} ETB round trip.`,
+      ],
       explorePath: '/transport',
     },
     {
       category: 'cafe',
       tier: foodTier,
-      title: 'Coffee culture stops',
-      why: 'Bahir Dar coffee is part of the experience; small daily spend.',
-      estCostPerUnit: foodTier === 'budget' ? 50 : foodTier === 'mid' ? 120 : 250,
+      title: 'Coffee ceremony & café stops',
+      why: 'Coffee is central to Bahir Dar culture; small daily spend.',
+      estCostPerUnit: foodTier === 'budget' ? 50 : foodTier === 'mid' ? 120 : 300,
       unit: 'coffee stop',
-      tips: ['Traditional coffee ceremony if offered.', 'Great for rest between sights.'],
+      tips: ['Traditional coffee ceremony if offered.', 'Great between sights on the lakeshore.'],
       explorePath: '/explore',
     },
   ]
@@ -203,35 +207,117 @@ export function buildSpendGuide(input: SpendGuideInput): SpendGuideResult {
   const sampleDay: DayPlanItem[] =
     tier === 'budget'
       ? [
-          { time: 'Morning', title: 'Lakeshore walk + coffee', category: 'cafe', estCost: 80 * travelers, note: 'Low cost, great orientation' },
-          { time: 'Midday', title: 'Local lunch (injera)', category: 'restaurant', estCost: Math.round(foodPersonDay * 0.4 * travelers), note: 'Fill up at local prices' },
-          { time: 'Afternoon', title: 'City / pier views', category: 'attraction', estCost: 100 * travelers, note: 'Mostly free walking' },
-          { time: 'Evening', title: 'Simple dinner near hotel', category: 'restaurant', estCost: Math.round(foodPersonDay * 0.45 * travelers), note: 'Stay close to save transport' },
+          {
+            time: 'Morning',
+            title: 'Lakeshore walk + coffee',
+            category: 'cafe',
+            estCost: 80 * travelers,
+            note: 'Low cost orientation',
+          },
+          {
+            time: 'Midday',
+            title: 'Local lunch (injera / tibs)',
+            category: 'restaurant',
+            estCost: Math.round(FOOD_PERSON_DAY_ETB.budget.typical * 0.4 * travelers),
+            note: '~50–150 ETB per local plate',
+          },
+          {
+            time: 'Afternoon',
+            title: 'Pier / market / free views',
+            category: 'attraction',
+            estCost: 100 * travelers,
+            note: 'Mostly free walking',
+          },
+          {
+            time: 'Evening',
+            title: 'Simple dinner near hotel',
+            category: 'restaurant',
+            estCost: Math.round(FOOD_PERSON_DAY_ETB.budget.typical * 0.45 * travelers),
+            note: 'Save on transport',
+          },
         ]
       : tier === 'mid'
         ? [
-            { time: 'Morning', title: 'Hotel breakfast + lake view', category: 'hotel', estCost: 0, note: 'Often included — confirm' },
-            { time: 'Day', title: 'Blue Nile Falls outing', category: 'attraction', estCost: Math.round((attrPerson / Math.max(days, 1)) * 0.7), note: 'Transport + entry estimates' },
-            { time: 'Lunch', title: 'Restaurant near falls or return city', category: 'restaurant', estCost: Math.round(foodPersonDay * 0.45 * travelers), note: '' },
-            { time: 'Evening', title: 'Lakeside dinner', category: 'restaurant', estCost: Math.round(foodPersonDay * 0.5 * travelers), note: 'Mid-range' },
+            {
+              time: 'Morning',
+              title: 'Hotel breakfast + lake area',
+              category: 'hotel',
+              estCost: 0,
+              note: 'Often included — confirm',
+            },
+            {
+              time: 'Day',
+              title: 'Blue Nile Falls outing',
+              category: 'attraction',
+              estCost: Math.round(
+                ATTRACTION_ETB.blueNileFallsEntry.typical * travelers +
+                  ATTRACTION_ETB.privateCarFallsRoundTrip.typical * 0.35 +
+                  ATTRACTION_ETB.blueNileFallsGuide.typical * 0.5
+              ),
+              note: 'Entry + share of car/guide estimates',
+            },
+            {
+              time: 'Lunch',
+              title: 'Restaurant meal',
+              category: 'restaurant',
+              estCost: Math.round(FOOD_PERSON_DAY_ETB.mid.typical * 0.4 * travelers),
+              note: 'Fish or tibs plate',
+            },
+            {
+              time: 'Evening',
+              title: 'Lakeside dinner',
+              category: 'restaurant',
+              estCost: Math.round(FOOD_PERSON_DAY_ETB.mid.typical * 0.5 * travelers),
+              note: '',
+            },
           ]
         : [
-            { time: 'Morning', title: 'Comfort hotel + breakfast', category: 'hotel', estCost: 0, note: 'Included if negotiated' },
-            { time: 'Day', title: 'Private boat / monastery visit', category: 'attraction', estCost: Math.round(attrPerson / Math.max(days, 1)), note: 'Agree full price upfront' },
-            { time: 'Lunch', title: 'Hotel or lakeside restaurant', category: 'restaurant', estCost: Math.round(foodPersonDay * 0.5 * travelers), note: '' },
-            { time: 'Evening', title: 'Fine local dining', category: 'restaurant', estCost: Math.round(foodPersonDay * 0.5 * travelers), note: 'Reserve if busy' },
+            {
+              time: 'Morning',
+              title: 'Comfort hotel + breakfast',
+              category: 'hotel',
+              estCost: 0,
+              note: 'Included if negotiated',
+            },
+            {
+              time: 'Day',
+              title: 'Lake Tana boat + monastery',
+              category: 'attraction',
+              estCost: Math.round(
+                (ATTRACTION_ETB.lakeTanaBoatPrivateHalfDay.typical + ATTRACTION_ETB.monasteryEntry.typical * 2) /
+                  Math.max(travelers, 1)
+              ),
+              note: 'Private boat share + entries',
+            },
+            {
+              time: 'Lunch',
+              title: 'Lakeside / hotel restaurant',
+              category: 'restaurant',
+              estCost: Math.round(FOOD_PERSON_DAY_ETB.comfort.typical * 0.45 * travelers),
+              note: '',
+            },
+            {
+              time: 'Evening',
+              title: 'Fine local dining',
+              category: 'restaurant',
+              estCost: Math.round(FOOD_PERSON_DAY_ETB.comfort.typical * 0.5 * travelers),
+              note: '',
+            },
           ]
 
   const warnings: string[] = []
-  if (cash < 500) warnings.push('Very low budget — prioritize food and free walks; lodging may not be realistic.')
-  if (cashPerPersonPerDay < 800) warnings.push('Under ~800 ETB per person per day: focus on guesthouses and local meals.')
-  if (days >= 5 && tier === 'budget') warnings.push('Long trip on a tight budget: cook or eat local, share rooms, limit paid tours.')
-  if (travelers > 4) warnings.push('Larger groups: negotiate room blocks and shared bajaj/taxi rates.')
+  if (cash < 2000) warnings.push('Very low budget — prioritize local meals and free walks; paid lodging may be difficult.')
+  if (cashPerPersonPerDay < 2000)
+    warnings.push('Under ~2,000 ETB per person per day: focus on guesthouses, local food, and free lakeshore.')
+  if (days >= 5 && tier === 'budget')
+    warnings.push('Long trip on a tight budget: share rooms, eat local, limit private boats.')
+  if (travelers > 4) warnings.push('Larger groups: negotiate room blocks and shared boat/car rates.')
+  warnings.push(PRICE_META.disclaimer)
 
   const summary =
     cash <= 0
       ? 'Enter how much money you have to see a personalized Bahir Dar plan.'
-      : `With ${cash.toLocaleString()} ETB for ${travelers} traveler${travelers > 1 ? 's' : ''} over ${days} day${days > 1 ? 's' : ''}, you are in a **${tier}** band (~${Math.round(cashPerPersonPerDay).toLocaleString()} ETB per person per day). Use the plan below for hotels, food, and visits — then confirm real prices on site.`
+      : `With ${cash.toLocaleString()} ETB for ${travelers} traveler${travelers > 1 ? 's' : ''} over ${days} day${days > 1 ? 's' : ''}, you are in a ${tier} band (~${Math.round(cashPerPersonPerDay).toLocaleString()} ETB per person per day). Prices reviewed ${PRICE_META.lastReviewed} — confirm live rates before you pay.`
 
   return {
     tier,
@@ -242,6 +328,7 @@ export function buildSpendGuide(input: SpendGuideInput): SpendGuideResult {
     sampleDay,
     warnings,
     summary,
+    priceMeta: PRICE_META,
   }
 }
 
