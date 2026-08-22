@@ -15,6 +15,7 @@ import {
   demoAdminMetrics,
 } from '@/services/admin'
 import { useAuth } from './useAuth'
+import { useAdminRealtime } from './useRealtimeQueries'
 
 export function useIsStaff() {
   const { user } = useAuth()
@@ -32,6 +33,8 @@ export function useIsStaff() {
 }
 
 export function useAdminMetrics(enabled: boolean) {
+  useAdminRealtime(enabled)
+
   return useQuery({
     queryKey: ['admin-metrics'],
     queryFn: async () => {
@@ -127,7 +130,10 @@ export function useAdminActions() {
   })
 
   const business = useMutation({
-    mutationFn: async (args: { businessId: string; status: 'approved' | 'suspended' | 'pending' }) => {
+    mutationFn: async (args: {
+      businessId: string
+      status: 'approved' | 'suspended' | 'pending'
+    }) => {
       const res = await setBusinessStatus(args.businessId, args.status)
       if (res.error) throw new Error(res.error)
     },

@@ -10,8 +10,12 @@ import {
 import type { Place } from '@/types/place'
 import { useAppStore } from '@/store'
 import { useMemo } from 'react'
+import { usePlacesRealtime } from './useRealtimeQueries'
 
 export function usePlaces(categorySlug?: string) {
+  // Keep directory lists fresh when places change elsewhere
+  usePlacesRealtime(true)
+
   return useQuery({
     queryKey: ['places', categorySlug ?? 'all'],
     queryFn: async () => {

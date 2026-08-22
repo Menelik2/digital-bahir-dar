@@ -14,10 +14,13 @@ import {
 } from '@/services/trips'
 import type { TripInput } from '@/types/trip'
 import { useAuth } from './useAuth'
+import { useTripsRealtime, useTripDetailRealtime } from './useRealtimeQueries'
 
 export function useMyTrips() {
   const { user } = useAuth()
-  return useQuery({
+  const live = useTripsRealtime()
+
+  const query = useQuery({
     queryKey: ['trips', user?.id],
     queryFn: async () => {
       if (!user) return []
@@ -28,11 +31,15 @@ export function useMyTrips() {
     enabled: !!user,
     staleTime: 30_000,
   })
+
+  return { ...query, realtime: live }
 }
 
 export function useTrip(tripId: string | undefined) {
   const { user } = useAuth()
-  return useQuery({
+  const live = useTripDetailRealtime(tripId)
+
+  const query = useQuery({
     queryKey: ['trip', tripId],
     queryFn: async () => {
       if (tripId === 'demo-trip-1' && user) return createDemoTrip(user.id)
@@ -41,6 +48,8 @@ export function useTrip(tripId: string | undefined) {
     enabled: !!tripId,
     staleTime: 30_000,
   })
+
+  return { ...query, realtime: live }
 }
 
 export function useCreateTrip() {

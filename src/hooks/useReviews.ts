@@ -9,14 +9,19 @@ import {
 } from '@/services/social'
 import type { ReviewInput } from '@/types/social'
 import { useAuth } from './useAuth'
+import { useReviewsRealtime } from './useRealtimeQueries'
 
 export function useReviews(placeId: string | undefined) {
-  return useQuery({
+  const live = useReviewsRealtime(placeId)
+
+  const query = useQuery({
     queryKey: ['reviews', placeId],
     queryFn: () => fetchReviews(placeId!),
     enabled: !!placeId,
     staleTime: 60_000,
   })
+
+  return { ...query, realtime: live }
 }
 
 export function useMyReview(placeId: string | undefined) {
@@ -72,7 +77,15 @@ export function useDeleteReview(placeId: string) {
 export function useReportReview() {
   const { user } = useAuth()
   return useMutation({
-    mutationFn: async ({ reviewId, reason, details }: { reviewId: string; reason: string; details?: string }) => {
+    mutationFn: async ({
+      reviewId,
+      reason,
+      details,
+    }: {
+      reviewId: string
+      reason: string
+      details?: string
+    }) => {
       if (!user) throw new Error('Sign in to report')
       const res = await reportReview(reviewId, user.id, reason, details)
       if (res.error) throw new Error(res.error)
