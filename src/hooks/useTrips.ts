@@ -12,6 +12,7 @@ import {
   deleteExpense,
   createDemoTrip,
 } from '@/services/trips'
+import { getItinerary, itineraryToTrip } from '@/data/itineraries'
 import type { TripInput } from '@/types/trip'
 import { useAuth } from './useAuth'
 import { useTripDetailRealtime } from './useRealtimeQueries'
@@ -39,11 +40,18 @@ export function useTrip(tripId: string | undefined) {
   const query = useQuery({
     queryKey: ['trip', tripId],
     queryFn: async () => {
+      if (!tripId) return null
+      // Curated guide packs (no auth / no DB)
+      if (tripId.startsWith('guide-')) {
+        const guide = getItinerary(tripId)
+        if (guide) return itineraryToTrip(guide, user?.id ?? 'guide')
+        return null
+      }
       if (tripId === 'demo-trip-1' && user) return createDemoTrip(user.id)
-      return fetchTrip(tripId!)
+      return fetchTrip(tripId)
     },
     enabled: !!tripId,
-    staleTime: 30_000,
+    staleTime: 60_000,
   })
 
   return { ...query, realtime: live }
@@ -67,6 +75,9 @@ export function useUpdateTrip(tripId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (input: Partial<TripInput>) => {
+      if (tripId.startsWith('guide-') || tripId.startsWith('demo-')) {
+        throw new Error('Guide plans are read-only. Create your own trip to edit.')
+      }
       const res = await updateTrip(tripId, input)
       if (res.error) throw new Error(res.error)
     },
@@ -82,7 +93,7 @@ export function useDeleteTrip() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (tripId: string) => {
-      if (tripId.startsWith('demo-')) return
+      if (tripId.startsWith('demo-') || tripId.startsWith('guide-')) return
       const res = await deleteTrip(tripId)
       if (res.error) throw new Error(res.error)
     },
@@ -94,6 +105,9 @@ export function useAddDay(tripId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (dayNumber: number) => {
+      if (tripId.startsWith('guide-') || tripId.startsWith('demo-')) {
+        throw new Error('Guide plans are read-only')
+      }
       const res = await addTripDay(tripId, dayNumber)
       if (res.error) throw new Error(res.error)
       return res.day!
@@ -111,6 +125,9 @@ export function useAddStop(tripId: string) {
       place_id?: string
       estimated_cost?: number
     }) => {
+      if (tripId.startsWith('guide-') || tripId.startsWith('demo-')) {
+        throw new Error('Guide plans are read-only')
+      }
       const res = await addTripStop(args.tripDayId, args)
       if (res.error) throw new Error(res.error)
       return res.stop!
@@ -123,6 +140,7 @@ export function useDeleteStop(tripId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (stopId: string) => {
+      if (tripId.startsWith('guide-') || tripId.startsWith('demo-')) return
       const res = await deleteTripStop(stopId)
       if (res.error) throw new Error(res.error)
     },
@@ -142,6 +160,9 @@ export function useAddExpense(tripId: string) {
       notes?: string
       currency?: string
     }) => {
+      if (tripId.startsWith('guide-') || tripId.startsWith('demo-')) {
+        throw new Error('Guide plans are read-only')
+      }
       const res = await addExpense(tripId, expense)
       if (res.error) throw new Error(res.error)
       return res.expense!
@@ -154,6 +175,7 @@ export function useDeleteExpense(tripId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (expenseId: string) => {
+      if (tripId.startsWith('guide-') || tripId.startsWith('demo-')) return
       const res = await deleteExpense(expenseId)
       if (res.error) throw new Error(res.error)
     },
