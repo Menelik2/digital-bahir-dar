@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
-import { Search, X, AlertCircle, ExternalLink } from 'lucide-react'
+import { Search, X, AlertCircle, ExternalLink, Layers } from 'lucide-react'
 import { MapView, openGoogleMapsDirections } from '@/components/map/MapView'
-import { MapcartaPanel } from '@/components/map/MapcartaEmbed'
 import { MapFilter } from '@/components/map/MapFilter'
 import { LocationButton } from '@/components/map/LocationButton'
 import { PlaceBottomSheet } from '@/components/map/PlaceBottomSheet'
 import { DirectionsPanel } from '@/components/map/DirectionsPanel'
 import { useFilteredPlaces } from '@/hooks/usePlaces'
+import { useOsmPlaces } from '@/hooks/useOsmPlaces'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useAppStore } from '@/store'
 import { BAHIR_DAR_CENTER } from '@/constants'
@@ -14,9 +14,18 @@ import { MAPCARTA_BAHIR_DAR, openMapcarta } from '@/constants/guideSites'
 import { distanceMeters } from '@/utils/geo'
 import type { Place } from '@/types/place'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 
-type MapProvider = 'app' | 'mapcarta'
+function mergePlaces(primary: Place[], secondary: Place[]): Place[] {
+  const seen = new Set(primary.map((p) => p.name.toLowerCase().trim()))
+  const out = [...primary]
+  for (const p of secondary) {
+    const key = p.name.toLowerCase().trim()
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(p)
+  }
+  return out
+}
 
 export default function MapPage() {
   const { location, setMapCenter, mapCenter, selectedPlaceId, setSelectedPlaceId } = useAppStore()
@@ -26,20 +35,50 @@ export default function MapPage() {
   const [filter, setFilter] = useState<string | null>(null)
   const [directionsPlace, setDirectionsPlace] = useState<Place | null>(null)
   const [travelMode, setTravelMode] = useState<'walking' | 'driving'>('walking')
-  /** Default to in-app Leaflet — Mapcarta cannot be embedded */
-  const [provider, setProvider] = useState<MapProvider>('app')
+  const [includeOsm, setIncludeOsm] = useState(true)
 
   const categorySlug =
     filter && !['near_me', 'verified'].includes(filter) ? filter : null
   const nearMe = filter === 'near_me'
   const verifiedOnly = filter === 'verified'
 
-  const { places, isLoading, isError, error, refetch } = useFilteredPlaces({
+  const { places: dbPlaces, isLoading, isError, error, refetch } = useFilteredPlaces({
     search,
     categorySlug,
     nearMe,
     verifiedOnly,
   })
+
+  // Same open data Mapcarta uses (OpenStreetMap via Overpass)
+  const osmCategories = useMemo(() => {
+    if (categorySlug === 'hotel') return ['hotel'] as const
+    if (categorySlug === 'restaurant' || categorySlug === 'cafe') return ['restaurant', 'cafe'] as const
+    if (categorySlug === 'attraction') return ['attraction'] as const
+    if (categorySlug === 'transport') return ['transport'] as const
+    if (categorySlug === 'bank' || categorySlug === 'atm') return ['bank', 'atm'] as const
+    if (categorySlug === 'hospital' || categorySlug === 'pharmacy') return ['hospital', 'pharmacy'] as const
+    return ['all'] as const
+  }, [categorySlug])
+
+  const {
+    data: osmPlaces = [],
+    isFetching: osmFetching,
+    refetch: refetchOsm,
+  } = useOsmPlaces([...osmCategories], includeOsm)
+
+  const places = useMemo(() => {
+    let list = includeOsm ? mergePlaces(dbPlaces, osmPlaces) : dbPlaces
+    if (search.trim()) {
+      const q = search.trim().toLowerCase()
+      list = list.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.short_description?.toLowerCase().includes(q) ||
+          p.address?.toLowerCase().includes(q)
+      )
+    }
+    return list
+  }, [dbPlaces, osmPlaces, includeOsm, search])
 
   const selectedPlace = useMemo(
     () => places.find((p) => p.id === selectedPlaceId) ?? null,
@@ -85,111 +124,95 @@ export default function MapPage() {
   }, [requestLocation, userPos, setMapCenter])
 
   return (
-    <div className="relative h-[calc(100dvh-4rem)] overflow-hidden">
-      <div className="absolute left-4 right-4 top-4 z-20 flex flex-col gap-2 lg:right-auto lg:w-[420px]">
-        <div className="flex rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-          <button
-            type="button"
-            onClick={() => setProvider('app')}
-            className={cn(
-              'flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition',
-              provider === 'app'
-                ? 'bg-sky-600 text-white'
-                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+    <div className="relative h-[calc(100dvh-4rem)] overflow-hidden bg-slate-200">
+      {/* Search + tools */}
+      <div className="absolute left-4 right-4 top-4 z-[1000] flex flex-col gap-2 lg:right-auto lg:w-[400px]">
+        <div className="flex gap-2">
+          <div className="flex flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+            <Search className="h-5 w-5 shrink-0 text-slate-400" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search Bahir Dar places…"
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+              aria-label="Search places"
+            />
+            {search && (
+              <button type="button" onClick={() => setSearch('')} className="rounded p-0.5 hover:bg-slate-100">
+                <X className="h-4 w-4 text-slate-400" />
+              </button>
             )}
-          >
-            App map
-          </button>
-          <button
-            type="button"
-            onClick={() => setProvider('mapcarta')}
-            className={cn(
-              'flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition',
-              provider === 'mapcarta'
-                ? 'bg-sky-600 text-white'
-                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-            )}
-          >
-            Mapcarta
-          </button>
+          </div>
+          <LocationButton onLocated={() => handleLocate()} />
         </div>
 
-        {provider === 'app' && (
-          <div className="flex gap-2">
-            <div className="flex flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-              <Search className="h-5 w-5 shrink-0 text-slate-400" />
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search places in Bahir Dar..."
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
-                aria-label="Search places"
-              />
-              {search && (
-                <button type="button" onClick={() => setSearch('')} className="rounded p-0.5 hover:bg-slate-100">
-                  <X className="h-4 w-4 text-slate-400" />
-                </button>
-              )}
-            </div>
-            <LocationButton onLocated={() => handleLocate()} />
-          </div>
-        )}
-
-        {provider === 'app' && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIncludeOsm((v) => !v)}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium shadow-sm ${
+              includeOsm
+                ? 'border-sky-500 bg-sky-600 text-white'
+                : 'border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900'
+            }`}
+          >
+            <Layers className="h-3.5 w-3.5" />
+            Live OSM {includeOsm ? 'on' : 'off'}
+            {osmFetching && includeOsm ? '…' : ''}
+          </button>
           <button
             type="button"
             onClick={() => openMapcarta()}
-            className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white/95 px-3 py-2 text-xs font-medium text-sky-700 shadow-md backdrop-blur hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900/95 dark:text-sky-300 dark:hover:bg-slate-800"
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-sky-700 shadow-sm hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-sky-300"
           >
-            <ExternalLink className="h-3.5 w-3.5" />
-            Open Bahir Dar on Mapcarta
+            <ExternalLink className="h-3.5 w-3.5" /> Mapcarta site
           </button>
-        )}
+          <span className="rounded-full bg-white/90 px-2.5 py-1 text-[11px] text-slate-500 shadow-sm dark:bg-slate-900/90">
+            {places.length} pins
+            {includeOsm && osmPlaces.length > 0 ? ` · ${osmPlaces.length} OSM` : ''}
+          </span>
+        </div>
       </div>
 
-      {provider === 'mapcarta' ? (
-        <MapcartaPanel
-          className="absolute inset-0 z-0 h-full w-full"
-          onUseAppMap={() => setProvider('app')}
-        />
-      ) : (
-        <MapView
-          places={places}
-          selectedPlaceId={selectedPlaceId}
-          userLocation={userPos}
-          center={mapCenter}
-          onPlaceSelect={handlePlaceSelect}
-          onCenterChange={setMapCenter}
-        />
-      )}
+      {/* Always-on interactive map — never depends on Mapcarta iframe */}
+      <MapView
+        places={places}
+        selectedPlaceId={selectedPlaceId}
+        userLocation={userPos}
+        center={mapCenter}
+        onPlaceSelect={handlePlaceSelect}
+        onCenterChange={setMapCenter}
+      />
 
-      {provider === 'app' && isError && (
-        <div className="absolute left-1/2 top-40 z-20 flex max-w-sm -translate-x-1/2 items-start gap-2 rounded-xl border border-red-200 bg-white px-3 py-2 text-sm shadow-lg dark:border-red-900 dark:bg-slate-900">
+      {isError && dbPlaces.length === 0 && !includeOsm && (
+        <div className="absolute left-1/2 top-36 z-[1000] flex max-w-sm -translate-x-1/2 items-start gap-2 rounded-xl border border-red-200 bg-white px-3 py-2 text-sm shadow-lg dark:border-red-900 dark:bg-slate-900">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
           <div>
             <p className="font-medium text-red-700 dark:text-red-300">Could not load places</p>
             <p className="text-xs text-slate-500">{error instanceof Error ? error.message : 'Unknown error'}</p>
-            <Button size="sm" variant="outline" className="mt-2" onClick={() => refetch()}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-2"
+              onClick={() => {
+                void refetch()
+                void refetchOsm()
+              }}
+            >
               Retry
             </Button>
           </div>
         </div>
       )}
 
-      {provider === 'app' && isLoading && (
-        <div className="absolute left-1/2 top-40 z-10 -translate-x-1/2 rounded-full bg-white px-4 py-1.5 text-sm shadow dark:bg-slate-900">
-          Loading places…
+      {isLoading && places.length === 0 && (
+        <div className="absolute left-1/2 top-36 z-[1000] -translate-x-1/2 rounded-full bg-white px-4 py-1.5 text-sm shadow dark:bg-slate-900">
+          Loading map data…
         </div>
       )}
 
-      {provider === 'app' && search && !isLoading && !isError && (
-        <div className="absolute left-1/2 top-40 z-10 -translate-x-1/2 rounded-full bg-white px-3 py-1 text-xs shadow dark:bg-slate-900">
-          {places.length} result{places.length !== 1 ? 's' : ''}
-        </div>
-      )}
-
-      {provider === 'app' && directionsPlace && (
+      {directionsPlace && (
         <DirectionsPanel
           origin={userPos}
           destination={directionsPlace}
@@ -201,7 +224,7 @@ export default function MapPage() {
         />
       )}
 
-      {provider === 'app' && !directionsPlace && (
+      {!directionsPlace && (
         <PlaceBottomSheet
           place={selectedPlace}
           distanceM={selectedDistance}
@@ -210,11 +233,16 @@ export default function MapPage() {
         />
       )}
 
-      {provider === 'app' && (
-        <div className="absolute bottom-24 left-0 right-0 z-10 px-4 lg:bottom-6">
-          <MapFilter active={filter} onChange={setFilter} />
-        </div>
-      )}
+      <div className="absolute bottom-24 left-0 right-0 z-[1000] px-4 lg:bottom-6">
+        <MapFilter active={filter} onChange={setFilter} />
+        <p className="mt-2 text-center text-[10px] text-slate-600 drop-shadow-sm dark:text-slate-300">
+          Map data © OpenStreetMap · Same open sources as{' '}
+          <a href={MAPCARTA_BAHIR_DAR} target="_blank" rel="noopener noreferrer" className="underline">
+            Mapcarta
+          </a>
+          {' · '}Layers (top-right): Streets / Satellite / Terrain
+        </p>
+      </div>
     </div>
   )
 }

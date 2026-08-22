@@ -2,16 +2,17 @@ import { ExternalLink, Map as MapIcon } from 'lucide-react'
 import { MAPCARTA_BAHIR_DAR, openMapcarta } from '@/constants/guideSites'
 import { Button } from '@/components/ui/button'
 
-interface MapcartaEmbedProps {
+interface Props {
   className?: string
   onUseAppMap?: () => void
 }
 
 /**
- * Mapcarta blocks embedding (X-Frame-Options / CSP → "refused to connect").
- * We show a clear panel and open Mapcarta in a new browser tab instead.
+ * Mapcarta refuses iframe embedding (X-Frame-Options / CSP).
+ * There is no public Mapcarta tile or embed API.
+ * Mapcarta itself is built on OpenStreetMap — our in-app Leaflet map uses that same data.
  */
-export function MapcartaPanel({ className, onUseAppMap }: MapcartaEmbedProps) {
+export function MapcartaPanel({ className, onUseAppMap }: Props) {
   return (
     <div
       className={
@@ -23,21 +24,18 @@ export function MapcartaPanel({ className, onUseAppMap }: MapcartaEmbedProps) {
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
           <MapIcon className="h-7 w-7" />
         </div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Mapcarta — Bahir Dar</h2>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Mapcarta opens in a new tab</h2>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
-          Mapcarta does not allow embedding inside other apps (browser security). Open their full
-          Bahir Dar map in a new tab to explore places of interest.
+          mapcarta.com blocks embedding inside other apps. Use the <strong>in-app map</strong> (OpenStreetMap
+          data — the same source Mapcarta uses) or open Mapcarta fully in your browser.
         </p>
         <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
-          <Button
-            className="w-full sm:w-auto"
-            onClick={() => openMapcarta()}
-          >
+          <Button className="w-full sm:w-auto" onClick={() => openMapcarta()}>
             <ExternalLink className="h-4 w-4" /> Open Mapcarta
           </Button>
           {onUseAppMap && (
             <Button variant="outline" className="w-full sm:w-auto" onClick={onUseAppMap}>
-              Use app map
+              Back to app map
             </Button>
           )}
         </div>
@@ -54,7 +52,6 @@ export function MapcartaPanel({ className, onUseAppMap }: MapcartaEmbedProps) {
   )
 }
 
-/** @deprecated Use MapcartaPanel — iframe is blocked by Mapcarta */
-export function MapcartaEmbed(props: MapcartaEmbedProps) {
+export function MapcartaEmbed(props: Props) {
   return <MapcartaPanel {...props} />
 }
