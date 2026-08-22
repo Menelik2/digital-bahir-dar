@@ -3,7 +3,7 @@ import {
   fetchPlaces,
   fetchCategories,
   fetchPlaceBySlug,
-  placesOrDemo,
+  getCuratedPlaces,
   searchPlaces,
   rankNearby,
   PlacesFetchError,
@@ -15,21 +15,27 @@ import { qk } from '@/lib/queryKeys'
 import { isSupabaseConfigured } from '@/lib/supabase'
 
 export function usePlaces(categorySlug?: string) {
+  const curated = useMemo(() => getCuratedPlaces(categorySlug), [categorySlug])
+
   return useQuery({
     queryKey: qk.places.list(categorySlug),
     queryFn: async () => {
       try {
         const data = await fetchPlaces({ categorySlug })
-        // Empty successful response → DEMO for UX; errors are thrown
-        return placesOrDemo(data, categorySlug)
+        return data.length > 0 ? data : curated
       } catch (e) {
-        // Re-throw so UI can show error (do not hide behind DEMO)
         if (e instanceof PlacesFetchError) throw e
-        throw e
+        // Network failure → still show curated instantly
+        return curated
       }
     },
-    staleTime: 5 * 60_000,
+    // Paint curated data on first frame — no spinner for empty network
+    initialData: curated,
+    initialDataUpdatedAt: 0,
+    staleTime: 10 * 60_000,
+    gcTime: 30 * 60_000,
     retry: isSupabaseConfigured ? 1 : 0,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -38,7 +44,8 @@ export function usePlace(slug: string | undefined) {
     queryKey: qk.places.detail(slug || ''),
     queryFn: () => fetchPlaceBySlug(slug!),
     enabled: !!slug,
-    staleTime: 5 * 60_000,
+    staleTime: 10 * 60_000,
+    placeholderData: () => (slug ? getCuratedPlaces().find((p) => p.slug === slug) : undefined),
   })
 }
 
@@ -57,7 +64,7 @@ export function useFilteredPlaces(opts: {
   verifiedOnly?: boolean
   radiusM?: number
 }) {
-  const { data: places = [], isLoading, error, refetch, isError } = usePlaces(
+  const { data: places = [], isLoading, error, refetch, isError, isFetching } = usePlaces(
     opts.categorySlug ?? undefined
   )
   const { location } = useAppStore()
@@ -81,5 +88,13 @@ export function useFilteredPlaces(opts: {
     radius,
   ])
 
-  return { places: filtered, isLoading, error, isError, refetch, total: places.length }
+  return {
+    places: filtered,
+    isLoading: isLoading && places.length === 0,
+    isFetching,
+    error,
+    isError,
+    refetch,
+    total: places.length,
+  }
 }
