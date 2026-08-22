@@ -13,11 +13,13 @@ const navItems = [
   { path: '/hotels', label: 'Hotels' },
   { path: '/restaurants', label: 'Restaurants' },
   { path: '/attractions', label: 'Attractions' },
+  { path: '/events', label: 'Events' },
+  { path: '/guides', label: 'Guides' },
   { path: '/trips', label: 'Trips' },
   { path: '/ai-guide', label: 'AI Guide' },
 ]
 
-export function Header() {
+export default function Header() {
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const { language, setLanguage } = useAppStore()
@@ -30,34 +32,74 @@ export function Header() {
           <span className="hidden sm:inline">{APP_NAME}</span>
           <span className="sm:hidden">DBD</span>
         </Link>
-        <nav className="hidden items-center gap-1 lg:flex">
+        <nav className="hidden items-center gap-1 xl:flex">
           {navItems.map((item) => (
-            <Link key={item.path} to={item.path} className={cn('rounded-lg px-3 py-2 text-sm font-medium transition-colors', location.pathname === item.path ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-100')}>
+            <Link
+              key={item.path}
+              to={item.path}
+              className={cn(
+                'rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
+                location.pathname === item.path ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-100'
+              )}
+            >
               {item.label}
             </Link>
           ))}
         </nav>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => setLanguage(language === 'en' ? 'am' : 'en')} title="Language">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setLanguage(language === 'en' ? 'am' : 'en')}
+            title="Language"
+          >
             <Globe className="h-5 w-5" />
           </Button>
-          <Link to="/auth"><Button size="sm" className="hidden sm:inline-flex">Log in</Button></Link>
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
+          <Link to="/auth">
+            <Button size="sm" className="hidden sm:inline-flex">
+              Log in
+            </Button>
+          </Link>
+          <Button variant="ghost" size="icon" className="xl:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
       </div>
       {mobileOpen && (
-        <div className="border-t border-slate-200 bg-white px-4 py-3 lg:hidden dark:border-slate-800 dark:bg-slate-950">
+        <div className="border-t border-slate-200 bg-white px-4 py-3 xl:hidden dark:border-slate-800 dark:bg-slate-950">
           <nav className="flex flex-col gap-1">
             {navItems.map((item) => (
-              <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)} className={cn('rounded-lg px-3 py-2.5 text-sm font-medium', location.pathname === item.path ? 'bg-sky-50 text-sky-700' : 'text-slate-600')}>
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  'rounded-lg px-3 py-2.5 text-sm font-medium',
+                  location.pathname === item.path ? 'bg-sky-50 text-sky-700' : 'text-slate-600'
+                )}
+              >
                 {item.label}
               </Link>
             ))}
+            <Link
+              to="/directory"
+              onClick={() => setMobileOpen(false)}
+              className="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600"
+            >
+              Directory
+            </Link>
+            <Link
+              to="/transport"
+              onClick={() => setMobileOpen(false)}
+              className="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600"
+            >
+              Transport
+            </Link>
           </nav>
         </div>
       )}
     </header>
   )
 }
+
+export { Header }
