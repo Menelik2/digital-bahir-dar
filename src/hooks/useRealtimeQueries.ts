@@ -1,3 +1,4 @@
+import { isOsmPlaceId } from '@/services/osmPlaces'
 import { useRealtimeSubscription } from './useRealtime'
 import { useAuth } from './useAuth'
 import { qk } from '@/lib/queryKeys'
@@ -20,7 +21,7 @@ export function useReviewsRealtime(placeId: string | undefined) {
     table: 'reviews',
     filter: placeId ? `place_id=eq.${placeId}` : undefined,
     event: '*',
-    enabled: !!placeId,
+    enabled: !!placeId && !isOsmPlaceId(placeId),
     invalidateKeys: placeId
       ? [
           qk.reviews.list(placeId),

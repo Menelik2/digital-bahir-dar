@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase'
 import type { Place, Category, PlaceWithDistance } from '@/types/place'
 import { distanceMeters } from '@/utils/geo'
 import { DEMO_PLACES, demoPlacesByCategory } from './demoPlaces'
+import { findCachedOsmPlace } from './osmPlaces'
 
 export { DEMO_PLACES }
 
@@ -84,6 +85,10 @@ export async function fetchPlaceBySlug(slug: string): Promise<Place | null> {
 
   if (error) console.warn('fetchPlaceBySlug:', error.message)
   if (data) return normalizePlace(data as Record<string, unknown>)
+  // OSM places live only in client cache after Discover / list fetch
+  if (slug.startsWith('osm-')) {
+    return findCachedOsmPlace(slug)
+  }
   return DEMO_PLACES.find((p) => p.slug === slug) ?? null
 }
 

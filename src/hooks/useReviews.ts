@@ -11,6 +11,7 @@ import type { ReviewInput } from '@/types/social'
 import { useAuth } from './useAuth'
 import { useReviewsRealtime } from './useRealtimeQueries'
 import { qk } from '@/lib/queryKeys'
+import { isOsmPlaceId } from '@/services/osmPlaces'
 
 export function useReviews(placeId: string | undefined) {
   const live = useReviewsRealtime(placeId)
@@ -18,7 +19,7 @@ export function useReviews(placeId: string | undefined) {
   const query = useQuery({
     queryKey: placeId ? qk.reviews.list(placeId) : ['reviews', 'none'],
     queryFn: () => fetchReviews(placeId!),
-    enabled: !!placeId,
+    enabled: !!placeId && !isOsmPlaceId(placeId),
     staleTime: 60_000,
   })
 
@@ -30,7 +31,7 @@ export function useMyReview(placeId: string | undefined) {
   return useQuery({
     queryKey: placeId ? qk.reviews.mine(placeId, user?.id) : ['my-review', 'none'],
     queryFn: () => fetchMyReview(placeId!, user!.id),
-    enabled: !!placeId && !!user,
+    enabled: !!placeId && !!user && !isOsmPlaceId(placeId),
   })
 }
 
@@ -38,7 +39,7 @@ export function useRatingSummary(placeId: string | undefined) {
   return useQuery({
     queryKey: placeId ? qk.reviews.summary(placeId) : ['rating-summary', 'none'],
     queryFn: () => getPlaceRatingSummary(placeId!),
-    enabled: !!placeId,
+    enabled: !!placeId && !isOsmPlaceId(placeId),
     staleTime: 60_000,
   })
 }
