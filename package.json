@@ -1,7 +1,7 @@
 {
   "name": "digital-bahir-dar",
   "private": true,
-  "version": "0.9.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "Digital Bahir Dar — Smart City Tourism, Navigation & AI Travel Platform for Bahir Dar, Ethiopia",
   "scripts": {
@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "lint": "oxlint src",
     "typecheck": "tsc --noEmit",
-    "test": "echo \"Tests in Phase 10\" && exit 0"
+    "test": "npm run smoke",
+    "icons": "python3 scripts/generate-pwa-icons.py",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "@googlemaps/markerclusterer": "^2.5.3",
