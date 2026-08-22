@@ -83,6 +83,12 @@ export interface BudgetBreakdown {
   remaining: number | null
   perPerson: number | null
   currency: string
+  /** Optional extensions from sumTripSpending */
+  estimatedOnly?: number
+  actualOnly?: number
+  stopEstimates?: number
+  usedPercent?: number | null
+  travelers?: number
 }
 
 export const EXPENSE_CATEGORIES: { id: ExpenseCategory; label: string }[] = [
