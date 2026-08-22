@@ -13,10 +13,12 @@ interface Props {
 }
 
 export function FavoriteButton({ placeId, className, size = 'default' }: Props) {
+  const osm = isOsmPlaceId(placeId)
   const { isAuthenticated } = useAuth()
-  if (isOsmPlaceId(placeId)) return null
-  const { data: favorited, isLoading } = useIsFavorited(placeId)
+  const { data: favorited, isLoading } = useIsFavorited(osm ? undefined : placeId)
   const toggle = useToggleFavorite(placeId)
+
+  if (osm) return null
 
   if (!isAuthenticated) {
     return (
