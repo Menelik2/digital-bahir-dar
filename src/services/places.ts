@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import type { Place, Category, PlaceWithDistance } from '@/types/place'
 import { distanceMeters } from '@/utils/geo'
 import { DEMO_PLACES, demoPlacesByCategory } from './demoPlaces'
@@ -6,11 +6,22 @@ import { findCachedOsmPlace } from './osmPlaces'
 
 export { DEMO_PLACES }
 
+export class PlacesFetchError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'PlacesFetchError'
+  }
+}
+
 export async function fetchPlaces(opts?: {
   categorySlug?: string
   verifiedOnly?: boolean
   limit?: number
 }): Promise<Place[]> {
+  if (!isSupabaseConfigured) {
+    return placesOrDemo([], opts?.categorySlug)
+  }
+
   let query = supabase
     .from('places')
     .select(`
@@ -30,19 +41,17 @@ export async function fetchPlaces(opts?: {
   if (opts?.limit) query = query.limit(opts.limit)
 
   if (opts?.categorySlug) {
-    const { data: cat } = await supabase
+    const { data: cat, error: catErr } = await supabase
       .from('categories')
       .select('id')
       .eq('slug', opts.categorySlug)
-      .single()
+      .maybeSingle()
+    if (catErr) throw new PlacesFetchError(catErr.message)
     if (cat) query = query.eq('category_id', cat.id)
   }
 
   const { data, error } = await query
-  if (error) {
-    console.warn('fetchPlaces:', error.message)
-    return []
-  }
+  if (error) throw new PlacesFetchError(error.message)
   return (data ?? []).map(normalizePlace) as Place[]
 }
 
@@ -59,36 +68,33 @@ function normalizePlace(row: Record<string, unknown>): Place {
 }
 
 export async function fetchCategories(): Promise<Category[]> {
+  if (!isSupabaseConfigured) return []
   const { data, error } = await supabase.from('categories').select('*').order('sort_order')
-  if (error) {
-    console.warn('fetchCategories:', error.message)
-    return []
-  }
+  if (error) throw new PlacesFetchError(error.message)
   return (data ?? []) as Category[]
 }
 
 export async function fetchPlaceBySlug(slug: string): Promise<Place | null> {
-  const { data, error } = await supabase
-    .from('places')
-    .select(`
-      *,
-      category:categories(*),
-      hotel:hotels(*),
-      restaurant:restaurants(*),
-      attraction:attractions(*),
-      bank:banks(*)
-    `)
-    .eq('slug', slug)
-    .eq('status', 'published')
-    .is('deleted_at', null)
-    .maybeSingle()
+  if (isSupabaseConfigured) {
+    const { data, error } = await supabase
+      .from('places')
+      .select(`
+        *,
+        category:categories(*),
+        hotel:hotels(*),
+        restaurant:restaurants(*),
+        attraction:attractions(*),
+        bank:banks(*)
+      `)
+      .eq('slug', slug)
+      .eq('status', 'published')
+      .is('deleted_at', null)
+      .maybeSingle()
 
-  if (error) console.warn('fetchPlaceBySlug:', error.message)
-  if (data) return normalizePlace(data as Record<string, unknown>)
-  // OSM places live only in client cache after Discover / list fetch
-  if (slug.startsWith('osm-')) {
-    return findCachedOsmPlace(slug)
+    if (error) console.warn('fetchPlaceBySlug:', error.message)
+    if (data) return normalizePlace(data as Record<string, unknown>)
   }
+  if (slug.startsWith('osm-')) return findCachedOsmPlace(slug)
   return DEMO_PLACES.find((p) => p.slug === slug) ?? null
 }
 
@@ -120,6 +126,7 @@ export function searchPlaces(places: Place[], query: string): Place[] {
   )
 }
 
+/** Only when Supabase is empty or offline — never on query error. */
 export function placesOrDemo(data: Place[], categorySlug?: string): Place[] {
   if (data.length > 0) return data
   if (categorySlug) return demoPlacesByCategory(categorySlug)

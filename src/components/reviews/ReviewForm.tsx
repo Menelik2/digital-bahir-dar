@@ -7,6 +7,7 @@ import { useUpsertReview } from '@/hooks/useReviews'
 import { useAuth } from '@/hooks/useAuth'
 import { Link } from 'react-router-dom'
 import type { Review } from '@/types/social'
+import { isPersistedPlaceId } from '@/utils/placeId'
 
 const schema = z.object({
   rating: z.number().min(1, 'Select a rating').max(5),
@@ -24,6 +25,7 @@ interface Props {
 
 export function ReviewForm({ placeId, existing, onDone }: Props) {
   const { isAuthenticated } = useAuth()
+  const canPersist = isPersistedPlaceId(placeId)
   const mut = useUpsertReview(placeId)
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -35,6 +37,14 @@ export function ReviewForm({ placeId, existing, onDone }: Props) {
   })
 
   const rating = form.watch('rating')
+
+  if (!canPersist) {
+    return (
+      <div className="rounded-xl border border-dashed border-slate-300 p-4 text-center text-sm text-slate-500 dark:border-slate-700">
+        Reviews are only available for verified database places (not DEMO or OpenStreetMap listings).
+      </div>
+    )
+  }
 
   if (!isAuthenticated) {
     return (

@@ -9,8 +9,6 @@ import {
 import type { Place } from '@/types/place'
 import { BAHIR_DAR_CENTER, DEFAULT_MAP_ZOOM } from '@/constants'
 
-const MAP_ID = 'digital-bahir-dar-map'
-
 interface MapViewProps {
   places: Place[]
   selectedPlaceId: string | null
@@ -82,6 +80,7 @@ export function MapView({
   onCenterChange,
 }: MapViewProps) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined
+  const mapId = (import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string | undefined)?.trim()
 
   if (!apiKey) {
     return (
@@ -89,8 +88,10 @@ export function MapView({
         <div className="max-w-sm px-6 text-center">
           <p className="mb-2 text-lg font-semibold">Google Maps API key required</p>
           <p className="text-sm text-slate-500">
-            Add <code className="rounded bg-slate-200 px-1 dark:bg-slate-800">VITE_GOOGLE_MAPS_API_KEY</code> to your
-            environment to enable the interactive map.
+            Add <code className="rounded bg-slate-200 px-1 dark:bg-slate-800">VITE_GOOGLE_MAPS_API_KEY</code> to
+            your environment. Optional:{' '}
+            <code className="rounded bg-slate-200 px-1 dark:bg-slate-800">VITE_GOOGLE_MAPS_MAP_ID</code> for
+            AdvancedMarker styling.
           </p>
           <p className="mt-3 text-xs text-slate-400">
             Showing {places.length} place{places.length !== 1 ? 's' : ''} in data layer.
@@ -105,7 +106,7 @@ export function MapView({
       <Map
         defaultCenter={BAHIR_DAR_CENTER}
         defaultZoom={DEFAULT_MAP_ZOOM}
-        mapId={MAP_ID}
+        {...(mapId ? { mapId } : {})}
         gestureHandling="greedy"
         disableDefaultUI={false}
         zoomControl

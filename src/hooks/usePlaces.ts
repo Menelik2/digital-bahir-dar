@@ -6,20 +6,30 @@ import {
   placesOrDemo,
   searchPlaces,
   rankNearby,
+  PlacesFetchError,
 } from '@/services/places'
 import type { Place } from '@/types/place'
 import { useAppStore } from '@/store'
 import { useMemo } from 'react'
 import { qk } from '@/lib/queryKeys'
+import { isSupabaseConfigured } from '@/lib/supabase'
 
 export function usePlaces(categorySlug?: string) {
   return useQuery({
     queryKey: qk.places.list(categorySlug),
     queryFn: async () => {
-      const data = await fetchPlaces({ categorySlug })
-      return placesOrDemo(data, categorySlug)
+      try {
+        const data = await fetchPlaces({ categorySlug })
+        // Empty successful response → DEMO for UX; errors are thrown
+        return placesOrDemo(data, categorySlug)
+      } catch (e) {
+        // Re-throw so UI can show error (do not hide behind DEMO)
+        if (e instanceof PlacesFetchError) throw e
+        throw e
+      }
     },
     staleTime: 5 * 60_000,
+    retry: isSupabaseConfigured ? 1 : 0,
   })
 }
 
@@ -45,10 +55,11 @@ export function useFilteredPlaces(opts: {
   categorySlug?: string | null
   nearMe?: boolean
   verifiedOnly?: boolean
-  /** meters; default 12km for city-scale nearby */
   radiusM?: number
 }) {
-  const { data: places = [], isLoading, error, refetch } = usePlaces(opts.categorySlug ?? undefined)
+  const { data: places = [], isLoading, error, refetch, isError } = usePlaces(
+    opts.categorySlug ?? undefined
+  )
   const { location } = useAppStore()
   const radius = opts.radiusM ?? 12_000
 
@@ -70,5 +81,5 @@ export function useFilteredPlaces(opts: {
     radius,
   ])
 
-  return { places: filtered, isLoading, error, refetch, total: places.length }
+  return { places: filtered, isLoading, error, isError, refetch, total: places.length }
 }
