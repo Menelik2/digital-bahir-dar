@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MapPin, Star, BadgeCheck, Navigation, ExternalLink } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -6,6 +7,7 @@ import type { Place } from '@/types/place'
 import { formatDistance } from '@/utils/geo'
 import { isOsmPlaceId, cacheOsmPlaceForDetail } from '@/services/osmPlaces'
 import { placeGuideLinks } from '@/constants/guideSites'
+import { placeCoverImage, placeImageAlt } from '@/utils/placeImage'
 import { cn } from '@/lib/utils'
 
 interface PlaceCardProps {
@@ -14,6 +16,33 @@ interface PlaceCardProps {
   showDirections?: boolean
   onDirections?: (place: Place) => void
   className?: string
+}
+
+function CoverImage({ place, className }: { place: Place; className?: string }) {
+  const [failed, setFailed] = useState(false)
+  const src = placeCoverImage(place)
+
+  if (failed) {
+    return (
+      <div
+        className={cn(
+          'bg-gradient-to-br from-sky-400 via-sky-500 to-teal-600',
+          className
+        )}
+      />
+    )
+  }
+
+  return (
+    <img
+      src={src}
+      alt={placeImageAlt(place)}
+      loading="lazy"
+      decoding="async"
+      className={cn('object-cover', className)}
+      onError={() => setFailed(true)}
+    />
+  )
 }
 
 export function PlaceCard({
@@ -38,8 +67,8 @@ export function PlaceCard({
       <Link to={detailTo} onClick={onNavigateDetail}>
         <Card className={cn('transition hover:shadow-md', className)}>
           <CardContent className="flex items-center gap-3 p-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-950">
-              <MapPin className="h-5 w-5" />
+            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-sky-100">
+              <CoverImage place={place} className="h-full w-full" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
@@ -65,7 +94,9 @@ export function PlaceCard({
   return (
     <Card className={cn('overflow-hidden transition hover:shadow-lg', className)}>
       <Link to={detailTo} onClick={onNavigateDetail}>
-        <div className="relative h-40 bg-gradient-to-br from-sky-400 via-sky-500 to-teal-600">
+        <div className="relative h-40 bg-slate-200 dark:bg-slate-800">
+          <CoverImage place={place} className="h-full w-full" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
           {place.featured && (
             <span className="absolute left-2 top-2 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-amber-950">
               Featured
