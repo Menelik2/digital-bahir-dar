@@ -1,6 +1,56 @@
 export type Lang = 'en' | 'am'
 
-const en = {
+export type Strings = {
+  appName: string
+  tagline: string
+  nav: {
+    home: string
+    explore: string
+    map: string
+    hotels: string
+    restaurants: string
+    attractions: string
+    events: string
+    guides: string
+    trips: string
+    aiGuide: string
+    directory: string
+    transport: string
+    login: string
+    profile: string
+  }
+  search: {
+    placeholder: string
+    globalPlaceholder: string
+    noResults: string
+    viewAll: string
+    recent: string
+  }
+  explore: {
+    title: string
+    subtitle: string
+    all: string
+    nearMe: string
+    locating: string
+    locationDenied: string
+    locationUnsupported: string
+    nearbyEmpty: string
+    loading: string
+    empty: string
+    distance: string
+  }
+  theme: {
+    light: string
+    dark: string
+    system: string
+  }
+  common: {
+    language: string
+    close: string
+  }
+}
+
+const en: Strings = {
   appName: 'Digital Bahir Dar',
   tagline: 'Explore Bahir Dar. Know Where to Go. Know What It Costs.',
   nav: {
@@ -48,9 +98,9 @@ const en = {
     language: 'Language',
     close: 'Close',
   },
-} as const
+}
 
-const am: typeof en = {
+const am: Strings = {
   appName: 'ዲጂታል ባሕር ዳር',
   tagline: 'ባሕር ዳርን ያስሱ። የት እንደሚሄዱ እና ምን እንደሚያስከፍል ያውቁ።',
   nav: {
@@ -100,6 +150,4 @@ const am: typeof en = {
   },
 }
 
-export const strings = { en, am } as const
-
-export type Strings = typeof en
+export const strings: Record<Lang, Strings> = { en, am }

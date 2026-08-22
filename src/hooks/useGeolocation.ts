@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAppStore } from '@/store'
 
-export function useGeolocation() {
+/** @param autoRequest if true, request location once on mount */
+export function useGeolocation(autoRequest = false) {
   const { location, setLocation } = useAppStore()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -33,6 +34,12 @@ export function useGeolocation() {
       { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 }
     )
   }, [setLocation])
+
+  useEffect(() => {
+    if (autoRequest && location.latitude == null && location.permission === 'prompt') {
+      request()
+    }
+  }, [autoRequest, location.latitude, location.permission, request])
 
   const hasFix = location.latitude != null && location.longitude != null
 
