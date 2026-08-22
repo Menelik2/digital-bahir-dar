@@ -10,13 +10,22 @@ import { useGeolocation } from '@/hooks/useGeolocation'
 import { useAppStore } from '@/store'
 import { distanceMeters, formatDistance, walkingMinutes, drivingMinutes } from '@/utils/geo'
 import { openGoogleMapsDirections } from '@/components/map/MapView'
-import { useMemo } from 'react'
+import { FavoriteButton } from '@/components/places/FavoriteButton'
+import { StarRating } from '@/components/reviews/StarRating'
+import { ReviewCard } from '@/components/reviews/ReviewCard'
+import { ReviewForm } from '@/components/reviews/ReviewForm'
+import { useReviews, useMyReview, useRatingSummary } from '@/hooks/useReviews'
+import { useMemo, useState } from 'react'
 
 export default function PlaceDetailsPage() {
   const { slug } = useParams<{ slug: string }>()
   const { data: place, isLoading, error, refetch } = usePlace(slug)
   const { location } = useAppStore()
   useGeolocation(true)
+  const { data: reviews = [], isLoading: reviewsLoading } = useReviews(place?.id)
+  const { data: myReview } = useMyReview(place?.id)
+  const { data: ratingSummary } = useRatingSummary(place?.id)
+  const [showReviewForm, setShowReviewForm] = useState(false)
 
   const userPos =
     location.permission === 'granted' && location.latitude != null && location.longitude != null
@@ -98,11 +107,12 @@ export default function PlaceDetailsPage() {
               {formatDistance(distanceM)} · 🚶 {walkingMinutes(distanceM)} min · 🚗 {drivingMinutes(distanceM)} min
             </span>
           )}
-          <div className="ml-auto flex gap-2">
+          <div className="ml-auto flex flex-wrap gap-2">
             <Button size="sm" onClick={() => openGoogleMapsDirections(place, userPos, 'walking')}>
               <Navigation className="h-4 w-4" /> Directions
             </Button>
             <Button size="sm" variant="outline" onClick={share}><Share2 className="h-4 w-4" /> Share</Button>
+            <FavoriteButton placeId={place.id} size="sm" />
           </div>
         </div>
 
@@ -181,9 +191,6 @@ export default function PlaceDetailsPage() {
                 {place.attraction.recommended_duration && (
                   <p><span className="font-medium text-slate-500">Duration:</span> {place.attraction.recommended_duration}</p>
                 )}
-                {place.attraction.best_time_to_visit && (
-                  <p><span className="font-medium text-slate-500">Best time:</span> {place.attraction.best_time_to_visit}</p>
-                )}
                 {place.attraction.safety_information && (
                   <p className="rounded-lg bg-amber-50 p-3 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
                     <strong>Safety:</strong> {place.attraction.safety_information}
@@ -202,11 +209,46 @@ export default function PlaceDetailsPage() {
                 {place.bank.bank_name && <span className="font-medium">{place.bank.bank_name}</span>}
                 {place.bank.has_atm && <span className="rounded-full bg-sky-50 px-3 py-1 text-sm">ATM</span>}
                 {place.bank.has_foreign_exchange && <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm">Foreign exchange</span>}
-                {place.bank.is_atm_only && <span className="rounded-full bg-slate-100 px-3 py-1 text-sm">ATM only</span>}
               </CardContent>
             </Card>
           </section>
         )}
+
+        <section className="mb-8">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-semibold">
+              Reviews
+              {ratingSummary && ratingSummary.count > 0 && (
+                <span className="ml-2 text-sm font-normal text-slate-500">
+                  {ratingSummary.avg}★ · {ratingSummary.count}
+                </span>
+              )}
+            </h2>
+            {ratingSummary && ratingSummary.count > 0 && (
+              <StarRating value={Math.round(ratingSummary.avg)} readonly size="sm" />
+            )}
+          </div>
+          {!showReviewForm && (
+            <Button variant="outline" size="sm" className="mb-4" onClick={() => setShowReviewForm(true)}>
+              {myReview ? 'Edit your review' : 'Write a review'}
+            </Button>
+          )}
+          {showReviewForm && (
+            <div className="mb-4">
+              <ReviewForm placeId={place.id} existing={myReview} onDone={() => setShowReviewForm(false)} />
+              <Button variant="ghost" size="sm" className="mt-2" onClick={() => setShowReviewForm(false)}>Cancel</Button>
+            </div>
+          )}
+          {reviewsLoading && <p className="text-sm text-slate-500">Loading reviews…</p>}
+          {!reviewsLoading && reviews.length === 0 && !showReviewForm && (
+            <p className="text-sm text-slate-500">No reviews yet. Be the first to share your experience.</p>
+          )}
+          <div className="space-y-3">
+            {reviews.map((r) => (
+              <ReviewCard key={r.id} review={r} placeId={place.id} />
+            ))}
+          </div>
+        </section>
 
         <section className="mb-8">
           <h2 className="mb-3 text-lg font-semibold">Location & contact</h2>
