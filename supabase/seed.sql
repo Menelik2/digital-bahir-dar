@@ -13,3 +13,6 @@ INSERT INTO categories (name, slug, icon, sort_order) VALUES
   ('Events', 'event', 'Calendar', 11),
   ('Emergency', 'emergency', 'AlertTriangle', 12)
 ON CONFLICT (slug) DO NOTHING;
+
+-- Sample places live as client-side DEMO_PLACES in src/services/places.ts
+-- until administrators insert verified production records.

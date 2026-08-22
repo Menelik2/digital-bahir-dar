@@ -1,46 +1,147 @@
-import { useEffect } from 'react'
-import { MapPin, Navigation, Search, Filter } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { useEffect, useMemo, useState, useCallback } from 'react'
+import { Search, X } from 'lucide-react'
+import { MapView, openGoogleMapsDirections } from '@/components/map/MapView'
+import { MapFilter } from '@/components/map/MapFilter'
+import { LocationButton } from '@/components/map/LocationButton'
+import { PlaceBottomSheet } from '@/components/map/PlaceBottomSheet'
+import { DirectionsPanel } from '@/components/map/DirectionsPanel'
+import { useFilteredPlaces } from '@/hooks/usePlaces'
+import { useGeolocation } from '@/hooks/useGeolocation'
 import { useAppStore } from '@/store'
+import { BAHIR_DAR_CENTER } from '@/constants'
+import { distanceMeters } from '@/utils/geo'
+import type { Place } from '@/types/place'
 
 export default function MapPage() {
-  const { location, setLocation, mapCenter } = useAppStore()
+  const { location, setMapCenter, mapCenter, selectedPlaceId, setSelectedPlaceId } = useAppStore()
+  const { request: requestLocation } = useGeolocation(true)
+
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<string | null>(null)
+  const [directionsPlace, setDirectionsPlace] = useState<Place | null>(null)
+  const [travelMode, setTravelMode] = useState<'walking' | 'driving'>('walking')
+
+  const categorySlug =
+    filter && !['near_me', 'verified'].includes(filter) ? filter : null
+  const nearMe = filter === 'near_me'
+  const verifiedOnly = filter === 'verified'
+
+  const { places, isLoading } = useFilteredPlaces({
+    search,
+    categorySlug,
+    nearMe,
+    verifiedOnly,
+  })
+
+  const selectedPlace = useMemo(
+    () => places.find((p) => p.id === selectedPlaceId) ?? null,
+    [places, selectedPlaceId]
+  )
+
+  const userPos =
+    location.permission === 'granted' && location.latitude != null && location.longitude != null
+      ? { lat: location.latitude, lng: location.longitude }
+      : null
+
+  const selectedDistance = useMemo(() => {
+    if (!selectedPlace || !userPos) return undefined
+    return distanceMeters(userPos.lat, userPos.lng, selectedPlace.latitude, selectedPlace.longitude)
+  }, [selectedPlace, userPos])
+
+  const directionsDistance = useMemo(() => {
+    if (!directionsPlace) return 0
+    if (userPos) return distanceMeters(userPos.lat, userPos.lng, directionsPlace.latitude, directionsPlace.longitude)
+    return distanceMeters(BAHIR_DAR_CENTER.lat, BAHIR_DAR_CENTER.lng, directionsPlace.latitude, directionsPlace.longitude)
+  }, [directionsPlace, userPos])
 
   useEffect(() => {
-    if (!navigator.geolocation) { setLocation({ permission: 'unsupported' }); return }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy, permission: 'granted', lastUpdated: Date.now() }),
-      () => setLocation({ permission: 'denied' }),
-      { enableHighAccuracy: true, timeout: 10000 }
-    )
-  }, [setLocation])
+    if (userPos) setMapCenter(userPos)
+  }, [location.permission]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handlePlaceSelect = useCallback(
+    (place: Place) => {
+      setSelectedPlaceId(place.id)
+      setMapCenter({ lat: place.latitude, lng: place.longitude })
+      setDirectionsPlace(null)
+    },
+    [setSelectedPlaceId, setMapCenter]
+  )
+
+  const handleDirections = useCallback((place: Place) => {
+    setDirectionsPlace(place)
+  }, [])
+
+  const handleLocate = useCallback(() => {
+    requestLocation()
+    if (userPos) setMapCenter(userPos)
+  }, [requestLocation, userPos, setMapCenter])
 
   return (
-    <div className="relative h-[calc(100dvh-4rem)]">
-      <div className="absolute left-4 right-4 top-4 z-10 flex gap-2">
+    <div className="relative h-[calc(100dvh-4rem)] overflow-hidden">
+      <div className="absolute left-4 right-4 top-4 z-10 flex gap-2 lg:right-auto lg:w-[420px]">
         <div className="flex flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-lg dark:border-slate-700 dark:bg-slate-900">
-          <Search className="h-5 w-5 text-slate-400" />
-          <input type="search" placeholder="Search places in Bahir Dar..." className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400" />
+          <Search className="h-5 w-5 shrink-0 text-slate-400" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search places in Bahir Dar..."
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+            aria-label="Search places"
+          />
+          {search && (
+            <button type="button" onClick={() => setSearch('')} className="rounded p-0.5 hover:bg-slate-100">
+              <X className="h-4 w-4 text-slate-400" />
+            </button>
+          )}
         </div>
-        <Button size="icon" variant="outline" className="h-11 w-11 shrink-0 rounded-xl bg-white shadow-lg"><Filter className="h-5 w-5" /></Button>
+        <LocationButton onLocated={() => handleLocate()} />
       </div>
-      <div className="flex h-full w-full items-center justify-center bg-slate-100 dark:bg-slate-900">
-        <div className="max-w-sm px-6 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-950"><MapPin className="h-8 w-8 text-sky-600" /></div>
-          <h2 className="mb-2 text-lg font-semibold">Digital Bahir Dar Map</h2>
-          <p className="mb-4 text-sm text-slate-500">Interactive Google Maps (Phase 2). Add VITE_GOOGLE_MAPS_API_KEY to enable.</p>
-          <p className="mb-4 text-xs text-slate-400">Center: {mapCenter.lat.toFixed(4)}, {mapCenter.lng.toFixed(4)}</p>
-          {location.permission === 'granted' && location.latitude && <p className="text-sm text-emerald-600">📍 You are here: {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}</p>}
-          {location.permission === 'denied' && <p className="text-sm text-amber-600">Location denied — you can still search.</p>}
-          <Button className="mt-4" size="sm"><Navigation className="h-4 w-4" /> Use my location</Button>
+
+      <MapView
+        places={places}
+        selectedPlaceId={selectedPlaceId}
+        userLocation={userPos}
+        center={mapCenter}
+        onPlaceSelect={handlePlaceSelect}
+        onCenterChange={setMapCenter}
+      />
+
+      {isLoading && (
+        <div className="absolute left-1/2 top-20 z-10 -translate-x-1/2 rounded-full bg-white px-4 py-1.5 text-sm shadow dark:bg-slate-900">
+          Loading places…
         </div>
-      </div>
-      <div className="absolute bottom-24 left-0 right-0 z-10 overflow-x-auto px-4 lg:bottom-6">
-        <div className="flex gap-2 pb-2">
-          {['Near Me', 'Hotels', 'Food', 'Attractions', 'Banks', 'ATM', 'Taxi'].map((c) => (
-            <button key={c} className="shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium shadow-md dark:border-slate-700 dark:bg-slate-900">{c}</button>
-          ))}
+      )}
+
+      {search && !isLoading && (
+        <div className="absolute left-1/2 top-20 z-10 -translate-x-1/2 rounded-full bg-white px-3 py-1 text-xs shadow dark:bg-slate-900">
+          {places.length} result{places.length !== 1 ? 's' : ''}
         </div>
+      )}
+
+      {directionsPlace && (
+        <DirectionsPanel
+          origin={userPos}
+          destination={directionsPlace}
+          distanceM={directionsDistance}
+          mode={travelMode}
+          onModeChange={setTravelMode}
+          onClose={() => setDirectionsPlace(null)}
+          onStartNavigation={() => openGoogleMapsDirections(directionsPlace, userPos, travelMode)}
+        />
+      )}
+
+      {!directionsPlace && (
+        <PlaceBottomSheet
+          place={selectedPlace}
+          distanceM={selectedDistance}
+          onClose={() => setSelectedPlaceId(null)}
+          onDirections={handleDirections}
+        />
+      )}
+
+      <div className="absolute bottom-24 left-0 right-0 z-10 px-4 lg:bottom-6">
+        <MapFilter active={filter} onChange={setFilter} />
       </div>
     </div>
   )
