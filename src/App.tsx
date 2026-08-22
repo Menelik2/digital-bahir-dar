@@ -13,6 +13,7 @@ import TransportPage from '@/pages/Transport'
 import EventsPage from '@/pages/Events'
 import DirectoryPage from '@/pages/Directory'
 import TripsPage from '@/pages/Trips'
+import TripDetailPage from '@/pages/Trips/TripDetail'
 import BudgetPage from '@/pages/Budget'
 import AIGuidePage from '@/pages/AIGuide'
 import GuidesPage from '@/pages/Guides'
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="/events" element={<EventsPage />} />
             <Route path="/directory" element={<DirectoryPage />} />
             <Route path="/trips" element={<TripsPage />} />
+            <Route path="/trips/:tripId" element={<TripDetailPage />} />
             <Route path="/budget" element={<BudgetPage />} />
             <Route path="/ai-guide" element={<AIGuidePage />} />
             <Route path="/guides" element={<GuidesPage />} />
