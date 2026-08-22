@@ -9,18 +9,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { filterRealPlaces } from '@/utils/realPlaces'
 import type { Place } from '@/types/place'
-
-const FILTERS: { id: OsmCategory; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'hotel', label: 'Hotels' },
-  { id: 'restaurant', label: 'Restaurants' },
-  { id: 'cafe', label: 'Cafés' },
-  { id: 'attraction', label: 'Sights' },
-  { id: 'transport', label: 'Transport' },
-  { id: 'bank', label: 'Banks' },
-  { id: 'atm', label: 'ATMs' },
-  { id: 'hospital', label: 'Health' },
-]
+import { useT } from '@/hooks/useT'
 
 function matchesCategory(place: Place, cat: OsmCategory): boolean {
   if (cat === 'all') return true
@@ -48,8 +37,21 @@ function mergeByName(primary: Place[], secondary: Place[]): Place[] {
 }
 
 export default function DiscoverPage() {
+  const t = useT()
   const [cat, setCat] = useState<OsmCategory>('all')
   const [q, setQ] = useState('')
+
+  const FILTERS: { id: OsmCategory; label: string }[] = [
+    { id: 'all', label: t.common.all },
+    { id: 'hotel', label: t.discover.hotels },
+    { id: 'restaurant', label: t.discover.restaurants },
+    { id: 'cafe', label: t.discover.cafes },
+    { id: 'attraction', label: t.discover.sights },
+    { id: 'transport', label: t.discover.transport },
+    { id: 'bank', label: t.discover.banks },
+    { id: 'atm', label: t.discover.atms },
+    { id: 'hospital', label: t.discover.health },
+  ]
 
   const osmCats = useMemo((): OsmCategory[] => {
     if (cat === 'all') return ['all']
@@ -68,16 +70,12 @@ export default function DiscoverPage() {
     isFetching,
   } = useOsmPlaces(osmCats, true)
 
-  // Instant real landmarks (no DEMO commercial); OSM fills hotels/restaurants
   const curated = useMemo(() => filterRealPlaces(CURATED_PLACES), [])
 
   const places = useMemo(() => {
-    // Prefer live OSM; fill with curated landmarks that match filter
     const curatedFiltered = curated.filter((p) => matchesCategory(p, cat))
     let list =
-      osmPlaces.length > 0
-        ? mergeByName(osmPlaces, curatedFiltered)
-        : curatedFiltered
+      osmPlaces.length > 0 ? mergeByName(osmPlaces, curatedFiltered) : curatedFiltered
 
     if (q.trim()) {
       const needle = q.trim().toLowerCase()
@@ -105,32 +103,26 @@ export default function DiscoverPage() {
         <div>
           <div className="mb-1 flex items-center gap-2">
             <Compass className="h-6 w-6 text-sky-600" />
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Discover Bahir Dar</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">{t.discover.title}</h1>
           </div>
-          <p className="mt-1 max-w-2xl text-slate-500 dark:text-slate-400">
-            Real places on the ground — hotels, restaurants, cafés, sights, and services from
-            OpenStreetMap, plus key Bahir Dar landmarks.
-          </p>
-          <p className="mt-1 text-xs text-slate-400">
-            Map data © OpenStreetMap contributors (ODbL) · Not DEMO listings
-          </p>
+          <p className="mt-1 max-w-2xl text-slate-500 dark:text-slate-400">{t.discover.subtitle}</p>
+          <p className="mt-1 text-xs text-slate-400">{t.discover.osmCredit}</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => void refetch()} disabled={isFetching}>
           {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          Refresh live data
+          {t.discover.refresh}
         </Button>
       </div>
 
-      {/* Search */}
       <div className="mb-4 flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <Search className="h-5 w-5 shrink-0 text-slate-400" />
         <input
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search hotels, restaurants, sights…"
+          placeholder={t.discover.searchPlaceholder}
           className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
-          aria-label="Search places"
+          aria-label={t.common.search}
         />
         {q && (
           <button type="button" onClick={() => setQ('')} className="rounded p-0.5 hover:bg-slate-100">
@@ -141,15 +133,17 @@ export default function DiscoverPage() {
 
       <div className="mb-2 flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[11px] font-semibold text-white">
-          {places.length} places
+          {places.length} {t.discover.placesCount}
         </span>
         {isFetching && (
           <span className="flex items-center gap-1 text-xs text-slate-500">
-            <Loader2 className="h-3 w-3 animate-spin" /> Updating from OpenStreetMap…
+            <Loader2 className="h-3 w-3 animate-spin" /> {t.discover.updatingOsm}
           </span>
         )}
         {!isFetching && osmPlaces.length > 0 && (
-          <span className="text-xs text-slate-500">{osmPlaces.length} from live OSM</span>
+          <span className="text-xs text-slate-500">
+            {osmPlaces.length} {t.discover.fromLiveOsm}
+          </span>
         )}
       </div>
 
@@ -173,11 +167,9 @@ export default function DiscoverPage() {
 
       <section className="mb-8 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/50">
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Travel guides
+          {t.discover.guideSites}
         </h2>
-        <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
-          Research Bahir Dar, then open a place below for Google Maps directions.
-        </p>
+        <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">{t.discover.guideSitesBody}</p>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {GUIDE_SITES.map((s) => (
             <a
@@ -202,7 +194,7 @@ export default function DiscoverPage() {
             rel="noopener noreferrer"
             className="text-sm font-medium text-sky-600 hover:underline"
           >
-            Google Maps: {cat} in Bahir Dar →
+            {t.discover.googleMapsCat}: {cat} →
           </a>
           <a
             href={searchLinks.openStreetMap}
@@ -210,39 +202,37 @@ export default function DiscoverPage() {
             rel="noopener noreferrer"
             className="text-sm font-medium text-sky-600 hover:underline"
           >
-            OSM search →
+            {t.discover.osmSearch} →
           </a>
         </div>
       </section>
 
       {showInitialSpinner && (
         <p className="flex items-center justify-center gap-2 py-16 text-slate-500">
-          <Loader2 className="h-5 w-5 animate-spin" /> Loading places…
+          <Loader2 className="h-5 w-5 animate-spin" /> {t.common.loading}
         </p>
       )}
 
       {isError && places.length === 0 && (
         <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-100">
-          Could not reach OpenStreetMap. {(error as Error)?.message}
+          {t.discover.loadFail} {(error as Error)?.message}
           <button type="button" className="ml-2 underline" onClick={() => void refetch()}>
-            Retry
+            {t.common.retry}
           </button>
         </div>
       )}
 
       {isError && places.length > 0 && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-          Live OSM update failed — showing landmarks.{" "}
+          {t.discover.loadFailPartial}{' '}
           <button type="button" className="underline" onClick={() => void refetch()}>
-            Retry
+            {t.common.retry}
           </button>
         </div>
       )}
 
       {!showInitialSpinner && places.length === 0 && (
-        <p className="py-12 text-center text-slate-500">
-          No places match this filter. Try All or another category.
-        </p>
+        <p className="py-12 text-center text-slate-500">{t.discover.empty}</p>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -266,7 +256,7 @@ export default function DiscoverPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 rounded-lg bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-800 dark:bg-teal-950 dark:text-teal-300"
                 >
-                  Directions
+                  {t.common.directions}
                 </a>
                 <a
                   href={links.openStreetMap}
