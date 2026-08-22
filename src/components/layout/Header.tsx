@@ -4,22 +4,23 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { GlobalSearch } from '@/components/search/GlobalSearch'
 import { ThemeLangControls } from '@/components/layout/ThemeLangControls'
-import { useT } from '@/hooks/useT'
+import { useT, useLang } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
 
 export function Header() {
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const t = useT()
+  const { isAm } = useLang()
 
   const navItems = [
     { path: '/', label: t.nav.home },
-    { path: '/explore', label: t.nav.explore },
+    { path: '/todo', label: isAm ? 'ተግባራት' : 'To Do' },
+    { path: '/city', label: isAm ? 'ከተማ' : 'City' },
     { path: '/discover', label: t.nav.discover },
     { path: '/map', label: t.nav.map },
     { path: '/hotels', label: t.nav.hotels },
     { path: '/restaurants', label: t.nav.restaurants },
-    { path: '/attractions', label: t.nav.attractions },
     { path: '/transport', label: t.nav.transport },
     { path: '/trips', label: t.nav.trips },
     { path: '/ai-guide', label: t.nav.aiGuide },
