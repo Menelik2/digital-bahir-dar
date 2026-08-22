@@ -12,6 +12,7 @@ import { distanceMeters, formatDistance, walkingMinutes, drivingMinutes } from '
 import { openGoogleMapsDirections } from '@/components/map/MapView'
 import { FavoriteButton } from '@/components/places/FavoriteButton'
 import { isOsmPlaceId } from '@/services/osmPlaces'
+import { isPersistedPlaceId } from '@/utils/placeId'
 import { StarRating } from '@/components/reviews/StarRating'
 import { ReviewCard } from '@/components/reviews/ReviewCard'
 import { ReviewForm } from '@/components/reviews/ReviewForm'
@@ -23,9 +24,10 @@ export default function PlaceDetailsPage() {
   const { data: place, isLoading, error, refetch } = usePlace(slug)
   const { location } = useAppStore()
   useGeolocation(true)
-  const { data: reviews = [], isLoading: reviewsLoading } = useReviews(place?.id)
-  const { data: myReview } = useMyReview(place?.id)
-  const { data: ratingSummary } = useRatingSummary(place?.id)
+  const canSocial = isPersistedPlaceId(place?.id)
+  const { data: reviews = [], isLoading: reviewsLoading } = useReviews(canSocial ? place?.id : undefined)
+  const { data: myReview } = useMyReview(canSocial ? place?.id : undefined)
+  const { data: ratingSummary } = useRatingSummary(canSocial ? place?.id : undefined)
   const [showReviewForm, setShowReviewForm] = useState(false)
 
   const userPos =
@@ -66,7 +68,7 @@ export default function PlaceDetailsPage() {
     )
   }
 
-  const isDemo = place.name.includes('(DEMO)')
+  const isDemo = place.name.includes('(DEMO)') || place.id.startsWith('demo-')
   const isOsm = isOsmPlaceId(place.id)
   const name = place.name.replace(' (DEMO)', '')
 
@@ -123,13 +125,13 @@ export default function PlaceDetailsPage() {
               <Navigation className="h-4 w-4" /> Directions
             </Button>
             <Button size="sm" variant="outline" onClick={share}><Share2 className="h-4 w-4" /> Share</Button>
-            {!isOsm && <FavoriteButton placeId={place.id} size="sm" />}
+            {canSocial && <FavoriteButton placeId={place.id} size="sm" />}
           </div>
         </div>
 
         {isDemo && (
           <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-            This is <strong>DEMO</strong> development data. Prices, phones, and hours are not real.
+            This is <strong>DEMO</strong> development data. Prices, phones, and hours are not real. Favorites and reviews require database places.
           </div>
         )}
 
@@ -225,7 +227,7 @@ export default function PlaceDetailsPage() {
           </section>
         )}
 
-        {!isOsm && (
+        {canSocial && (
           <section className="mb-8">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-lg font-semibold">
