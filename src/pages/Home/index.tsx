@@ -16,13 +16,21 @@ import {
   Navigation,
   Users,
   Wallet,
+  ListTodo,
+  Building,
+  Compass,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { APP_TAGLINE } from '@/constants'
 import { CITY_EVENTS, PRACTICAL_TIPS } from '@/data/cityLife'
+import { CITY_TODOS } from '@/data/thingsToDo'
+import { useTodoStore } from '@/store/todoStore'
 
 const quickActions = [
+  { label: 'Things to Do', icon: ListTodo, path: '/todo', color: 'bg-sky-50 text-sky-700' },
+  { label: 'Smart City', icon: Building, path: '/city', color: 'bg-slate-100 text-slate-700' },
+  { label: 'Discover', icon: Compass, path: '/discover', color: 'bg-teal-50 text-teal-700' },
   { label: 'Hotels', icon: Hotel, path: '/hotels', color: 'bg-blue-50 text-blue-600' },
   { label: 'Restaurants', icon: UtensilsCrossed, path: '/restaurants', color: 'bg-orange-50 text-orange-600' },
   { label: 'Attractions', icon: Landmark, path: '/attractions', color: 'bg-emerald-50 text-emerald-600' },
@@ -30,39 +38,40 @@ const quickActions = [
   { label: 'Banks', icon: Building2, path: '/banks', color: 'bg-indigo-50 text-indigo-600' },
   { label: 'ATMs', icon: CreditCard, path: '/banks', color: 'bg-cyan-50 text-cyan-600' },
   { label: 'Guides', icon: Users, path: '/guides', color: 'bg-teal-50 text-teal-600' },
-  { label: 'Cafes', icon: Coffee, path: '/explore', color: 'bg-amber-50 text-amber-700' },
-  { label: 'Shopping', icon: ShoppingBag, path: '/directory', color: 'bg-pink-50 text-pink-600' },
   { label: 'Events', icon: Calendar, path: '/events', color: 'bg-purple-50 text-purple-600' },
-  { label: 'Budget', icon: Wallet, path: '/budget', color: 'bg-lime-50 text-lime-700' },
   { label: 'Emergency', icon: AlertTriangle, path: '/directory#emergency', color: 'bg-rose-50 text-rose-600' },
 ]
 
 export default function HomePage() {
   const upcoming = CITY_EVENTS.filter((e) => e.featured).slice(0, 3)
   const tips = PRACTICAL_TIPS.slice(0, 3)
+  const completed = useTodoStore((s) => s.completed)
+  const done = CITY_TODOS.filter((t) => completed[t.id]).length
 
   return (
     <div>
       <section className="relative overflow-hidden bg-gradient-to-br from-sky-600 via-sky-500 to-teal-600 px-4 py-16 text-white sm:py-24">
         <div className="relative mx-auto max-w-4xl text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium">
-            <MapPin className="h-4 w-4" /> Bahir Dar, Ethiopia 🇪🇹
+            <MapPin className="h-4 w-4" /> Bahir Dar Smart Digital City 🇪🇹
           </div>
-          <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">Discover Bahir Dar</h1>
+          <h1 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+            To Do Bahir Dar
+          </h1>
           <p className="mx-auto mb-8 max-w-2xl text-lg text-sky-100 sm:text-xl">{APP_TAGLINE}</p>
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link to="/map">
+            <Link to="/todo">
               <Button size="lg" className="w-full bg-white text-sky-700 hover:bg-sky-50 sm:w-auto">
-                <Navigation className="h-5 w-5" /> Explore Map
+                <ListTodo className="h-5 w-5" /> Things to Do ({done}/{CITY_TODOS.length})
               </Button>
             </Link>
-            <Link to="/trips">
+            <Link to="/city">
               <Button
                 size="lg"
                 variant="outline"
                 className="w-full border-white/40 bg-white/10 text-white hover:bg-white/20 sm:w-auto"
               >
-                Plan My Trip
+                <Building className="h-5 w-5" /> Smart City hub
               </Button>
             </Link>
             <Link to="/ai-guide">
@@ -75,7 +84,7 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-10">
-        <h2 className="mb-6 text-xl font-semibold">What do you need?</h2>
+        <h2 className="mb-6 text-xl font-semibold">City services</h2>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
           {quickActions.map((a) => (
             <Link key={a.label} to={a.path}>
@@ -137,12 +146,14 @@ export default function HomePage() {
               </CardContent>
             </Card>
           </Link>
-          <Link to="/guides">
+          <Link to="/todo">
             <Card className="overflow-hidden transition hover:shadow-lg">
-              <div className="h-40 bg-gradient-to-br from-amber-400 to-orange-500" />
+              <div className="h-40 bg-gradient-to-br from-violet-500 to-sky-600" />
               <CardContent className="p-4">
-                <h3 className="font-semibold">Local guides</h3>
-                <p className="text-sm text-slate-500">Licensed help for boats, Falls & city</p>
+                <h3 className="font-semibold">Your city checklist</h3>
+                <p className="text-sm text-slate-500">
+                  {done} of {CITY_TODOS.length} things done — keep exploring
+                </p>
               </CardContent>
             </Card>
           </Link>
@@ -183,24 +194,30 @@ export default function HomePage() {
                 <Wallet className="h-4 w-4" /> Budget
               </Button>
             </Link>
+            <Link to="/map">
+              <Button variant="outline" size="sm">
+                <Navigation className="h-4 w-4" /> Map
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-4xl px-4 py-16 text-center">
-        <h2 className="mb-3 text-2xl font-bold">Ready to explore?</h2>
+        <h2 className="mb-3 text-2xl font-bold">Your smart city in one app</h2>
         <p className="mb-6 text-slate-600 dark:text-slate-400">
-          GPS map, AI guide, trips, budgets, events, and local services — built for Bahir Dar.
+          Checklist, map, live places, AI guide, trips, budgets, events, and local services — for
+          Bahir Dar.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link to="/map">
+          <Link to="/todo">
             <Button size="lg">
-              <MapPin className="h-5 w-5" /> Open Map
+              <ListTodo className="h-5 w-5" /> Start checklist
             </Button>
           </Link>
-          <Link to="/ai-guide">
+          <Link to="/city">
             <Button size="lg" variant="outline">
-              <Sparkles className="h-5 w-5" /> AI Guide
+              Open Smart City
             </Button>
           </Link>
         </div>
