@@ -10,7 +10,6 @@ const DEMO_KNOWLEDGE: { keys: string[]; reply: string; priority?: number }[] = [
       "Selam! I'm your Bahir Dar guide.\n\nAsk me anything about:\n• **Where to go** (Lake Tana, Blue Nile Falls, viewpoints)\n• **Food** (injera, lake fish, coffee)\n• **Hotels & budget**\n• **Transport** (bajaj, boats, airport)\n• **A 1–3 day itinerary**\n\nPrices are estimates only — always verify locally.",
   },
   {
-    // Vague “where should I go / what to see” — must match before generic fallback
     keys: [
       'where',
       'where to go',
@@ -112,7 +111,6 @@ function scoreMatch(lower: string, keys: string[]): number {
   let score = 0
   for (const k of keys) {
     if (lower.includes(k)) {
-      // Longer key matches are stronger (e.g. "where to go" > "where")
       score += Math.max(1, k.length / 4)
     }
   }
@@ -122,7 +120,6 @@ function scoreMatch(lower: string, keys: string[]): number {
 function matchDemoReply(userText: string): string {
   const lower = userText.toLowerCase().trim()
 
-  // Score all entries; pick best
   let best: { reply: string; score: number } | null = null
   for (const entry of DEMO_KNOWLEDGE) {
     const s = scoreMatch(lower, entry.keys) * (entry.priority ?? 5)
@@ -131,8 +128,11 @@ function matchDemoReply(userText: string): string {
   }
   if (best && best.score > 0) return best.reply
 
-  // Intent heuristics for short / broken English (e.g. "tell me where i go")
-  if (\b(go|see|visit|do|plan|trip|tour)\b/.test(lower) || lower.length < 40) {
+  // Broken / short English: "tell me where i go", "where i go", etc.
+  if (
+    /\b(go|see|visit|do|plan|trip|tour|place|places)\b/.test(lower) ||
+    /where/.test(lower)
+  ) {
     const whereEntry = DEMO_KNOWLEDGE.find((e) => e.keys.includes('where to go'))
     if (whereEntry) return whereEntry.reply
   }
@@ -161,8 +161,6 @@ export async function sendGuideMessage(
 
   const lastUser = [...history].reverse().find((m) => m.role === 'user')
 
-  // Prefer rich offline answers immediately when the last message clearly matches knowledge
-  // (still try live AI first if configured — offline is fallback only)
   try {
     const { data, error } = await supabase.functions.invoke('ai-guide', {
       body: { messages, locale },
@@ -179,11 +177,12 @@ export async function sendGuideMessage(
 
     if (data?.fallback || data?.error) {
       return {
-        reply: data.reply && !String(data.reply).includes('not fully configured')
-          ? data.reply
-          : lastUser
-            ? matchDemoReply(lastUser.content)
-            : DEMO_KNOWLEDGE[0].reply,
+        reply:
+          data.reply && !String(data.reply).includes('not fully configured')
+            ? data.reply
+            : lastUser
+              ? matchDemoReply(lastUser.content)
+              : DEMO_KNOWLEDGE[0].reply,
         fallback: true,
         error: data.error,
       }
