@@ -14,13 +14,13 @@ import {
 } from '@/services/trips'
 import type { TripInput } from '@/types/trip'
 import { useAuth } from './useAuth'
-import { useTripsRealtime, useTripDetailRealtime } from './useRealtimeQueries'
+import { useTripDetailRealtime } from './useRealtimeQueries'
 
 export function useMyTrips() {
   const { user } = useAuth()
-  const live = useTripsRealtime()
+  // trips list realtime is global in RealtimeProvider — no second channel here
 
-  const query = useQuery({
+  return useQuery({
     queryKey: ['trips', user?.id],
     queryFn: async () => {
       if (!user) return []
@@ -31,8 +31,6 @@ export function useMyTrips() {
     enabled: !!user,
     staleTime: 30_000,
   })
-
-  return { ...query, realtime: live }
 }
 
 export function useTrip(tripId: string | undefined) {

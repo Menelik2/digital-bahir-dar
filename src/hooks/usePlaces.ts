@@ -10,12 +10,9 @@ import {
 import type { Place } from '@/types/place'
 import { useAppStore } from '@/store'
 import { useMemo } from 'react'
-import { usePlacesRealtime } from './useRealtimeQueries'
 
+/** Places list — realtime is mounted once in Layout (usePlacesRealtime), not here. */
 export function usePlaces(categorySlug?: string) {
-  // Keep directory lists fresh when places change elsewhere
-  usePlacesRealtime(true)
-
   return useQuery({
     queryKey: ['places', categorySlug ?? 'all'],
     queryFn: async () => {

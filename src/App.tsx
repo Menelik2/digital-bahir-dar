@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Layout } from '@/components/layout/Layout'
+import { RealtimeProvider } from '@/components/realtime/RealtimeProvider'
 import HomePage from '@/pages/Home'
 import MapPage from '@/pages/Map'
 import AuthPage from '@/pages/Auth'
@@ -23,37 +24,46 @@ import AdminPage from '@/pages/Admin'
 import PlaceDetailsPage from '@/pages/PlaceDetails'
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 60_000, retry: 1 } },
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      retry: 1,
+      // Avoid stampedes when many realtime invalidations fire
+      refetchOnWindowFocus: true,
+    },
+  },
 })
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/explore" element={<ExplorePage />} />
-            <Route path="/map" element={<MapPage />} />
-            <Route path="/hotels" element={<HotelsPage />} />
-            <Route path="/restaurants" element={<RestaurantsPage />} />
-            <Route path="/attractions" element={<AttractionsPage />} />
-            <Route path="/banks" element={<BanksPage />} />
-            <Route path="/transport" element={<TransportPage />} />
-            <Route path="/events" element={<EventsPage />} />
-            <Route path="/directory" element={<DirectoryPage />} />
-            <Route path="/trips" element={<TripsPage />} />
-            <Route path="/trips/:tripId" element={<TripDetailPage />} />
-            <Route path="/budget" element={<BudgetPage />} />
-            <Route path="/ai-guide" element={<AIGuidePage />} />
-            <Route path="/guides" element={<GuidesPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/business" element={<BusinessPage />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route path="/places/:slug" element={<PlaceDetailsPage />} />
-            <Route path="/auth" element={<AuthPage />} />
-          </Route>
-        </Routes>
+        <RealtimeProvider>
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/explore" element={<ExplorePage />} />
+              <Route path="/map" element={<MapPage />} />
+              <Route path="/hotels" element={<HotelsPage />} />
+              <Route path="/restaurants" element={<RestaurantsPage />} />
+              <Route path="/attractions" element={<AttractionsPage />} />
+              <Route path="/banks" element={<BanksPage />} />
+              <Route path="/transport" element={<TransportPage />} />
+              <Route path="/events" element={<EventsPage />} />
+              <Route path="/directory" element={<DirectoryPage />} />
+              <Route path="/trips" element={<TripsPage />} />
+              <Route path="/trips/:tripId" element={<TripDetailPage />} />
+              <Route path="/budget" element={<BudgetPage />} />
+              <Route path="/ai-guide" element={<AIGuidePage />} />
+              <Route path="/guides" element={<GuidesPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/business" element={<BusinessPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/places/:slug" element={<PlaceDetailsPage />} />
+              <Route path="/auth" element={<AuthPage />} />
+            </Route>
+          </Routes>
+        </RealtimeProvider>
       </BrowserRouter>
     </QueryClientProvider>
   )

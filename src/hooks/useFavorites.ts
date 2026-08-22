@@ -1,20 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchFavorites, isFavorited, addFavorite, removeFavorite } from '@/services/social'
 import { useAuth } from './useAuth'
-import { useFavoritesRealtime } from './useRealtimeQueries'
 
+/** Favorites list — realtime mounted once in RealtimeProvider when signed in. */
 export function useFavorites() {
   const { user } = useAuth()
-  const live = useFavoritesRealtime()
 
-  const query = useQuery({
+  return useQuery({
     queryKey: ['favorites', user?.id],
     queryFn: () => fetchFavorites(user!.id),
     enabled: !!user,
     staleTime: 60_000,
   })
-
-  return { ...query, realtime: live }
 }
 
 export function useIsFavorited(placeId: string | undefined) {
