@@ -1,13 +1,51 @@
 import { useEffect } from 'react'
-import {
-  APIProvider,
-  Map,
-  AdvancedMarker,
-  Pin,
-  useMap,
-} from '@vis.gl/react-google-maps'
+import { MapContainer, TileLayer, Marker, Popup, useMap, CircleMarker } from 'react-leaflet'
+import L from 'leaflet'
 import type { Place } from '@/types/place'
 import { BAHIR_DAR_CENTER, DEFAULT_MAP_ZOOM } from '@/constants'
+import 'leaflet/dist/leaflet.css'
+
+// Fix default marker icons in Vite (bundler breaks Leaflet's relative icon URLs)
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DefaultIcon = L.icon({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+})
+L.Marker.prototype.options.icon = DefaultIcon
+
+function pinIcon(selected: boolean, featured: boolean) {
+  const color = selected ? '#0ea5e9' : featured ? '#f59e0b' : '#0f766e'
+  const scale = selected ? 1.25 : 1
+  const size = 28 * scale
+  return L.divIcon({
+    className: '',
+    html: `<div style="
+      width:${size}px;height:${size}px;
+      background:${color};
+      border:2px solid ${selected ? '#0369a1' : '#134e4a'};
+      border-radius:50% 50% 50% 0;
+      transform:rotate(-45deg);
+      box-shadow:0 2px 6px rgba(0,0,0,.35);
+      display:flex;align-items:center;justify-content:center;
+    "><span style="
+      transform:rotate(45deg);
+      width:10px;height:10px;
+      background:#fff;border-radius:50%;
+    "></span></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+    popupAnchor: [0, -size],
+  })
+}
 
 interface MapViewProps {
   places: Place[]
@@ -18,56 +56,27 @@ interface MapViewProps {
   onCenterChange?: (center: { lat: number; lng: number }) => void
 }
 
-function PlaceMarkers({
-  places,
-  selectedPlaceId,
-  onPlaceSelect,
-}: {
-  places: Place[]
-  selectedPlaceId: string | null
-  onPlaceSelect: (place: Place) => void
-}) {
-  return (
-    <>
-      {places.map((place) => {
-        const selected = place.id === selectedPlaceId
-        return (
-          <AdvancedMarker
-            key={place.id}
-            position={{ lat: place.latitude, lng: place.longitude }}
-            onClick={() => onPlaceSelect(place)}
-            title={place.name}
-            zIndex={selected ? 1000 : 1}
-          >
-            <Pin
-              background={selected ? '#0ea5e9' : place.featured ? '#f59e0b' : '#0f766e'}
-              borderColor={selected ? '#0369a1' : '#134e4a'}
-              glyphColor="#ffffff"
-              scale={selected ? 1.3 : 1}
-            />
-          </AdvancedMarker>
-        )
-      })}
-    </>
-  )
-}
-
-function UserMarker({ position }: { position: { lat: number; lng: number } }) {
-  return (
-    <AdvancedMarker position={position} title="You are here" zIndex={2000}>
-      <div className="relative flex h-5 w-5 items-center justify-center">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-60" />
-        <span className="relative h-3.5 w-3.5 rounded-full border-2 border-white bg-sky-500 shadow" />
-      </div>
-    </AdvancedMarker>
-  )
-}
-
 function MapCamera({ center }: { center: { lat: number; lng: number } }) {
   const map = useMap()
   useEffect(() => {
-    if (map) map.panTo(center)
+    map.panTo([center.lat, center.lng], { animate: true })
   }, [map, center.lat, center.lng])
+  return null
+}
+
+function MapEvents({ onCenterChange }: { onCenterChange?: (c: { lat: number; lng: number }) => void }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!onCenterChange) return
+    const handler = () => {
+      const c = map.getCenter()
+      onCenterChange({ lat: c.lat, lng: c.lng })
+    }
+    map.on('moveend', handler)
+    return () => {
+      map.off('moveend', handler)
+    }
+  }, [map, onCenterChange])
   return null
 }
 
@@ -79,51 +88,72 @@ export function MapView({
   onPlaceSelect,
   onCenterChange,
 }: MapViewProps) {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined
-  const mapId = (import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string | undefined)?.trim()
-
-  if (!apiKey) {
-    return (
-      <div className="flex h-full w-full items-center justify-center bg-slate-100 dark:bg-slate-900">
-        <div className="max-w-sm px-6 text-center">
-          <p className="mb-2 text-lg font-semibold">Google Maps API key required</p>
-          <p className="text-sm text-slate-500">
-            Add <code className="rounded bg-slate-200 px-1 dark:bg-slate-800">VITE_GOOGLE_MAPS_API_KEY</code> to
-            your environment. Optional:{' '}
-            <code className="rounded bg-slate-200 px-1 dark:bg-slate-800">VITE_GOOGLE_MAPS_MAP_ID</code> for
-            AdvancedMarker styling.
-          </p>
-          <p className="mt-3 text-xs text-slate-400">
-            Showing {places.length} place{places.length !== 1 ? 's' : ''} in data layer.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <APIProvider apiKey={apiKey} libraries={['marker']}>
-      <Map
-        defaultCenter={BAHIR_DAR_CENTER}
-        defaultZoom={DEFAULT_MAP_ZOOM}
-        {...(mapId ? { mapId } : {})}
-        gestureHandling="greedy"
-        disableDefaultUI={false}
-        zoomControl
-        mapTypeControl={false}
-        streetViewControl={false}
-        fullscreenControl={false}
-        className="h-full w-full"
-        onCameraChanged={(ev) => {
-          const c = ev.detail.center
-          if (c) onCenterChange?.({ lat: c.lat, lng: c.lng })
-        }}
-      >
-        <MapCamera center={center} />
-        <PlaceMarkers places={places} selectedPlaceId={selectedPlaceId} onPlaceSelect={onPlaceSelect} />
-        {userLocation && <UserMarker position={userLocation} />}
-      </Map>
-    </APIProvider>
+    <MapContainer
+      center={[BAHIR_DAR_CENTER.lat, BAHIR_DAR_CENTER.lng]}
+      zoom={DEFAULT_MAP_ZOOM}
+      className="h-full w-full z-0"
+      zoomControl
+      attributionControl
+      style={{ height: '100%', width: '100%' }}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        maxZoom={19}
+      />
+      <MapCamera center={center} />
+      <MapEvents onCenterChange={onCenterChange} />
+
+      {places.map((place) => {
+        const selected = place.id === selectedPlaceId
+        return (
+          <Marker
+            key={place.id}
+            position={[place.latitude, place.longitude]}
+            icon={pinIcon(selected, !!place.featured)}
+            eventHandlers={{
+              click: () => onPlaceSelect(place),
+            }}
+            zIndexOffset={selected ? 1000 : 1}
+          >
+            <Popup>
+              <strong>{place.name}</strong>
+              {place.short_description && (
+                <div style={{ fontSize: 12, marginTop: 4 }}>{place.short_description}</div>
+              )}
+            </Popup>
+          </Marker>
+        )
+      })}
+
+      {userLocation && (
+        <>
+          <CircleMarker
+            center={[userLocation.lat, userLocation.lng]}
+            radius={8}
+            pathOptions={{
+              color: '#0369a1',
+              fillColor: '#0ea5e9',
+              fillOpacity: 0.9,
+              weight: 2,
+            }}
+          >
+            <Popup>You are here</Popup>
+          </CircleMarker>
+          <CircleMarker
+            center={[userLocation.lat, userLocation.lng]}
+            radius={20}
+            pathOptions={{
+              color: '#0ea5e9',
+              fillColor: '#0ea5e9',
+              fillOpacity: 0.15,
+              weight: 1,
+            }}
+          />
+        </>
+      )}
+    </MapContainer>
   )
 }
 
