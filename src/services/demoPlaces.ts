@@ -1,0 +1,96 @@
+import type { Place } from '@/types/place'
+import { BAHIR_DAR_CENTER } from '@/constants'
+
+/** Client-side DEMO places — clearly labeled. Not production data. */
+export const DEMO_PLACES: Place[] = [
+  {
+    id: 'demo-lake-tana', name: 'Lake Tana (DEMO)', slug: 'lake-tana-demo', category_id: 'demo-attraction',
+    description: "DEMO DATA — Ethiopia's largest lake. Verify boat operators locally.",
+    short_description: 'Largest lake in Ethiopia', address: 'Bahir Dar, Amhara',
+    latitude: 11.6167, longitude: 37.4, phone: null, email: null, website: null,
+    price_level: null, entrance_fee: null, currency: 'ETB', verified: false, featured: true, status: 'published',
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    category: { id: 'demo-attraction', name: 'Attractions', slug: 'attraction', icon: 'Landmark', description: null, sort_order: 4 },
+    attraction: { id: 'demo-att-1', place_id: 'demo-lake-tana', attraction_type: 'nature', entrance_fee: null,
+      recommended_duration: 'Half day – full day', best_time_to_visit: 'Morning', historical_information: null,
+      safety_information: 'Use verified boat operators', accessibility: null },
+  },
+  {
+    id: 'demo-blue-nile', name: 'Blue Nile Falls Viewpoint (DEMO)', slug: 'blue-nile-falls-demo', category_id: 'demo-attraction',
+    description: 'DEMO DATA — Tissisat viewpoint. Confirm access and fees before visiting.',
+    short_description: 'Tissisat — the smoking water', address: 'Near Bahir Dar',
+    latitude: 11.489, longitude: 37.587, phone: null, email: null, website: null,
+    price_level: 2, entrance_fee: null, currency: 'ETB', verified: false, featured: true, status: 'published',
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    category: { id: 'demo-attraction', name: 'Attractions', slug: 'attraction', icon: 'Landmark', description: null, sort_order: 4 },
+    attraction: { id: 'demo-att-2', place_id: 'demo-blue-nile', attraction_type: 'nature', entrance_fee: null,
+      recommended_duration: '2–4 hours', best_time_to_visit: 'Rainy season', historical_information: null,
+      safety_information: 'Steep paths', accessibility: 'Limited' },
+  },
+  {
+    id: 'demo-hotel-1', name: 'Lakeside Hotel Example (DEMO)', slug: 'lakeside-hotel-demo', category_id: 'demo-hotel',
+    description: 'DEMO DATA — Example hotel. Prices are not real.', short_description: 'Example lakeside stay',
+    address: 'Bahir Dar lakeside (approximate)', latitude: 11.598, longitude: 37.385,
+    phone: null, email: null, website: null, price_level: 3, entrance_fee: null, currency: 'ETB',
+    verified: false, featured: true, status: 'published',
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    category: { id: 'demo-hotel', name: 'Hotels', slug: 'hotel', icon: 'Hotel', description: null, sort_order: 1 },
+    hotel: { id: 'demo-h-1', place_id: 'demo-hotel-1', star_rating: 3, minimum_price: null, maximum_price: null,
+      amenities: ['WiFi', 'Restaurant', 'Lake view'], check_in: '14:00', check_out: '11:00' },
+  },
+  {
+    id: 'demo-hotel-2', name: 'City Center Guesthouse (DEMO)', slug: 'city-guesthouse-demo', category_id: 'demo-hotel',
+    description: 'DEMO DATA — Budget example only.', short_description: 'Example budget stay',
+    address: 'Central Bahir Dar (approximate)', latitude: 11.591, longitude: 37.392,
+    phone: null, email: null, website: null, price_level: 1, entrance_fee: null, currency: 'ETB',
+    verified: false, featured: false, status: 'published',
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    category: { id: 'demo-hotel', name: 'Hotels', slug: 'hotel', icon: 'Hotel', description: null, sort_order: 1 },
+    hotel: { id: 'demo-h-2', place_id: 'demo-hotel-2', star_rating: 2, minimum_price: null, maximum_price: null,
+      amenities: ['WiFi'], check_in: '13:00', check_out: '10:00' },
+  },
+  {
+    id: 'demo-rest-1', name: 'Traditional Ethiopian Kitchen (DEMO)', slug: 'traditional-kitchen-demo', category_id: 'demo-restaurant',
+    description: 'DEMO DATA — Example traditional restaurant.', short_description: 'Injera & traditional dishes (example)',
+    address: 'Bahir Dar (approximate)', latitude: 11.595, longitude: 37.388,
+    phone: null, email: null, website: null, price_level: 2, entrance_fee: null, currency: 'ETB',
+    verified: false, featured: true, status: 'published',
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    category: { id: 'demo-restaurant', name: 'Restaurants', slug: 'restaurant', icon: 'UtensilsCrossed', description: null, sort_order: 2 },
+    restaurant: { id: 'demo-r-1', place_id: 'demo-rest-1', cuisine_type: 'Ethiopian', minimum_price: null, maximum_price: null,
+      vegetarian: true, traditional_food: true, delivery_available: false, reservation_available: false },
+  },
+  {
+    id: 'demo-bank-1', name: 'Commercial Bank Branch (DEMO)', slug: 'cbe-branch-demo', category_id: 'demo-bank',
+    description: 'DEMO DATA — Example bank branch.', short_description: 'Example bank branch',
+    address: 'Main street, Bahir Dar (approximate)', latitude: 11.593, longitude: 37.391,
+    phone: null, email: null, website: null, price_level: null, entrance_fee: null, currency: 'ETB',
+    verified: false, featured: false, status: 'published',
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    category: { id: 'demo-bank', name: 'Banks', slug: 'bank', icon: 'Building2', description: null, sort_order: 5 },
+    bank: { id: 'demo-b-1', place_id: 'demo-bank-1', bank_name: 'Example Bank', has_atm: true, has_foreign_exchange: true, is_atm_only: false },
+  },
+  {
+    id: 'demo-atm-1', name: 'ATM — City Center (DEMO)', slug: 'atm-center-demo', category_id: 'demo-atm',
+    description: 'DEMO DATA — Example ATM.', short_description: 'Example ATM',
+    address: 'Bahir Dar center (approximate)', latitude: 11.594, longitude: 37.3905,
+    phone: null, email: null, website: null, price_level: null, entrance_fee: null, currency: 'ETB',
+    verified: false, featured: false, status: 'published',
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    category: { id: 'demo-atm', name: 'ATMs', slug: 'atm', icon: 'CreditCard', description: null, sort_order: 6 },
+    bank: { id: 'demo-b-2', place_id: 'demo-atm-1', bank_name: 'Example ATM', has_atm: true, has_foreign_exchange: false, is_atm_only: true },
+  },
+  {
+    id: 'demo-center', name: 'Bahir Dar City Center (DEMO)', slug: 'bahir-dar-center-demo', category_id: 'demo-attraction',
+    description: 'DEMO DATA — City center reference.', short_description: 'City center',
+    address: 'Bahir Dar', latitude: BAHIR_DAR_CENTER.lat, longitude: BAHIR_DAR_CENTER.lng,
+    phone: null, email: null, website: null, price_level: null, entrance_fee: null, currency: 'ETB',
+    verified: false, featured: false, status: 'published',
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    category: { id: 'demo-attraction', name: 'Attractions', slug: 'attraction', icon: 'Landmark', description: null, sort_order: 4 },
+  },
+]
+
+export function demoPlacesByCategory(slug: string): Place[] {
+  return DEMO_PLACES.filter((p) => p.category?.slug === slug)
+}
