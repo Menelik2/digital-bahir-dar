@@ -7,6 +7,7 @@ import HomePage from '@/pages/Home'
 import MapPage from '@/pages/Map'
 import AuthPage from '@/pages/Auth'
 import ExplorePage from '@/pages/Explore'
+import DiscoverPage from '@/pages/Discover'
 import HotelsPage from '@/pages/Hotels'
 import RestaurantsPage from '@/pages/Restaurants'
 import AttractionsPage from '@/pages/Attractions'
@@ -33,6 +34,7 @@ export default function App() {
             <Route element={<Layout />}>
               <Route path="/" element={<HomePage />} />
               <Route path="/explore" element={<ExplorePage />} />
+              <Route path="/discover" element={<DiscoverPage />} />
               <Route path="/map" element={<MapPage />} />
               <Route path="/hotels" element={<HotelsPage />} />
               <Route path="/restaurants" element={<RestaurantsPage />} />
