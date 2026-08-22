@@ -16,6 +16,7 @@ import { distanceMeters } from '@/utils/geo'
 import { filterRealPlaces } from '@/utils/realPlaces'
 import type { Place } from '@/types/place'
 import { Button } from '@/components/ui/button'
+import { useT } from '@/hooks/useT'
 
 function mergePlaces(primary: Place[], secondary: Place[]): Place[] {
   const seen = new Set(primary.map((p) => p.name.toLowerCase().trim()))
@@ -30,6 +31,7 @@ function mergePlaces(primary: Place[], secondary: Place[]): Place[] {
 }
 
 export default function MapPage() {
+  const t = useT()
   const { location, setMapCenter, mapCenter, selectedPlaceId, setSelectedPlaceId } = useAppStore()
   const { request: requestLocation, hasFix } = useGeolocation({ autoRequest: true, watch: true })
   const mapboxOn = !!getMapboxToken()
@@ -39,7 +41,6 @@ export default function MapPage() {
   const [filter, setFilter] = useState<string | null>(null)
   const [directionsPlace, setDirectionsPlace] = useState<Place | null>(null)
   const [travelMode, setTravelMode] = useState<'walking' | 'driving'>('walking')
-  /** Live OSM is the real place source — always on for production map */
   const [includeOsm, setIncludeOsm] = useState(true)
 
   const categorySlug =
@@ -71,11 +72,9 @@ export default function MapPage() {
     refetch: refetchOsm,
   } = useOsmPlaces([...osmCategories], includeOsm)
 
-  // Real app: OSM first, then curated landmarks only (no DEMO hotels/restaurants)
   const places = useMemo(() => {
     const base = filterRealPlaces(dbPlaces)
     let list = includeOsm ? mergePlaces(osmPlaces, base) : base
-    // Prefer OSM density when available
     if (includeOsm && osmPlaces.length > 0) {
       list = mergePlaces(osmPlaces, base)
     }
@@ -110,8 +109,19 @@ export default function MapPage() {
 
   const directionsDistance = useMemo(() => {
     if (!directionsPlace) return 0
-    if (userPos) return distanceMeters(userPos.lat, userPos.lng, directionsPlace.latitude, directionsPlace.longitude)
-    return distanceMeters(BAHIR_DAR_CENTER.lat, BAHIR_DAR_CENTER.lng, directionsPlace.latitude, directionsPlace.longitude)
+    if (userPos)
+      return distanceMeters(
+        userPos.lat,
+        userPos.lng,
+        directionsPlace.latitude,
+        directionsPlace.longitude
+      )
+    return distanceMeters(
+      BAHIR_DAR_CENTER.lat,
+      BAHIR_DAR_CENTER.lng,
+      directionsPlace.latitude,
+      directionsPlace.longitude
+    )
   }, [directionsPlace, userPos])
 
   useEffect(() => {
@@ -158,12 +168,16 @@ export default function MapPage() {
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search real places…"
+              placeholder={t.map.searchPlaceholder}
               className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
-              aria-label="Search places"
+              aria-label={t.common.search}
             />
             {search && (
-              <button type="button" onClick={() => setSearch('')} className="rounded p-0.5 hover:bg-slate-100">
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="rounded p-0.5 hover:bg-slate-100"
+              >
                 <X className="h-4 w-4 text-slate-400" />
               </button>
             )}
@@ -174,11 +188,11 @@ export default function MapPage() {
         <div className="flex flex-wrap items-center gap-2">
           <LocationStatus />
           <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm">
-            Live map · OpenStreetMap
+            {t.map.liveMap}
           </span>
           {mapboxOn && (
             <span className="rounded-full bg-sky-600 px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm">
-              Mapbox tiles
+              {t.map.mapboxTiles}
             </span>
           )}
           <button
@@ -191,11 +205,11 @@ export default function MapPage() {
             }`}
           >
             <Layers className="h-3.5 w-3.5" />
-            OSM {includeOsm ? 'on' : 'off'}
+            {includeOsm ? t.map.osmOn : t.map.osmOff}
             {osmFetching && includeOsm ? '…' : ''}
           </button>
           <span className="rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-medium text-slate-600 shadow-sm dark:bg-slate-900/95">
-            {places.length} places
+            {places.length} {t.map.places}
           </span>
         </div>
       </div>
@@ -211,10 +225,10 @@ export default function MapPage() {
 
       {includeOsm && osmError && osmPlaces.length === 0 && (
         <div className="absolute left-1/2 top-40 z-[1000] max-w-sm -translate-x-1/2 rounded-xl border border-amber-200 bg-white px-3 py-2 text-sm shadow-lg dark:border-amber-900 dark:bg-slate-900">
-          <p className="font-medium text-amber-800 dark:text-amber-200">Live places slow to load</p>
-          <p className="text-xs text-slate-500">Showing landmarks. Retry OpenStreetMap.</p>
+          <p className="font-medium text-amber-800 dark:text-amber-200">{t.map.osmSlow}</p>
+          <p className="text-xs text-slate-500">{t.map.osmSlowBody}</p>
           <Button size="sm" variant="outline" className="mt-2" onClick={() => void refetchOsm()}>
-            Retry OSM
+            {t.map.retryOsm}
           </Button>
         </div>
       )}
@@ -223,10 +237,20 @@ export default function MapPage() {
         <div className="absolute left-1/2 top-40 z-[1000] flex max-w-sm -translate-x-1/2 items-start gap-2 rounded-xl border border-red-200 bg-white px-3 py-2 text-sm shadow-lg">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
           <div>
-            <p className="font-medium text-red-700">Could not load places</p>
-            <p className="text-xs text-slate-500">{error instanceof Error ? error.message : 'Error'}</p>
-            <Button size="sm" variant="outline" className="mt-2" onClick={() => { void refetch(); void refetchOsm() }}>
-              Retry
+            <p className="font-medium text-red-700">{t.map.loadFail}</p>
+            <p className="text-xs text-slate-500">
+              {error instanceof Error ? error.message : t.common.error}
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-2"
+              onClick={() => {
+                void refetch()
+                void refetchOsm()
+              }}
+            >
+              {t.common.retry}
             </Button>
           </div>
         </div>
@@ -234,7 +258,7 @@ export default function MapPage() {
 
       {isLoading && places.length === 0 && (
         <div className="absolute left-1/2 top-40 z-[1000] -translate-x-1/2 rounded-full bg-white px-4 py-1.5 text-sm shadow">
-          Loading map…
+          {t.map.loading}
         </div>
       )}
 
@@ -262,7 +286,7 @@ export default function MapPage() {
       <div className="absolute bottom-24 left-0 right-0 z-[1000] px-4 lg:bottom-6">
         <MapFilter active={filter} onChange={setFilter} />
         <p className="mt-2 text-center text-[10px] text-slate-700 drop-shadow-sm dark:text-slate-200">
-          Real places from OpenStreetMap · Tap locate for GPS · Layers: Streets / Satellite
+          {t.map.footer}
         </p>
       </div>
     </div>
