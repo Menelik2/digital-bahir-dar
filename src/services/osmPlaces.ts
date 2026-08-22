@@ -1,6 +1,14 @@
 /**
  * Live Bahir Dar places from OpenStreetMap via Overpass API.
- * Fast path: memory + localStorage cache (1h). Network is background-only.
+ *
+ * Query design (speed):
+ * - `nwr` instead of separate node/way statements
+ * - Regex unions → fewer union branches
+ * - Tight city bbox applied once per statement
+ * - `out center qt` (quadtile order is faster than default)
+ * - Prefer named POIs for tourism/food
+ * - Short server timeout + client AbortSignal
+ *
  * Attribution: © OpenStreetMap contributors (ODbL)
  */
 
@@ -8,6 +16,7 @@ import { BAHIR_DAR_CENTER } from '@/constants'
 import type { CategorySlug, Place } from '@/types/place'
 import { placeGuideLinks } from '@/constants/guideSites'
 
+/** Tight Bahir Dar city bbox (south, west, north, east) */
 export const BAHIR_DAR_BBOX = {
   south: 11.52,
   west: 37.3,
@@ -21,14 +30,14 @@ const OVERPASS_ENDPOINTS = [
 ]
 
 const APP_USER_AGENT =
-  'DigitalBahirDar/1.1 (https://github.com/Menelik2/digital-bahir-dar; tourism-poi)'
+  'DigitalBahirDar/1.2 (https://github.com/Menelik2/digital-bahir-dar; tourism-poi)'
 
-const MIN_GAP_MS = 800
+const MIN_GAP_MS = 600
 const BACKOFF_429_MS = 15_000
 const MAX_RETRIES = 1
-const NETWORK_TIMEOUT_MS = 12_000
-const CACHE_TTL_MS = 60 * 60_000 // 1 hour
-const LS_PREFIX = 'dbd-osm-v1:'
+const NETWORK_TIMEOUT_MS = 10_000
+const CACHE_TTL_MS = 60 * 60_000
+const LS_PREFIX = 'dbd-osm-v2:' // bump when query shape changes
 const DETAIL_KEY = 'dbd-osm-detail'
 
 export type OsmCategory =
@@ -43,25 +52,27 @@ export type OsmCategory =
   | 'pharmacy'
   | 'all'
 
-/** Lean selectors — fewer Overpass clauses = faster */
-const CATEGORY_QL: Record<Exclude<OsmCategory, 'all'>, string[]> = {
-  hotel: ['node["tourism"="hotel"]', 'node["tourism"="guest_house"]'],
-  restaurant: ['node["amenity"="restaurant"]'],
-  cafe: ['node["amenity"="cafe"]'],
+/**
+ * Optimized Overpass fragments (no bbox — appended by buildQuery).
+ * Uses nwr + regex so one statement replaces many node[...] lines.
+ */
+const CATEGORY_UNION: Record<Exclude<OsmCategory, 'all'>, string[]> = {
+  hotel: ['nwr["tourism"~"^(hotel|guest_house|hostel|motel)$"]["name"]'],
+  restaurant: ['nwr["amenity"~"^(restaurant|fast_food)$"]["name"]'],
+  cafe: ['nwr["amenity"~"^(cafe|coffee_shop)$"]["name"]'],
   attraction: [
-    'node["tourism"="attraction"]',
-    'node["tourism"="viewpoint"]',
-    'node["historic"]',
+    'nwr["tourism"~"^(attraction|museum|viewpoint|zoo|artwork)$"]["name"]',
+    'nwr["historic"]["name"]',
   ],
   transport: [
-    'node["amenity"="bus_station"]',
-    'node["aeroway"="aerodrome"]',
-    'node["amenity"="ferry_terminal"]',
+    'nwr["amenity"~"^(bus_station|ferry_terminal)$"]',
+    'nwr["aeroway"="aerodrome"]',
+    'nwr["railway"="station"]',
   ],
-  bank: ['node["amenity"="bank"]'],
-  atm: ['node["amenity"="atm"]'],
-  hospital: ['node["amenity"="hospital"]'],
-  pharmacy: ['node["amenity"="pharmacy"]'],
+  bank: ['nwr["amenity"="bank"]["name"]'],
+  atm: ['nwr["amenity"="atm"]'],
+  hospital: ['nwr["amenity"~"^(hospital|clinic)$"]["name"]'],
+  pharmacy: ['nwr["amenity"="pharmacy"]["name"]'],
 }
 
 type OverpassElement = {
@@ -98,37 +109,56 @@ function enqueue<T>(fn: () => Promise<T>): Promise<T> {
   return next
 }
 
-function bboxFilter() {
+function bboxClause(): string {
   const { south, west, north, east } = BAHIR_DAR_BBOX
+  // Overpass order: (south,west,north,east)
   return `(${south},${west},${north},${east})`
 }
 
-function buildQuery(categories: OsmCategory[]): string {
-  // For "all", only high-value tourism tags — not every bus_stop
+/**
+ * Build a compact Overpass QL string.
+ *
+ * Example (hotels):
+ * [out:json][timeout:8][maxsize:16777216];
+ * (
+ *   nwr["tourism"~"^(hotel|guest_house|hostel|motel)$"]["name"](11.52,37.3,11.66,37.48);
+ * );
+ * out center qt;
+ */
+export function buildOverpassQuery(categories: OsmCategory[]): string {
   const keys: Exclude<OsmCategory, 'all'>[] =
     categories.includes('all') || categories.length === 0
-      ? ['hotel', 'restaurant', 'cafe', 'attraction', 'transport', 'bank', 'hospital']
+      ? ['hotel', 'restaurant', 'cafe', 'attraction', 'transport', 'bank', 'hospital', 'pharmacy']
       : (categories.filter((c) => c !== 'all') as Exclude<OsmCategory, 'all'>[])
 
+  const bb = bboxClause()
   const lines: string[] = []
-  const bb = bboxFilter()
+
   for (const cat of keys) {
-    for (const sel of CATEGORY_QL[cat]) {
-      lines.push(`  ${sel}${bb};`)
+    for (const frag of CATEGORY_UNION[cat]) {
+      // Attach bbox filter once per statement — required for spatial index use
+      lines.push(`  ${frag}${bb};`)
     }
   }
 
-  return `
-[out:json][timeout:10];
-(
-${lines.join('\n')}
-);
-out center tags;
-`.trim()
+  // timeout: server-side budget; maxsize: cap response; qt: faster ordered output
+  return [
+    '[out:json][timeout:8][maxsize:16777216];',
+    '(',
+    ...lines,
+    ');',
+    'out center qt;',
+  ].join('\n')
+}
+
+/** @deprecated use buildOverpassQuery */
+function buildQuery(categories: OsmCategory[]): string {
+  return buildOverpassQuery(categories)
 }
 
 function detectCategory(tags: Record<string, string>): CategorySlug {
-  if (tags.tourism === 'hotel' || tags.tourism === 'guest_house' || tags.tourism === 'hostel') return 'hotel'
+  if (tags.tourism === 'hotel' || tags.tourism === 'guest_house' || tags.tourism === 'hostel' || tags.tourism === 'motel')
+    return 'hotel'
   if (tags.amenity === 'restaurant' || tags.amenity === 'fast_food') return 'restaurant'
   if (tags.amenity === 'cafe' || tags.amenity === 'coffee_shop') return 'cafe'
   if (tags.amenity === 'bank') return 'bank'
@@ -162,10 +192,10 @@ function elementToPlace(el: OverpassElement): Place | null {
   const lat = el.lat ?? el.center?.lat
   const lon = el.lon ?? el.center?.lon
   if (lat == null || lon == null) return null
-  // Skip unnamed bus stops etc.
-  if (!tags.name && !tags['name:en'] && tags.highway === 'bus_stop') return null
 
-  const name = tags.name || tags['name:en'] || tags['name:am'] || `Place ${el.id}`
+  const name = tags.name || tags['name:en'] || tags['name:am']
+  if (!name) return null // skip unnamed nodes (noise)
+
   const categorySlug = detectCategory(tags)
   const phone = tags.phone || tags['contact:phone'] || null
   const website = tags.website || tags['contact:website'] || null
@@ -179,8 +209,8 @@ function elementToPlace(el: OverpassElement): Place | null {
     description: tags.description || tags.note || null,
     short_description: tags.cuisine
       ? `${tags.cuisine} · OpenStreetMap`
-      : tags.tourism || tags.amenity
-        ? `${tags.tourism || tags.amenity} · OpenStreetMap`
+      : tags.tourism || tags.amenity || tags.historic
+        ? `${tags.tourism || tags.amenity || tags.historic} · OpenStreetMap`
         : 'OpenStreetMap',
     address: address || 'Bahir Dar, Ethiopia',
     latitude: lat,
@@ -264,7 +294,7 @@ async function postOverpass(query: string): Promise<OverpassResponse> {
           }
         }
       }
-      if (attempt < MAX_RETRIES) await sleep(600)
+      if (attempt < MAX_RETRIES) await sleep(500)
     }
     throw lastError instanceof Error ? lastError : new Error('Overpass failed')
   })
@@ -345,7 +375,6 @@ export function findCachedOsmPlace(slug: string): Place | null {
   } catch {
     /* */
   }
-  // scan localStorage buckets
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i)
