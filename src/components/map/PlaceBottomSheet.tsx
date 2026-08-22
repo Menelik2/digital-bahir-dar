@@ -3,6 +3,7 @@ import { MapPin, Navigation, X, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Place } from '@/types/place'
 import { formatDistance, walkingMinutes, drivingMinutes } from '@/utils/geo'
+import { placeGuideLinks } from '@/constants/guideSites'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -15,6 +16,8 @@ interface Props {
 
 export function PlaceBottomSheet({ place, distanceM, onClose, onDirections, className }: Props) {
   if (!place) return null
+
+  const links = placeGuideLinks(place)
 
   return (
     <div
@@ -64,17 +67,25 @@ export function PlaceBottomSheet({ place, distanceM, onClose, onDirections, clas
         {place.address && <span className="truncate">{place.address}</span>}
       </div>
 
-      <div className="flex gap-2 p-4">
-        <Button className="flex-1" onClick={() => onDirections(place)}>
-          <Navigation className="h-4 w-4" />
-          Directions
-        </Button>
-        <Link to={`/places/${place.slug}`} className="flex-1">
-          <Button variant="outline" className="w-full">
-            <ExternalLink className="h-4 w-4" />
-            Details
+      <div className="flex flex-col gap-2 p-4">
+        <div className="flex gap-2">
+          <Button className="flex-1" onClick={() => onDirections(place)}>
+            <Navigation className="h-4 w-4" />
+            Directions
           </Button>
-        </Link>
+          <Link to={`/places/${place.slug}`} className="flex-1">
+            <Button variant="outline" className="w-full">
+              <ExternalLink className="h-4 w-4" />
+              Details
+            </Button>
+          </Link>
+        </div>
+        <a href={links.mapcarta} target="_blank" rel="noopener noreferrer" className="w-full">
+          <Button variant="secondary" className="w-full" size="sm">
+            <ExternalLink className="h-3.5 w-3.5" />
+            View on Mapcarta
+          </Button>
+        </a>
       </div>
     </div>
   )
