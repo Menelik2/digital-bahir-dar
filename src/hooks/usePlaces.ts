@@ -1,5 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { fetchPlaces, fetchCategories, DEMO_PLACES, searchPlaces, rankNearby } from '@/services/places'
+import {
+  fetchPlaces,
+  fetchCategories,
+  fetchPlaceBySlug,
+  placesOrDemo,
+  searchPlaces,
+  rankNearby,
+} from '@/services/places'
 import type { Place } from '@/types/place'
 import { useAppStore } from '@/store'
 import { useMemo } from 'react'
@@ -9,9 +16,17 @@ export function usePlaces(categorySlug?: string) {
     queryKey: ['places', categorySlug ?? 'all'],
     queryFn: async () => {
       const data = await fetchPlaces({ categorySlug })
-      if (data.length === 0) return DEMO_PLACES
-      return data
+      return placesOrDemo(data, categorySlug)
     },
+    staleTime: 5 * 60_000,
+  })
+}
+
+export function usePlace(slug: string | undefined) {
+  return useQuery({
+    queryKey: ['place', slug],
+    queryFn: () => fetchPlaceBySlug(slug!),
+    enabled: !!slug,
     staleTime: 5 * 60_000,
   })
 }

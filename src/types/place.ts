@@ -32,6 +32,69 @@ export interface Place {
   updated_at: string
   category?: Category
   distance_m?: number
+  hotel?: HotelDetails | null
+  restaurant?: RestaurantDetails | null
+  attraction?: AttractionDetails | null
+  bank?: BankDetails | null
+}
+
+export interface HotelDetails {
+  id: string
+  place_id: string
+  star_rating: number | null
+  minimum_price: number | null
+  maximum_price: number | null
+  amenities: string[]
+  check_in: string | null
+  check_out: string | null
+}
+
+export interface RestaurantDetails {
+  id: string
+  place_id: string
+  cuisine_type: string | null
+  minimum_price: number | null
+  maximum_price: number | null
+  vegetarian: boolean
+  traditional_food: boolean
+  delivery_available: boolean
+  reservation_available: boolean
+}
+
+export interface AttractionDetails {
+  id: string
+  place_id: string
+  attraction_type: string | null
+  entrance_fee: number | null
+  recommended_duration: string | null
+  best_time_to_visit: string | null
+  historical_information: string | null
+  safety_information: string | null
+  accessibility: string | null
+}
+
+export interface BankDetails {
+  id: string
+  place_id: string
+  bank_name: string | null
+  has_atm: boolean
+  has_foreign_exchange: boolean
+  is_atm_only: boolean
+}
+
+export interface TransportService {
+  id: string
+  place_id: string | null
+  service_type: string
+  provider_name: string
+  phone: string | null
+  estimated_price_min: number | null
+  estimated_price_max: number | null
+  currency: string
+  price_label: string
+  route_description: string | null
+  verified: boolean
+  last_price_updated_at: string | null
 }
 
 export interface PlaceWithDistance extends Place {
@@ -70,3 +133,5 @@ export type CategorySlug =
   | 'event'
   | 'government'
   | 'emergency'
+
+export type SortOption = 'distance' | 'name' | 'featured' | 'price_asc' | 'price_desc'

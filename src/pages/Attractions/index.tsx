@@ -1,8 +1,17 @@
+import { PlaceListPage } from '@/components/places/PlaceListPage'
+
 export default function AttractionsPage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="mb-2 text-2xl font-bold">Attractions</h1>
-      <p className="text-slate-500">Coming in later phases. Will connect to real Supabase data.</p>
-    </div>
+    <PlaceListPage
+      title="Attractions"
+      subtitle="Things to do and see in Bahir Dar"
+      categorySlug="attraction"
+      filters={[
+        { id: 'nature', label: 'Nature' },
+        { id: 'culture', label: 'Culture' },
+        { id: 'history', label: 'History' },
+      ]}
+      emptyMessage="No attractions listed yet. Lake Tana and Blue Nile Falls will appear once verified."
+    />
   )
 }

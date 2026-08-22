@@ -1,8 +1,17 @@
+import { PlaceListPage } from '@/components/places/PlaceListPage'
+
 export default function HotelsPage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="mb-2 text-2xl font-bold">Hotels</h1>
-      <p className="text-slate-500">Coming in later phases. Will connect to real Supabase data.</p>
-    </div>
+    <PlaceListPage
+      title="Hotels"
+      subtitle="Places to stay in Bahir Dar — verified listings when available"
+      categorySlug="hotel"
+      filters={[
+        { id: 'budget', label: 'Budget' },
+        { id: 'mid', label: 'Mid-range' },
+        { id: 'luxury', label: 'Luxury' },
+      ]}
+      emptyMessage="No hotel listings yet. Administrators will add verified hotels."
+    />
   )
 }
