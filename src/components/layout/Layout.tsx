@@ -4,12 +4,14 @@ import { MobileNav } from './MobileNav'
 import { InstallPrompt } from '@/components/pwa/InstallPrompt'
 import { OfflineBanner } from '@/components/pwa/OfflineBanner'
 import { useRegisterSW } from '@/hooks/useRegisterSW'
+import { useThemeSync } from '@/hooks/useTheme'
 
 export function Layout() {
   useRegisterSW()
+  useThemeSync()
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex min-h-full flex-col bg-white dark:bg-slate-950">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-sky-600 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"

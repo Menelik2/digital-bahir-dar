@@ -1,14 +1,19 @@
-import { useEffect, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useAppStore } from '@/store'
 
-export function useGeolocation(auto = true) {
+export function useGeolocation() {
   const { location, setLocation } = useAppStore()
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const request = useCallback(() => {
     if (!navigator.geolocation) {
       setLocation({ permission: 'unsupported' })
+      setError('unsupported')
       return
     }
+    setLoading(true)
+    setError(null)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocation({
@@ -18,15 +23,18 @@ export function useGeolocation(auto = true) {
           permission: 'granted',
           lastUpdated: Date.now(),
         })
+        setLoading(false)
       },
-      () => setLocation({ permission: 'denied' }),
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60_000 }
+      (err) => {
+        setLocation({ permission: 'denied' })
+        setError(err.message || 'denied')
+        setLoading(false)
+      },
+      { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 }
     )
   }, [setLocation])
 
-  useEffect(() => {
-    if (auto && location.permission === 'prompt') request()
-  }, [auto, location.permission, request])
+  const hasFix = location.latitude != null && location.longitude != null
 
-  return { location, request, hasPosition: location.permission === 'granted' && location.latitude != null }
+  return { location, request, loading, error, hasFix }
 }

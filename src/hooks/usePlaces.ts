@@ -45,19 +45,30 @@ export function useFilteredPlaces(opts: {
   categorySlug?: string | null
   nearMe?: boolean
   verifiedOnly?: boolean
+  /** meters; default 12km for city-scale nearby */
+  radiusM?: number
 }) {
   const { data: places = [], isLoading, error, refetch } = usePlaces(opts.categorySlug ?? undefined)
   const { location } = useAppStore()
+  const radius = opts.radiusM ?? 12_000
 
   const filtered = useMemo(() => {
     let list: Place[] = places
     if (opts.verifiedOnly) list = list.filter((p) => p.verified)
     if (opts.search) list = searchPlaces(list, opts.search)
     if (opts.nearMe && location.latitude != null && location.longitude != null) {
-      return rankNearby(list, location.latitude, location.longitude, 8000)
+      return rankNearby(list, location.latitude, location.longitude, radius)
     }
     return list
-  }, [places, opts.search, opts.nearMe, opts.verifiedOnly, location.latitude, location.longitude])
+  }, [
+    places,
+    opts.search,
+    opts.nearMe,
+    opts.verifiedOnly,
+    location.latitude,
+    location.longitude,
+    radius,
+  ])
 
   return { places: filtered, isLoading, error, refetch, total: places.length }
 }
