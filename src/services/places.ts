@@ -2,7 +2,7 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import type { Place, Category, PlaceWithDistance } from '@/types/place'
 import { distanceMeters } from '@/utils/geo'
 import { DEMO_PLACES, demoPlacesByCategory } from './demoPlaces'
-import { findCachedOsmPlace } from './osmPlaces'
+import { findCachedOsmPlace, fetchOsmPlaces, type OsmCategory } from './osmPlaces'
 
 export { DEMO_PLACES }
 
@@ -13,46 +13,79 @@ export class PlacesFetchError extends Error {
   }
 }
 
+const SLUG_TO_OSM: Record<string, OsmCategory[]> = {
+  hotel: ['hotel'],
+  restaurant: ['restaurant'],
+  cafe: ['cafe'],
+  attraction: ['attraction'],
+  transport: ['transport'],
+  bank: ['bank'],
+  atm: ['atm'],
+  hospital: ['hospital'],
+  pharmacy: ['pharmacy'],
+}
+
 export async function fetchPlaces(opts?: {
   categorySlug?: string
   verifiedOnly?: boolean
   limit?: number
 }): Promise<Place[]> {
-  if (!isSupabaseConfigured) {
-    return placesOrDemo([], opts?.categorySlug)
+  // 1) Supabase when configured
+  if (isSupabaseConfigured) {
+    let query = supabase
+      .from('places')
+      .select(`
+        *,
+        category:categories(*),
+        hotel:hotels(*),
+        restaurant:restaurants(*),
+        attraction:attractions(*),
+        bank:banks(*)
+      `)
+      .eq('status', 'published')
+      .is('deleted_at', null)
+      .order('featured', { ascending: false })
+      .order('name')
+
+    if (opts?.verifiedOnly) query = query.eq('verified', true)
+    if (opts?.limit) query = query.limit(opts.limit)
+
+    if (opts?.categorySlug) {
+      const { data: cat, error: catErr } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('slug', opts.categorySlug)
+        .maybeSingle()
+      if (catErr) throw new PlacesFetchError(catErr.message)
+      if (cat) query = query.eq('category_id', cat.id)
+    }
+
+    const { data, error } = await query
+    if (error) throw new PlacesFetchError(error.message)
+    const rows = (data ?? []).map(normalizePlace) as Place[]
+    if (rows.length > 0) return rows
+    // empty DB → fall through to OSM / DEMO
   }
 
-  let query = supabase
-    .from('places')
-    .select(`
-      *,
-      category:categories(*),
-      hotel:hotels(*),
-      restaurant:restaurants(*),
-      attraction:attractions(*),
-      bank:banks(*)
-    `)
-    .eq('status', 'published')
-    .is('deleted_at', null)
-    .order('featured', { ascending: false })
-    .order('name')
-
-  if (opts?.verifiedOnly) query = query.eq('verified', true)
-  if (opts?.limit) query = query.limit(opts.limit)
-
-  if (opts?.categorySlug) {
-    const { data: cat, error: catErr } = await supabase
-      .from('categories')
-      .select('id')
-      .eq('slug', opts.categorySlug)
-      .maybeSingle()
-    if (catErr) throw new PlacesFetchError(catErr.message)
-    if (cat) query = query.eq('category_id', cat.id)
+  // 2) Live OpenStreetMap (real Bahir Dar POIs)
+  try {
+    const cats: OsmCategory[] = opts?.categorySlug
+      ? SLUG_TO_OSM[opts.categorySlug] ?? ['all']
+      : ['all']
+    const osm = await fetchOsmPlaces({
+      categories: cats,
+      limit: opts?.limit,
+    })
+    if (osm.length > 0) {
+      if (opts?.verifiedOnly) return osm.filter((p) => p.verified)
+      return osm
+    }
+  } catch (e) {
+    console.warn('OSM places fallback failed:', e)
   }
 
-  const { data, error } = await query
-  if (error) throw new PlacesFetchError(error.message)
-  return (data ?? []).map(normalizePlace) as Place[]
+  // 3) Client DEMO markers
+  return placesOrDemo([], opts?.categorySlug)
 }
 
 function normalizePlace(row: Record<string, unknown>): Place {
@@ -94,7 +127,17 @@ export async function fetchPlaceBySlug(slug: string): Promise<Place | null> {
     if (error) console.warn('fetchPlaceBySlug:', error.message)
     if (data) return normalizePlace(data as Record<string, unknown>)
   }
-  if (slug.startsWith('osm-')) return findCachedOsmPlace(slug)
+  if (slug.startsWith('osm-') || slug.includes('osm-')) {
+    const cached = findCachedOsmPlace(slug)
+    if (cached) return cached
+    // last chance: broad OSM fetch then match
+    try {
+      const all = await fetchOsmPlaces({ categories: ['all'] })
+      return all.find((p) => p.slug === slug || p.id === slug) ?? null
+    } catch {
+      return null
+    }
+  }
   return DEMO_PLACES.find((p) => p.slug === slug) ?? null
 }
 
@@ -126,7 +169,7 @@ export function searchPlaces(places: Place[], query: string): Place[] {
   )
 }
 
-/** Only when Supabase is empty or offline — never on query error. */
+/** Only when Supabase + OSM are empty — never on query error. */
 export function placesOrDemo(data: Place[], categorySlug?: string): Place[] {
   if (data.length > 0) return data
   if (categorySlug) return demoPlacesByCategory(categorySlug)

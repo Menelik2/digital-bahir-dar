@@ -5,29 +5,12 @@ import type { Place } from '@/types/place'
 import { BAHIR_DAR_CENTER, DEFAULT_MAP_ZOOM } from '@/constants'
 import 'leaflet/dist/leaflet.css'
 
-// Fix default marker icons in Vite (bundler breaks Leaflet's relative icon URLs)
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const DefaultIcon = L.icon({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-})
-L.Marker.prototype.options.icon = DefaultIcon
-
 function pinIcon(selected: boolean, featured: boolean) {
   const color = selected ? '#0ea5e9' : featured ? '#f59e0b' : '#0f766e'
   const scale = selected ? 1.25 : 1
   const size = 28 * scale
   return L.divIcon({
-    className: '',
+    className: 'dbd-pin',
     html: `<div style="
       width:${size}px;height:${size}px;
       background:${color};
@@ -157,6 +140,7 @@ export function MapView({
   )
 }
 
+/** Opens Google Maps directions in a new tab (no API key required). */
 export function openGoogleMapsDirections(
   dest: Place,
   origin?: { lat: number; lng: number } | null,
