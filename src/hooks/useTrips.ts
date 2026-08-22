@@ -18,7 +18,6 @@ import { useTripDetailRealtime } from './useRealtimeQueries'
 
 export function useMyTrips() {
   const { user } = useAuth()
-  // trips list realtime is global in RealtimeProvider — no second channel here
 
   return useQuery({
     queryKey: ['trips', user?.id],
@@ -139,6 +138,9 @@ export function useAddExpense(tripId: string) {
       title: string
       amount: number
       is_estimated?: boolean
+      expense_date?: string
+      notes?: string
+      currency?: string
     }) => {
       const res = await addExpense(tripId, expense)
       if (res.error) throw new Error(res.error)
