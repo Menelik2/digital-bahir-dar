@@ -1,26 +1,28 @@
 import { Outlet } from 'react-router-dom'
 import { Header } from './Header'
 import { MobileNav } from './MobileNav'
-import { useAppStore } from '@/store'
-import { useEffect } from 'react'
+import { InstallPrompt } from '@/components/pwa/InstallPrompt'
+import { OfflineBanner } from '@/components/pwa/OfflineBanner'
+import { useRegisterSW } from '@/hooks/useRegisterSW'
 
 export function Layout() {
-  const { isOnline, setIsOnline } = useAppStore()
-  useEffect(() => {
-    const on = () => setIsOnline(true)
-    const off = () => setIsOnline(false)
-    window.addEventListener('online', on)
-    window.addEventListener('offline', off)
-    setIsOnline(navigator.onLine)
-    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off) }
-  }, [setIsOnline])
+  useRegisterSW()
 
   return (
     <div className="flex min-h-full flex-col">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-sky-600 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+      >
+        Skip to content
+      </a>
       <Header />
-      {!isOnline && <div className="bg-amber-500 px-4 py-1.5 text-center text-sm font-medium text-white">🟠 Offline — showing saved information</div>}
-      <main className="flex-1 pb-20 lg:pb-0"><Outlet /></main>
+      <OfflineBanner />
+      <main id="main-content" className="flex-1 pb-20 lg:pb-0" tabIndex={-1}>
+        <Outlet />
+      </main>
       <MobileNav />
+      <InstallPrompt />
     </div>
   )
 }
