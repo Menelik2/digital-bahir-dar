@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
 import { Search, X, AlertCircle, ExternalLink } from 'lucide-react'
 import { MapView, openGoogleMapsDirections } from '@/components/map/MapView'
-import { MapcartaEmbed } from '@/components/map/MapcartaEmbed'
+import { MapcartaPanel } from '@/components/map/MapcartaEmbed'
 import { MapFilter } from '@/components/map/MapFilter'
 import { LocationButton } from '@/components/map/LocationButton'
 import { PlaceBottomSheet } from '@/components/map/PlaceBottomSheet'
@@ -26,7 +26,8 @@ export default function MapPage() {
   const [filter, setFilter] = useState<string | null>(null)
   const [directionsPlace, setDirectionsPlace] = useState<Place | null>(null)
   const [travelMode, setTravelMode] = useState<'walking' | 'driving'>('walking')
-  const [provider, setProvider] = useState<MapProvider>('mapcarta')
+  /** Default to in-app Leaflet — Mapcarta cannot be embedded */
+  const [provider, setProvider] = useState<MapProvider>('app')
 
   const categorySlug =
     filter && !['near_me', 'verified'].includes(filter) ? filter : null
@@ -85,9 +86,20 @@ export default function MapPage() {
 
   return (
     <div className="relative h-[calc(100dvh-4rem)] overflow-hidden">
-      {/* Provider toggle */}
       <div className="absolute left-4 right-4 top-4 z-20 flex flex-col gap-2 lg:right-auto lg:w-[420px]">
         <div className="flex rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+          <button
+            type="button"
+            onClick={() => setProvider('app')}
+            className={cn(
+              'flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition',
+              provider === 'app'
+                ? 'bg-sky-600 text-white'
+                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
+            )}
+          >
+            App map
+          </button>
           <button
             type="button"
             onClick={() => setProvider('mapcarta')}
@@ -99,18 +111,6 @@ export default function MapPage() {
             )}
           >
             Mapcarta
-          </button>
-          <button
-            type="button"
-            onClick={() => setProvider('app')}
-            className={cn(
-              'flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition',
-              provider === 'app'
-                ? 'bg-sky-600 text-white'
-                : 'text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800'
-            )}
-          >
-            App places
           </button>
         </div>
 
@@ -136,33 +136,23 @@ export default function MapPage() {
           </div>
         )}
 
-        {provider === 'mapcarta' && (
-          <div className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white/95 px-3 py-2 text-xs shadow-lg backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
-            <p className="text-slate-600 dark:text-slate-300">
-              Exploring Bahir Dar on{' '}
-              <a
-                href={MAPCARTA_BAHIR_DAR}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-sky-600 hover:underline"
-              >
-                Mapcarta
-              </a>
-            </p>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 shrink-0"
-              onClick={() => openMapcarta(search || 'Bahir Dar')}
-            >
-              <ExternalLink className="h-3.5 w-3.5" /> Full site
-            </Button>
-          </div>
+        {provider === 'app' && (
+          <button
+            type="button"
+            onClick={() => openMapcarta()}
+            className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white/95 px-3 py-2 text-xs font-medium text-sky-700 shadow-md backdrop-blur hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900/95 dark:text-sky-300 dark:hover:bg-slate-800"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            Open Bahir Dar on Mapcarta
+          </button>
         )}
       </div>
 
       {provider === 'mapcarta' ? (
-        <MapcartaEmbed className="absolute inset-0 z-0 h-full w-full" />
+        <MapcartaPanel
+          className="absolute inset-0 z-0 h-full w-full"
+          onUseAppMap={() => setProvider('app')}
+        />
       ) : (
         <MapView
           places={places}
@@ -175,7 +165,7 @@ export default function MapPage() {
       )}
 
       {provider === 'app' && isError && (
-        <div className="absolute left-1/2 top-36 z-20 flex max-w-sm -translate-x-1/2 items-start gap-2 rounded-xl border border-red-200 bg-white px-3 py-2 text-sm shadow-lg dark:border-red-900 dark:bg-slate-900">
+        <div className="absolute left-1/2 top-40 z-20 flex max-w-sm -translate-x-1/2 items-start gap-2 rounded-xl border border-red-200 bg-white px-3 py-2 text-sm shadow-lg dark:border-red-900 dark:bg-slate-900">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
           <div>
             <p className="font-medium text-red-700 dark:text-red-300">Could not load places</p>
@@ -188,13 +178,13 @@ export default function MapPage() {
       )}
 
       {provider === 'app' && isLoading && (
-        <div className="absolute left-1/2 top-36 z-10 -translate-x-1/2 rounded-full bg-white px-4 py-1.5 text-sm shadow dark:bg-slate-900">
+        <div className="absolute left-1/2 top-40 z-10 -translate-x-1/2 rounded-full bg-white px-4 py-1.5 text-sm shadow dark:bg-slate-900">
           Loading places…
         </div>
       )}
 
       {provider === 'app' && search && !isLoading && !isError && (
-        <div className="absolute left-1/2 top-36 z-10 -translate-x-1/2 rounded-full bg-white px-3 py-1 text-xs shadow dark:bg-slate-900">
+        <div className="absolute left-1/2 top-40 z-10 -translate-x-1/2 rounded-full bg-white px-3 py-1 text-xs shadow dark:bg-slate-900">
           {places.length} result{places.length !== 1 ? 's' : ''}
         </div>
       )}
