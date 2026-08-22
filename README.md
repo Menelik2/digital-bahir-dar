@@ -5,7 +5,7 @@
 Production-oriented smart city platform for **Bahir Dar, Ethiopia**: tourism, navigation, AI guide, trips, budgets, business listings, and admin moderation.
 
 **Repo:** https://github.com/Menelik2/digital-bahir-dar  
-**Version:** 1.0.0 (Phases 1–10)
+**Version:** 1.0.2 (Phases 1–10)
 
 ---
 
@@ -15,7 +15,7 @@ Production-oriented smart city platform for **Bahir Dar, Ethiopia**: tourism, na
 |-------|------|
 | Frontend | React 19, TypeScript, Vite 6, Tailwind CSS v4 |
 | UI | shadcn-style components, Lucide icons |
-| Maps | Google Maps (`@vis.gl/react-google-maps`) |
+| Maps | **Leaflet + OpenStreetMap** (free, no API key) |
 | Data | TanStack Query, Zustand |
 | Backend | Supabase (Postgres, Auth, RLS, Edge Functions) |
 | PWA | Custom service worker + web manifest |
@@ -48,7 +48,7 @@ See **[LAUNCH.md](./LAUNCH.md)** for the production go-live checklist.
 git clone https://github.com/Menelik2/digital-bahir-dar.git
 cd digital-bahir-dar
 cp .env.example .env.local
-# Edit VITE_SUPABASE_* and VITE_GOOGLE_MAPS_API_KEY
+# Edit VITE_SUPABASE_* (map works without any Google key)
 
 python3 scripts/generate-pwa-icons.py
 npm install
@@ -81,7 +81,7 @@ Service worker registers in production builds. In dev, append `?sw=1` to test.
 | Path | Description |
 |------|-------------|
 | `/` | Home |
-| `/map` | Interactive map |
+| `/map` | Interactive map (OpenStreetMap) |
 | `/explore` | All places |
 | `/hotels` `/restaurants` `/attractions` `/banks` `/transport` | Category lists |
 | `/places/:slug` | Place details, reviews, save |
