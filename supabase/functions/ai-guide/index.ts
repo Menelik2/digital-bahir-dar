@@ -1,6 +1,9 @@
 // Supabase Edge Function: AI Guide for Digital Bahir Dar
 // Deploy: supabase functions deploy ai-guide
-// Secrets: AI_API_KEY (OpenAI or compatible)
+// Secrets (Supabase only — never VITE_*):
+//   AI_API_KEY  = Groq API key from https://console.groq.com/keys
+//   AI_MODEL    = optional (default: llama-3.3-70b-versatile)
+//   AI_BASE_URL = optional (default: https://api.groq.com/openai/v1)
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
@@ -40,7 +43,7 @@ serve(async (req) => {
           error: 'AI_API_KEY not configured',
           fallback: true,
           reply:
-            'The AI guide is not fully configured on the server yet. Use the in-app demo tips, map, and trip planner. Ask an admin to set AI_API_KEY on the Edge Function.',
+            'The AI guide is not fully configured on the server yet. Use the in-app demo tips, map, and trip planner. Ask an admin to set AI_API_KEY (Groq) on the Edge Function.',
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
@@ -51,14 +54,18 @@ serve(async (req) => {
         ? SYSTEM_PROMPT + '\nPrefer Amharic (አማርኛ) when the user writes in Amharic.'
         : SYSTEM_PROMPT
 
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Groq is OpenAI-compatible. Override with AI_BASE_URL if needed.
+    const baseUrl = (Deno.env.get('AI_BASE_URL') || 'https://api.groq.com/openai/v1').replace(/\/$/, '')
+    const model = Deno.env.get('AI_MODEL') || 'llama-3.3-70b-versatile'
+
+    const res = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: Deno.env.get('AI_MODEL') || 'gpt-4o-mini',
+        model,
         messages: [{ role: 'system', content: systemContent }, ...messages.slice(-20)],
         temperature: 0.7,
         max_tokens: 800,
@@ -68,7 +75,7 @@ serve(async (req) => {
     if (!res.ok) {
       const errText = await res.text()
       console.error('AI provider error', res.status, errText)
-      return new Response(JSON.stringify({ error: 'AI provider error', status: res.status }), {
+      return new Response(JSON.stringify({ error: 'AI provider error', status: res.status, detail: errText.slice(0, 500) }), {
         status: 502,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -77,7 +84,7 @@ serve(async (req) => {
     const data = await res.json()
     const reply = data.choices?.[0]?.message?.content ?? 'Sorry, I could not generate a reply.'
 
-    return new Response(JSON.stringify({ reply, model: data.model }), {
+    return new Response(JSON.stringify({ reply, model: data.model || model }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (e) {
