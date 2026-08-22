@@ -44,11 +44,7 @@ export type Strings = {
     empty: string
     distance: string
   }
-  theme: {
-    light: string
-    dark: string
-    system: string
-  }
+  theme: { light: string; dark: string; system: string }
   common: {
     language: string
     close: string
@@ -66,6 +62,14 @@ export type Strings = {
     fromOsm: string
     liveMap: string
     youAreHere: string
+    verified: string
+    featured: string
+    nearest: string
+    name: string
+    maps: string
+    cancel: string
+    delete: string
+    create: string
   }
   home: {
     badge: string
@@ -144,6 +148,70 @@ export type Strings = {
     noTrips: string
     guide: string
   }
+  list: {
+    includesOsm: string
+    discoverLive: string
+    refreshMaps: string
+    searchPrefix: string
+    loadingPlaces: string
+    loadFail: string
+    tryDiscover: string
+    fromOsmCount: string
+    budget: string
+    midRange: string
+    luxury: string
+    traditional: string
+    vegetarian: string
+  }
+  pages: {
+    hotelsTitle: string
+    hotelsSubtitle: string
+    hotelsEmpty: string
+    restaurantsTitle: string
+    restaurantsSubtitle: string
+    restaurantsEmpty: string
+    attractionsTitle: string
+    attractionsSubtitle: string
+    attractionsEmpty: string
+    banksTitle: string
+    banksSubtitle: string
+    banksEmpty: string
+    transportTitle: string
+    transportSubtitle: string
+    transportEmpty: string
+    typicalFares: string
+    findRoutes: string
+    googleTransport: string
+    liveOsmTransport: string
+  }
+  ai: {
+    title: string
+    demoMode: string
+    liveMode: string
+    thinking: string
+    placeholder: string
+    welcome: string
+    error: string
+    reset: string
+  }
+  notFound: {
+    title: string
+    body: string
+  }
+  food: {
+    localGuide: string
+    whatToEat: string
+    whatToEatBody: string
+    neighborhoods: string
+    recommended: string
+    etiquette: string
+    foodSafety: string
+    allPicks: string
+    allPicksBody: string
+    mustTry: string
+    tip: string
+    openInApp: string
+  }
 }
 
 const en: Strings = {
@@ -190,11 +258,7 @@ const en: Strings = {
     empty: 'No places match your search.',
     distance: 'Distance',
   },
-  theme: {
-    light: 'Light',
-    dark: 'Dark',
-    system: 'System',
-  },
+  theme: { light: 'Light', dark: 'Dark', system: 'System' },
   common: {
     language: 'Language',
     close: 'Close',
@@ -212,6 +276,14 @@ const en: Strings = {
     fromOsm: 'from live OSM',
     liveMap: 'Live map · OpenStreetMap',
     youAreHere: 'You are here',
+    verified: 'Verified',
+    featured: 'Featured',
+    nearest: 'Nearest',
+    name: 'Name',
+    maps: 'Maps',
+    cancel: 'Cancel',
+    delete: 'Delete',
+    create: 'Create',
   },
   home: {
     badge: 'Bahir Dar Smart Digital City 🇪🇹',
@@ -293,6 +365,72 @@ const en: Strings = {
     noTrips: 'No personal trips yet. Create one or open a guide plan above.',
     guide: 'GUIDE',
   },
+  list: {
+    includesOsm: 'Includes OpenStreetMap data',
+    discoverLive: 'Discover live map',
+    refreshMaps: 'Refresh maps',
+    searchPrefix: 'Search',
+    loadingPlaces: 'Loading places…',
+    loadFail: 'Could not load data.',
+    tryDiscover: 'Try Discover (live OpenStreetMap) →',
+    fromOsmCount: 'from OpenStreetMap',
+    budget: 'Budget',
+    midRange: 'Mid-range',
+    luxury: 'Luxury',
+    traditional: 'Traditional Ethiopian',
+    vegetarian: 'Vegetarian',
+  },
+  pages: {
+    hotelsTitle: 'Hotels',
+    hotelsSubtitle: 'Places to stay in Bahir Dar — app listings plus live OpenStreetMap',
+    hotelsEmpty: 'No hotels found. Try Discover or check Google Maps for Bahir Dar lodging.',
+    restaurantsTitle: 'Restaurants & cafés',
+    restaurantsSubtitle: 'App listings + live OpenStreetMap food places in Bahir Dar',
+    restaurantsEmpty: 'No restaurants yet — use recommendations above or Discover for live food places.',
+    attractionsTitle: 'Attractions',
+    attractionsSubtitle: 'Sights and landmarks in Bahir Dar',
+    attractionsEmpty: 'No attractions found. Try Discover.',
+    banksTitle: 'Banks & ATMs',
+    banksSubtitle: 'Banks and cash points in Bahir Dar',
+    banksEmpty: 'No bank listings yet. Try Discover.',
+    transportTitle: 'Transport',
+    transportSubtitle: 'Bus stops, taxi points, airport & ferry terminals from OpenStreetMap',
+    transportEmpty: 'No transport POIs loaded. See fares below or open Google Maps.',
+    typicalFares: 'Typical fares (estimates)',
+    findRoutes: 'Find routes online',
+    googleTransport: 'Google Maps transport',
+    liveOsmTransport: 'Live OSM transport',
+  },
+  ai: {
+    title: 'AI Guide',
+    demoMode: 'Local knowledge · offline-safe',
+    liveMode: 'Live model',
+    thinking: 'Thinking…',
+    placeholder: 'Ask about Bahir Dar…',
+    welcome:
+      "Selam! I'm the Digital Bahir Dar AI guide.\n\nAsk about Lake Tana, Blue Nile Falls, food, hotels, transport, safety, or a multi-day plan.\n\nPrices are estimates only; always verify locally.",
+    error: 'Something went wrong. Please try again or use Map / Budget / Trips.',
+    reset: 'Reset chat',
+  },
+  notFound: {
+    title: 'Page not found',
+    body: 'That route does not exist in Digital Bahir Dar.',
+  },
+  food: {
+    localGuide: 'Local food guide',
+    whatToEat: 'What to eat in Bahir Dar',
+    whatToEatBody:
+      'Lake fish, injera houses, coffee culture, and budget kitchens — practical picks for visitors. Prices are estimates; confirm on site.',
+    neighborhoods: 'Neighborhoods',
+    recommended: 'Recommended experiences',
+    etiquette: 'Etiquette',
+    foodSafety: 'Food safety',
+    allPicks: 'All picks',
+    allPicksBody: 'More ideas below, then live listings from the app and OpenStreetMap.',
+    mustTry: 'Must try',
+    tip: 'Tip',
+    openInApp: 'Open in app →',
+  },
 }
 
 const am: Strings = {
@@ -339,11 +477,7 @@ const am: Strings = {
     empty: 'ከፍለጋዎ ጋር የሚዛመድ ቦታ የለም።',
     distance: 'ርቀት',
   },
-  theme: {
-    light: 'ብርሃን',
-    dark: 'ጨለማ',
-    system: 'ስርዓት',
-  },
+  theme: { light: 'ብርሃን', dark: 'ጨለማ', system: 'ስርዓት' },
   common: {
     language: 'ቋንቋ',
     close: 'ዝጋ',
@@ -361,6 +495,14 @@ const am: Strings = {
     fromOsm: 'ከቀጥታ OSM',
     liveMap: 'ቀጥታ ካርታ · OpenStreetMap',
     youAreHere: 'እርስዎ እዚህ ነዎት',
+    verified: 'የተረጋገጠ',
+    featured: 'ተመራጭ',
+    nearest: 'ቅርብ',
+    name: 'ስም',
+    maps: 'ካርታዎች',
+    cancel: 'ሰርዝ',
+    delete: 'ሰርዝ',
+    create: 'ፍጠር',
   },
   home: {
     badge: 'ባሕር ዳር ብልጥ ዲጂታል ከተማ 🇪🇹',
@@ -440,6 +582,72 @@ const am: Strings = {
     loginBody: 'መመሪያ እቅዶችን በነፃ ይመልከቱ። የግል ጉዞዎችን ለመፍጠር ይግቡ።',
     noTrips: 'እስካሁን የግል ጉዞ የለም። አዲስ ይፍጠሩ ወይም ከላይ መመሪያ ይክፈቱ።',
     guide: 'መመሪያ',
+  },
+  list: {
+    includesOsm: 'የOpenStreetMap ውሂብን ያካትታል',
+    discoverLive: 'ቀጥታ ካርታ አግኝ',
+    refreshMaps: 'ካርታዎችን አድስ',
+    searchPrefix: 'ፈልግ',
+    loadingPlaces: 'ቦታዎች በመጫን ላይ…',
+    loadFail: 'ውሂብ መጫን አልተቻለም።',
+    tryDiscover: 'አግኝን ይሞክሩ (ቀጥታ OpenStreetMap) →',
+    fromOsmCount: 'ከ OpenStreetMap',
+    budget: 'በጀት',
+    midRange: 'መካከለኛ',
+    luxury: 'ላክሸሪ',
+    traditional: 'ባህላዊ ኢትዮጵያዊ',
+    vegetarian: 'ቬጀቴሪያን',
+  },
+  pages: {
+    hotelsTitle: 'ሆቴሎች',
+    hotelsSubtitle: 'በባሕር ዳር የመኝታ ቦታዎች — የመተግበሪያ ዝርዝሮች እና ቀጥታ OpenStreetMap',
+    hotelsEmpty: 'ሆቴል አልተገኘም። አግኝን ይሞክሩ ወይም Google Maps ይመልከቱ።',
+    restaurantsTitle: 'ምግብ ቤቶች እና ካፌዎች',
+    restaurantsSubtitle: 'የመተግበሪያ ዝርዝሮች + ቀጥታ OpenStreetMap ምግብ ቤቶች',
+    restaurantsEmpty: 'ምግብ ቤት እስካሁን የለም — ከላይ ያሉ ምክሮችን ወይም አግኝን ይጠቀሙ።',
+    attractionsTitle: 'መስህቦች',
+    attractionsSubtitle: 'በባሕር ዳር መስህቦች እና ታሪካዊ ቦታዎች',
+    attractionsEmpty: 'መስህብ አልተገኘም። አግኝን ይሞክሩ።',
+    banksTitle: 'ባንኮች እና ATM',
+    banksSubtitle: 'በባሕር ዳር ባንኮች እና ጥሬ ገንዘብ ነጥቦች',
+    banksEmpty: 'የባንክ ዝርዝር እስካሁን የለም። አግኝን ይሞክሩ።',
+    transportTitle: 'ትራንስፖርት',
+    transportSubtitle: 'የአውቶቡስ ማቆሚያዎች፣ ታክሲ፣ አውሮፕላን ማረፊያ እና ጀልባ ከ OpenStreetMap',
+    transportEmpty: 'የትራንስፖርት ቦታ አልተጫነም። ከታች ያለውን ታሪፍ ይመልከቱ።',
+    typicalFares: 'መደበኛ ታሪፎች (ግምት)',
+    findRoutes: 'መንገዶችን በመስመር ላይ ያግኙ',
+    googleTransport: 'Google Maps ትራንስፖርት',
+    liveOsmTransport: 'ቀጥታ OSM ትራንስፖርት',
+  },
+  ai: {
+    title: 'AI መመሪያ',
+    demoMode: 'አካባቢያዊ እውቀት · ከመስመር ውጭ',
+    liveMode: 'ቀጥታ ሞዴል',
+    thinking: 'በማሰብ ላይ…',
+    placeholder: 'ስለ ባሕር ዳር ይጠይቁ…',
+    welcome:
+      'ሰላም! የዲጂታል ባሕር ዳር AI መመሪያ ነኝ።\n\nስለ ጣና ሐይቅ፣ አባይ ፏፏቴ፣ ምግብ፣ ሆቴል፣ ትራንስፖርት፣ ደህንነት ወይም የብዙ ቀን እቅድ ይጠይቁ።\n\nዋጋዎች ግምት ብቻ ናቸው፤ በአካባቢ ያረጋግጡ።',
+    error: 'ስህተት ተከስቷል። እንደገና ይሞክሩ ወይም ካርታ / በጀት / ጉዞዎችን ይጠቀሙ።',
+    reset: 'ውይይት አድስ',
+  },
+  notFound: {
+    title: 'ገጹ አልተገኘም',
+    body: 'ያ መንገድ በዲጂታል ባሕር ዳር ውስጥ የለም።',
+  },
+  food: {
+    localGuide: 'የአካባቢ ምግብ መመሪያ',
+    whatToEat: 'በባሕር ዳር ምን መብላት',
+    whatToEatBody:
+      'የሐይቅ አሳ፣ እንጀራ ቤቶች፣ ቡና ባህል እና በጀት ምግብ ቤቶች — ለጎብኚዎች ተግባራዊ ምርጫዎች። ዋጋዎች ግምት ናቸው።',
+    neighborhoods: 'አካባቢዎች',
+    recommended: 'የሚመከሩ ተሞክሮዎች',
+    etiquette: 'ስነ ምግባር',
+    foodSafety: 'የምግብ ደህንነት',
+    allPicks: 'ሁሉም ምርጫዎች',
+    allPicksBody: 'ተጨማሪ ሀሳቦች ከታች፣ ከዚያ ከመተግበሪያ እና OpenStreetMap ቀጥታ ዝርዝሮች።',
+    mustTry: 'መሞከር ያለብዎት',
+    tip: 'ምክር',
+    openInApp: 'በመተግበሪያ ውስጥ ክፈት →',
   },
 }
 

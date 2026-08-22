@@ -1,13 +1,15 @@
 import { PlaceListPage } from '@/components/places/PlaceListPage'
+import { useT } from '@/hooks/useT'
 
 export default function AttractionsPage() {
+  const t = useT()
   return (
     <PlaceListPage
-      title="Attractions"
-      subtitle="Lake Tana, Blue Nile Falls, monasteries & city sights"
+      title={t.pages.attractionsTitle}
+      subtitle={t.pages.attractionsSubtitle}
       categorySlug="attraction"
       osmCategories={['attraction']}
-      emptyMessage="No attractions listed yet. Use Discover or Wikivoyage for travel ideas."
+      emptyMessage={t.pages.attractionsEmpty}
     />
   )
 }

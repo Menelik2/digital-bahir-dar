@@ -1,14 +1,16 @@
 import { PlaceListPage } from '@/components/places/PlaceListPage'
+import { useT } from '@/hooks/useT'
 
 export default function BanksPage() {
+  const t = useT()
   return (
     <PlaceListPage
-      title="Banks & ATMs"
-      subtitle="Bank branches and cash points — app listings plus OpenStreetMap"
+      title={t.pages.banksTitle}
+      subtitle={t.pages.banksSubtitle}
       categorySlug="bank"
       osmCategories={['bank', 'atm']}
-      filters={[{ id: 'atm', label: 'ATMs' }]}
-      emptyMessage="No bank or ATM listings yet. Try Discover or Google Maps for cash points."
+      filters={[{ id: 'atm', label: 'ATM' }]}
+      emptyMessage={t.pages.banksEmpty}
     />
   )
 }

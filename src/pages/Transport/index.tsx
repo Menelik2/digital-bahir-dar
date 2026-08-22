@@ -4,22 +4,24 @@ import { PlaceListPage } from '@/components/places/PlaceListPage'
 import { GUIDE_SITES, categoryGuideSearch } from '@/constants/guideSites'
 import { TRANSPORT_FARES } from '@/data/cityLife'
 import { Card, CardContent } from '@/components/ui/card'
+import { useT } from '@/hooks/useT'
 
 export default function TransportPage() {
+  const t = useT()
   const maps = categoryGuideSearch('bus station taxi Bahir Dar')
 
   return (
     <div>
       <PlaceListPage
-        title="Transport"
-        subtitle="Bus stops, taxi points, airport & ferry terminals from OpenStreetMap"
+        title={t.pages.transportTitle}
+        subtitle={t.pages.transportSubtitle}
         categorySlug="transport"
         osmCategories={['transport']}
-        emptyMessage="No transport POIs loaded. See fares below or open Google Maps."
+        emptyMessage={t.pages.transportEmpty}
       />
 
       <section className="mx-auto max-w-6xl px-4 pb-12">
-        <h2 className="mb-3 text-lg font-semibold">Typical fares (estimates)</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t.pages.typicalFares}</h2>
         <div className="mb-8 grid gap-3 sm:grid-cols-2">
           {TRANSPORT_FARES.map((f) => (
             <Card key={f.id}>
@@ -38,7 +40,7 @@ export default function TransportPage() {
           ))}
         </div>
 
-        <h2 className="mb-3 text-lg font-semibold">Find routes online</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t.pages.findRoutes}</h2>
         <div className="flex flex-wrap gap-3">
           <a
             href={maps.googleMaps}
@@ -46,13 +48,13 @@ export default function TransportPage() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium dark:border-slate-700 dark:bg-slate-900"
           >
-            <ExternalLink className="h-4 w-4 text-sky-600" /> Google Maps transport
+            <ExternalLink className="h-4 w-4 text-sky-600" /> {t.pages.googleTransport}
           </a>
           <Link
             to="/discover"
             className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium dark:border-slate-700 dark:bg-slate-900"
           >
-            Live OSM transport
+            {t.pages.liveOsmTransport}
           </Link>
           {GUIDE_SITES.filter((s) => s.categories.includes('transport')).map((s) => (
             <a

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Sparkles, Send, Loader2, Map, Wallet, Route, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -6,28 +6,42 @@ import { sendGuideMessage, SUGGESTED_PROMPTS } from '@/services/aiGuide'
 import type { ChatMessage } from '@/types/ai'
 import { useAppStore } from '@/store'
 import { cn } from '@/lib/utils'
+import { useT } from '@/hooks/useT'
 
 function uid() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
-const WELCOME: ChatMessage = {
-  id: 'welcome',
-  role: 'assistant',
-  content:
-    "Selam! I'm the Digital Bahir Dar AI guide.\n\nAsk about Lake Tana, Blue Nile Falls, food, hotels, transport, safety, or a multi-day plan. I'll reply in DEMO mode until the server AI key is configured — tips are still useful for planning.\n\nPrices are estimates only; always verify locally.",
-  createdAt: new Date().toISOString(),
-  isDemo: true,
-}
-
 export default function AIGuidePage() {
+  const t = useT()
   const { language } = useAppStore()
-  const [messages, setMessages] = useState<ChatMessage[]>([WELCOME])
+
+  const welcome = useMemo(
+    (): ChatMessage => ({
+      id: 'welcome',
+      role: 'assistant',
+      content: t.ai.welcome,
+      createdAt: new Date().toISOString(),
+      isDemo: true,
+    }),
+    [t.ai.welcome]
+  )
+
+  const [messages, setMessages] = useState<ChatMessage[]>([welcome])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [demoMode, setDemoMode] = useState(true)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const prevWelcome = useRef(welcome.content)
+
+  // Update welcome when language changes (if only welcome showing)
+  useEffect(() => {
+    if (prevWelcome.current !== welcome.content && messages.length <= 1) {
+      setMessages([welcome])
+      prevWelcome.current = welcome.content
+    }
+  }, [welcome, messages.length])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -67,7 +81,7 @@ export default function AIGuidePage() {
         {
           id: uid(),
           role: 'assistant',
-          content: 'Something went wrong. Please try again or use Map / Budget / Trips.',
+          content: t.ai.error,
           createdAt: new Date().toISOString(),
           isDemo: true,
         },
@@ -79,7 +93,7 @@ export default function AIGuidePage() {
   }
 
   const reset = () => {
-    setMessages([WELCOME])
+    setMessages([welcome])
     setDemoMode(true)
   }
 
@@ -91,17 +105,29 @@ export default function AIGuidePage() {
             <Sparkles className="h-4 w-4" />
           </div>
           <div>
-            <h1 className="text-base font-bold leading-tight">AI Guide</h1>
-            <p className="text-[11px] text-slate-500">
-              {demoMode ? 'DEMO knowledge · offline-safe' : 'Live model'}
-            </p>
+            <h1 className="text-base font-bold leading-tight">{t.ai.title}</h1>
+            <p className="text-[11px] text-slate-500">{demoMode ? t.ai.demoMode : t.ai.liveMode}</p>
           </div>
         </div>
         <div className="flex gap-1">
-          <Link to="/map"><Button size="icon" variant="ghost" title="Map"><Map className="h-4 w-4" /></Button></Link>
-          <Link to="/budget"><Button size="icon" variant="ghost" title="Budget"><Wallet className="h-4 w-4" /></Button></Link>
-          <Link to="/trips"><Button size="icon" variant="ghost" title="Trips"><Route className="h-4 w-4" /></Button></Link>
-          <Button size="icon" variant="ghost" title="Reset chat" onClick={reset}><RotateCcw className="h-4 w-4" /></Button>
+          <Link to="/map">
+            <Button size="icon" variant="ghost" title={t.nav.map}>
+              <Map className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Link to="/budget">
+            <Button size="icon" variant="ghost" title={t.nav.budget}>
+              <Wallet className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Link to="/trips">
+            <Button size="icon" variant="ghost" title={t.nav.trips}>
+              <Route className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Button size="icon" variant="ghost" title={t.ai.reset} onClick={reset}>
+            <RotateCcw className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 
@@ -116,9 +142,6 @@ export default function AIGuidePage() {
                   : 'rounded-bl-md bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100'
               )}
             >
-              {m.role === 'assistant' && m.isDemo && (
-                <span className="mb-1.5 inline-block rounded bg-amber-200/80 px-1.5 py-0.5 text-[10px] font-medium text-amber-900">DEMO</span>
-              )}
               <div className="whitespace-pre-wrap">{formatContent(m.content)}</div>
             </div>
           </div>
@@ -126,7 +149,7 @@ export default function AIGuidePage() {
         {sending && (
           <div className="flex justify-start">
             <div className="flex items-center gap-2 rounded-2xl rounded-bl-md bg-slate-100 px-4 py-3 text-sm text-slate-500 dark:bg-slate-800">
-              <Loader2 className="h-4 w-4 animate-spin" /> Thinking…
+              <Loader2 className="h-4 w-4 animate-spin" /> {t.ai.thinking}
             </div>
           </div>
         )}
@@ -136,8 +159,13 @@ export default function AIGuidePage() {
       {messages.length <= 2 && (
         <div className="mb-2 flex shrink-0 flex-wrap gap-1.5">
           {SUGGESTED_PROMPTS.map((p) => (
-            <button key={p} type="button" disabled={sending} onClick={() => send(p)}
-              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600 hover:border-sky-300 hover:text-sky-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+            <button
+              key={p}
+              type="button"
+              disabled={sending}
+              onClick={() => send(p)}
+              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600 hover:border-sky-300 hover:text-sky-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+            >
               {p}
             </button>
           ))}
@@ -146,7 +174,10 @@ export default function AIGuidePage() {
 
       <form
         className="flex shrink-0 gap-2 border-t border-slate-200 py-3 dark:border-slate-800"
-        onSubmit={(e) => { e.preventDefault(); send(input) }}
+        onSubmit={(e) => {
+          e.preventDefault()
+          send(input)
+        }}
       >
         <textarea
           ref={inputRef}
@@ -159,11 +190,16 @@ export default function AIGuidePage() {
             }
           }}
           rows={1}
-          placeholder="Ask about Bahir Dar…"
+          placeholder={t.ai.placeholder}
           className="max-h-28 min-h-[42px] flex-1 resize-none rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-sky-500 dark:border-slate-700 dark:bg-slate-950"
           disabled={sending}
         />
-        <Button type="submit" size="icon" className="h-[42px] w-[42px] shrink-0 rounded-xl" disabled={sending || !input.trim()}>
+        <Button
+          type="submit"
+          size="icon"
+          className="h-[42px] w-[42px] shrink-0 rounded-xl"
+          disabled={sending || !input.trim()}
+        >
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </form>

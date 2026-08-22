@@ -20,6 +20,7 @@ import { placeGuideLinks } from '@/constants/guideSites'
 import type { OsmCategory } from '@/services/osmPlaces'
 import type { Place, SortOption } from '@/types/place'
 import { cn } from '@/lib/utils'
+import { useT } from '@/hooks/useT'
 
 interface PlaceListPageProps {
   title: string
@@ -27,9 +28,7 @@ interface PlaceListPageProps {
   categorySlug: string
   filters?: { id: string; label: string }[]
   emptyMessage?: string
-  /** Pull live OpenStreetMap places for this category */
   osmCategories?: OsmCategory[]
-  /** When true, show OSM even if Supabase has rows (merged, Supabase first) */
   mergeOsm?: boolean
 }
 
@@ -50,10 +49,11 @@ export function PlaceListPage({
   subtitle,
   categorySlug,
   filters = [],
-  emptyMessage = 'No places found yet. Verified listings will appear here.',
+  emptyMessage,
   osmCategories,
   mergeOsm = true,
 }: PlaceListPageProps) {
+  const t = useT()
   const [search, setSearch] = useState('')
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
   const [sort, setSort] = useState<SortOption>('featured')
@@ -77,7 +77,6 @@ export function PlaceListPage({
 
   const combined = useMemo(() => {
     if (!mergeOsm) return places
-    // Prefer verified Supabase; fill gaps with OSM
     return mergePlaces(places, osmPlaces)
   }, [places, osmPlaces, mergeOsm])
 
@@ -103,11 +102,15 @@ export function PlaceListPage({
     }
     if (sort === 'name') return list.sort((a, b) => a.name.localeCompare(b.name))
     return list.sort(
-      (a, b) => Number(b.featured) - Number(a.featured) || Number(b.verified) - Number(a.verified) || a.name.localeCompare(b.name)
+      (a, b) =>
+        Number(b.featured) - Number(a.featured) ||
+        Number(b.verified) - Number(a.verified) ||
+        a.name.localeCompare(b.name)
     )
   }, [combined, search, sort, location.latitude, location.longitude, activeFilter])
 
   const loading = isLoading && (osmLoading || !mergeOsm)
+  const empty = emptyMessage ?? t.list.loadFail
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -117,9 +120,9 @@ export function PlaceListPage({
           {subtitle && <p className="mt-1 text-slate-500 dark:text-slate-400">{subtitle}</p>}
           {mergeOsm && (
             <p className="mt-1 text-xs text-slate-400">
-              Includes OpenStreetMap data ·{' '}
+              {t.list.includesOsm} ·{' '}
               <Link to="/discover" className="text-sky-600 hover:underline">
-                Discover live map
+                {t.list.discoverLive}
               </Link>
             </p>
           )}
@@ -134,12 +137,8 @@ export function PlaceListPage({
             }}
             disabled={osmFetching}
           >
-            {osmFetching ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-            Refresh maps
+            {osmFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            {t.list.refreshMaps}
           </Button>
         )}
       </div>
@@ -151,7 +150,7 @@ export function PlaceListPage({
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder={`Search ${title.toLowerCase()}...`}
+            placeholder={`${t.list.searchPrefix} ${title}…`}
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400 dark:text-slate-100"
           />
         </div>
@@ -169,9 +168,9 @@ export function PlaceListPage({
         <div className="mb-4 flex flex-wrap gap-2">
           {(
             [
-              ['featured', 'Featured'],
-              ['distance', 'Nearest'],
-              ['name', 'Name'],
+              ['featured', t.common.featured],
+              ['distance', t.common.nearest],
+              ['name', t.common.name],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -202,7 +201,7 @@ export function PlaceListPage({
               : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
           )}
         >
-          All
+          {t.common.all}
         </button>
         <button
           type="button"
@@ -214,7 +213,7 @@ export function PlaceListPage({
               : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
           )}
         >
-          Verified
+          {t.common.verified}
         </button>
         {filters.map((f) => (
           <button
@@ -236,16 +235,16 @@ export function PlaceListPage({
       {loading && (
         <div className="flex flex-col items-center py-20 text-slate-500">
           <Loader2 className="mb-3 h-8 w-8 animate-spin text-sky-500" />
-          <p>Loading places…</p>
+          <p>{t.list.loadingPlaces}</p>
         </div>
       )}
 
       {error && !sorted.length && (
         <div className="flex flex-col items-center py-20 text-center">
           <AlertCircle className="mb-3 h-8 w-8 text-red-500" />
-          <p className="mb-4 text-sm text-slate-500">Could not load data.</p>
+          <p className="mb-4 text-sm text-slate-500">{t.list.loadFail}</p>
           <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="h-4 w-4" /> Retry
+            <RefreshCw className="h-4 w-4" /> {t.common.retry}
           </Button>
         </div>
       )}
@@ -253,9 +252,9 @@ export function PlaceListPage({
       {!loading && sorted.length === 0 && (
         <div className="flex flex-col items-center py-20 text-center">
           <MapPin className="mb-3 h-10 w-10 text-slate-300" />
-          <p className="font-medium text-slate-700 dark:text-slate-300">{emptyMessage}</p>
+          <p className="font-medium text-slate-700 dark:text-slate-300">{empty}</p>
           <Link to="/discover" className="mt-4 text-sm font-medium text-sky-600 hover:underline">
-            Try Discover (live OpenStreetMap) →
+            {t.list.tryDiscover}
           </Link>
         </div>
       )}
@@ -263,9 +262,11 @@ export function PlaceListPage({
       {!loading && sorted.length > 0 && (
         <>
           <p className="mb-4 text-sm text-slate-500">
-            {sorted.length} place{sorted.length !== 1 ? 's' : ''}
+            {sorted.length} {t.common.places}
             {osmPlaces.length > 0 && (
-              <span className="text-slate-400"> · {osmPlaces.length} from OpenStreetMap</span>
+              <span className="text-slate-400">
+                {' '}· {osmPlaces.length} {t.list.fromOsmCount}
+              </span>
             )}
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -283,7 +284,7 @@ export function PlaceListPage({
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700 dark:bg-sky-950 dark:text-sky-300"
                       >
-                        <ExternalLink className="h-3 w-3" /> Maps
+                        <ExternalLink className="h-3 w-3" /> {t.common.maps}
                       </a>
                       <a
                         href={links.googleDirections}
@@ -291,7 +292,7 @@ export function PlaceListPage({
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 rounded-lg bg-teal-50 px-2 py-1 text-xs font-medium text-teal-800 dark:bg-teal-950 dark:text-teal-300"
                       >
-                        Directions
+                        {t.common.directions}
                       </a>
                     </div>
                   )}

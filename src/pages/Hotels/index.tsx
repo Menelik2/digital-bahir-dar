@@ -1,18 +1,20 @@
 import { PlaceListPage } from '@/components/places/PlaceListPage'
+import { useT } from '@/hooks/useT'
 
 export default function HotelsPage() {
+  const t = useT()
   return (
     <PlaceListPage
-      title="Hotels"
-      subtitle="Places to stay in Bahir Dar — verified app listings plus live OpenStreetMap"
+      title={t.pages.hotelsTitle}
+      subtitle={t.pages.hotelsSubtitle}
       categorySlug="hotel"
       osmCategories={['hotel']}
       filters={[
-        { id: 'budget', label: 'Budget' },
-        { id: 'mid', label: 'Mid-range' },
-        { id: 'luxury', label: 'Luxury' },
+        { id: 'budget', label: t.list.budget },
+        { id: 'mid', label: t.list.midRange },
+        { id: 'luxury', label: t.list.luxury },
       ]}
-      emptyMessage="No hotels found. Try Discover or check Google Maps for Bahir Dar lodging."
+      emptyMessage={t.pages.hotelsEmpty}
     />
   )
 }
