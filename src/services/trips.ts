@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { Trip, TripDay, TripStop, TripExpense, TripInput, BudgetBreakdown } from '@/types/trip'
+import { sumTripSpending } from '@/utils/budget'
 
 export async function fetchMyTrips(userId: string): Promise<Trip[]> {
   const { data, error } = await supabase
@@ -164,24 +165,9 @@ export async function deleteExpense(expenseId: string): Promise<{ error: string 
   return { error: error?.message ?? null }
 }
 
+/** Trip spending: logged expenses + stop estimates (see utils/budget). */
 export function computeBudget(trip: Trip): BudgetBreakdown {
-  const expenses = trip.expenses ?? []
-  const byCategory: Record<string, number> = {}
-  let totalExpenses = 0
-  for (const e of expenses) {
-    const amt = Number(e.amount) || 0
-    byCategory[e.category] = (byCategory[e.category] ?? 0) + amt
-    totalExpenses += amt
-  }
-  for (const day of trip.days ?? []) {
-    for (const stop of day.stops ?? []) {
-      if (stop.estimated_cost) totalExpenses += Number(stop.estimated_cost)
-    }
-  }
-  const budgetTotal = trip.budget_total != null ? Number(trip.budget_total) : null
-  const remaining = budgetTotal != null ? budgetTotal - totalExpenses : null
-  const perPerson = trip.traveler_count > 0 ? totalExpenses / trip.traveler_count : totalExpenses
-  return { byCategory, totalExpenses, budgetTotal, remaining, perPerson, currency: trip.currency }
+  return sumTripSpending(trip)
 }
 
 export function createDemoTrip(userId: string): Trip {
