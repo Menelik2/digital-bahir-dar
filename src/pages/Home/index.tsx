@@ -10,7 +10,6 @@ import {
   Coffee,
   ShoppingBag,
   Hospital,
-  Pill,
   Calendar,
   AlertTriangle,
   Sparkles,

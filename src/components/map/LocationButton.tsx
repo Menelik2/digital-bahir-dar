@@ -9,11 +9,11 @@ interface Props {
 }
 
 export function LocationButton({ className, onLocated }: Props) {
-  const { location, request, hasPosition } = useGeolocation(false)
+  const { location, request, hasFix } = useGeolocation(false)
 
   const handleClick = () => {
     request()
-    if (hasPosition && location.latitude && location.longitude) {
+    if (hasFix && location.latitude && location.longitude) {
       onLocated?.(location.latitude, location.longitude)
     }
   }
@@ -27,7 +27,7 @@ export function LocationButton({ className, onLocated }: Props) {
       title="My location"
       aria-label="Use my location"
     >
-      <Navigation className={cn('h-5 w-5', hasPosition && 'text-sky-600')} />
+      <Navigation className={cn('h-5 w-5', hasFix && 'text-sky-600')} />
     </Button>
   )
 }
