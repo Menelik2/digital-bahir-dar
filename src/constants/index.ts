@@ -8,6 +8,7 @@ export const CATEGORIES = [
   { slug: 'restaurant', name: 'Restaurants', icon: 'UtensilsCrossed' },
   { slug: 'cafe', name: 'Cafes', icon: 'Coffee' },
   { slug: 'attraction', name: 'Attractions', icon: 'Landmark' },
+  { slug: 'transport', name: 'Transport', icon: 'Bus' },
   { slug: 'bank', name: 'Banks', icon: 'Building2' },
   { slug: 'atm', name: 'ATMs', icon: 'CreditCard' },
   { slug: 'taxi', name: 'Taxi', icon: 'Car' },

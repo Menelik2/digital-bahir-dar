@@ -34,6 +34,7 @@ const BY_SLUG: Record<string, string> = {
     'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Lake_Tana_from_the_air_%28Ethiopia%29.jpg/640px-Lake_Tana_from_the_air_%28Ethiopia%29.jpg',
   'bahir-dar-bus-station':
     'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Bahir_Dar_Ethiopia.jpg/640px-Bahir_Dar_Ethiopia.jpg',
+  // Airport — city aerial (no reliable free airport photo); avoids broken Unsplash ids
   'bahir-dar-airport-bjr':
     'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Bahir_Dar_Ethiopia.jpg/640px-Bahir_Dar_Ethiopia.jpg',
   'felege-hiwot-hospital':
@@ -46,7 +47,7 @@ const BY_SLUG: Record<string, string> = {
     'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Lake_Tana_from_the_air_%28Ethiopia%29.jpg/640px-Lake_Tana_from_the_air_%28Ethiopia%29.jpg',
 }
 
-/** Category fallbacks (Wikimedia / generic travel) */
+/** Category fallbacks — prefer Wikimedia; Unsplash only when stable */
 const BY_CATEGORY: Record<string, string> = {
   hotel:
     'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=640&q=80&auto=format&fit=crop',
@@ -60,8 +61,9 @@ const BY_CATEGORY: Record<string, string> = {
     'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=640&q=80&auto=format&fit=crop',
   atm:
     'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=640&q=80&auto=format&fit=crop',
+  // Fixed: previous Unsplash id 1544620341-11c8b6b5b3b3 was invalid → solid gradient on cards
   transport:
-    'https://images.unsplash.com/photo-1544620341-11c8b6b5b3b3?w=640&q=80&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=640&q=80&auto=format&fit=crop',
   hospital:
     'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=640&q=80&auto=format&fit=crop',
   pharmacy:
@@ -94,11 +96,18 @@ export function placeCoverImage(place: {
   // Heuristic from name
   const n = (place.name || '').toLowerCase()
   if (n.includes('hotel') || n.includes('resort') || n.includes('guesthouse')) return BY_CATEGORY.hotel
-  if (n.includes('restaurant') || n.includes('kitchen') || n.includes('grill')) return BY_CATEGORY.restaurant
+  if (n.includes('restaurant') || n.includes('kitchen') || n.includes('grill'))
+    return BY_CATEGORY.restaurant
   if (n.includes('cafe') || n.includes('coffee')) return BY_CATEGORY.cafe
   if (n.includes('bank') || n.includes('atm')) return BY_CATEGORY.bank
   if (n.includes('hospital') || n.includes('clinic')) return BY_CATEGORY.hospital
-  if (n.includes('airport') || n.includes('bus') || n.includes('boat') || n.includes('taxi'))
+  if (
+    n.includes('airport') ||
+    n.includes('bus') ||
+    n.includes('boat') ||
+    n.includes('taxi') ||
+    n.includes('pier')
+  )
     return BY_CATEGORY.transport
 
   return DEFAULT_COVER
