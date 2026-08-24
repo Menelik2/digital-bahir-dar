@@ -74,10 +74,8 @@ export default function MapPage() {
 
   const places = useMemo(() => {
     const base = filterRealPlaces(dbPlaces)
+    // Prefer OSM first when enabled (live POIs), then curated/DB fallbacks
     let list = includeOsm ? mergePlaces(osmPlaces, base) : base
-    if (includeOsm && osmPlaces.length > 0) {
-      list = mergePlaces(osmPlaces, base)
-    }
     if (search.trim()) {
       const q = search.trim().toLowerCase()
       list = list.filter(
