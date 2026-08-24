@@ -55,16 +55,12 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-1 sm:gap-2">
+          {/* Desktop search */}
           <GlobalSearch className="hidden sm:flex" />
-          <button
-            type="button"
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 sm:hidden dark:hover:bg-slate-800"
-            onClick={() => setMobileOpen(true)}
-            aria-label={t.search.globalPlaceholder}
-          >
-            <span className="sr-only">{t.common.search}</span>
-            <GlobalSearch />
-          </button>
+          {/* Mobile search — standalone control, not nested inside the menu button */}
+          <div className="sm:hidden">
+            <GlobalSearch className="flex h-10 w-10 items-center justify-center rounded-lg border-0 bg-transparent px-0 py-0" />
+          </div>
           <ThemeLangControls />
           <Link to="/auth">
             <Button size="sm" className="hidden sm:inline-flex">
@@ -77,6 +73,7 @@ export function Header() {
             className="xl:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Menu"
+            aria-expanded={mobileOpen}
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
@@ -114,6 +111,13 @@ export function Header() {
               className="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300"
             >
               {t.nav.events}
+            </Link>
+            <Link
+              to="/auth"
+              onClick={() => setMobileOpen(false)}
+              className="rounded-lg px-3 py-2.5 text-sm font-medium text-sky-600 dark:text-sky-400"
+            >
+              {t.nav.login}
             </Link>
           </nav>
         </div>
