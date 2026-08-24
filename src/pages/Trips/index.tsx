@@ -179,10 +179,34 @@ export default function TripsPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold sm:text-3xl">My Trips</h1>
-        <p className="text-slate-500">Itineraries and plans for Bahir Dar — real places, practical pacing</p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold sm:text-3xl">My Trips</h1>
+          <p className="text-slate-500">Itineraries and plans for Bahir Dar — real places, practical pacing</p>
+        </div>
+        <Link to="/trip-planner">
+          <Button className="bg-gradient-to-r from-sky-600 to-teal-600 hover:from-sky-700 hover:to-teal-700">
+            <Sparkles className="h-4 w-4" /> AI Trip Planner
+          </Button>
+        </Link>
       </div>
+
+      <Link to="/trip-planner" className="mb-8 block">
+        <Card className="overflow-hidden border-sky-200 transition hover:border-sky-400 hover:shadow-md dark:border-sky-800">
+          <CardContent className="flex flex-wrap items-center gap-4 p-4 sm:p-5">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-teal-500 text-white">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-slate-900 dark:text-white">Build a custom plan in 30 seconds</p>
+              <p className="text-sm text-slate-500">
+                Pick days, budget, and interests — get a clear day-by-day Bahir Dar itinerary with ETB estimates.
+              </p>
+            </div>
+            <span className="text-sm font-medium text-sky-600">Open planner →</span>
+          </CardContent>
+        </Card>
+      </Link>
 
       {/* Ready-made guide plans — available without login */}
       <section className="mb-10">
