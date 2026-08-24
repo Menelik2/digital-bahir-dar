@@ -35,42 +35,6 @@ const FALLS_IMG =
 const CITY_IMG =
   'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Bahir_Dar_Ethiopia.jpg/640px-Bahir_Dar_Ethiopia.jpg'
 
-/** Four primary visitor paths — answer “what do I need?” in one tap */
-const DESK = [
-  {
-    to: '/hotels',
-    title: 'Stay',
-    body: 'Hotels by budget · near lake or center',
-    icon: Hotel,
-    gradient: 'from-blue-500 to-sky-600',
-    ring: 'hover:ring-blue-300',
-  },
-  {
-    to: '/restaurants',
-    title: 'Eat',
-    body: 'Injera, lake fish, coffee · price bands',
-    icon: UtensilsCrossed,
-    gradient: 'from-orange-500 to-amber-600',
-    ring: 'hover:ring-orange-300',
-  },
-  {
-    to: '/transport',
-    title: 'Go',
-    body: 'Airport, bajaj, boats, falls day trip',
-    icon: Car,
-    gradient: 'from-violet-500 to-purple-600',
-    ring: 'hover:ring-violet-300',
-  },
-  {
-    to: '/today',
-    title: 'See',
-    body: 'Today’s plan · lake, viewpoint, market',
-    icon: Sun,
-    gradient: 'from-teal-500 to-emerald-600',
-    ring: 'hover:ring-teal-300',
-  },
-] as const
-
 export default function HomePage() {
   const t = useT()
   const upcoming = CITY_EVENTS.filter((e) => e.featured).slice(0, 3)
@@ -78,9 +42,44 @@ export default function HomePage() {
   const completed = useTodoStore((s) => s.completed)
   const done = CITY_TODOS.filter((x) => completed[x.id]).length
 
+  const desk = [
+    {
+      to: '/hotels',
+      title: t.home.stay,
+      body: t.home.stayBody,
+      icon: Hotel,
+      gradient: 'from-blue-500 to-sky-600',
+      ring: 'hover:ring-blue-300',
+    },
+    {
+      to: '/restaurants',
+      title: t.home.eat,
+      body: t.home.eatBody,
+      icon: UtensilsCrossed,
+      gradient: 'from-orange-500 to-amber-600',
+      ring: 'hover:ring-orange-300',
+    },
+    {
+      to: '/transport',
+      title: t.home.go,
+      body: t.home.goBody,
+      icon: Car,
+      gradient: 'from-violet-500 to-purple-600',
+      ring: 'hover:ring-violet-300',
+    },
+    {
+      to: '/today',
+      title: t.home.see,
+      body: t.home.seeBody,
+      icon: Sun,
+      gradient: 'from-teal-500 to-emerald-600',
+      ring: 'hover:ring-teal-300',
+    },
+  ] as const
+
   const moreTools = [
-    { label: 'Today', icon: Sun, path: '/today', color: 'bg-amber-50 text-amber-700' },
-    { label: 'Planner', icon: Sparkles, path: '/trip-planner', color: 'bg-sky-50 text-sky-700' },
+    { label: t.nav.today, icon: Sun, path: '/today', color: 'bg-amber-50 text-amber-700' },
+    { label: t.nav.planner, icon: Sparkles, path: '/trip-planner', color: 'bg-sky-50 text-sky-700' },
     { label: t.home.thingsToDo, icon: ListTodo, path: '/todo', color: 'bg-sky-50 text-sky-700' },
     { label: t.nav.discover, icon: Compass, path: '/discover', color: 'bg-teal-50 text-teal-700' },
     { label: t.nav.explore, icon: Search, path: '/explore', color: 'bg-sky-50 text-sky-700' },
@@ -96,7 +95,6 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-sky-600 via-sky-500 to-teal-600 px-4 py-14 text-white sm:py-20">
         <div className="relative mx-auto max-w-4xl text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium">
@@ -104,13 +102,11 @@ export default function HomePage() {
           </div>
           <h1 className="mb-3 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">{t.home.title}</h1>
           <p className="mx-auto mb-6 max-w-2xl text-lg text-sky-100 sm:text-xl">{t.tagline}</p>
-          <p className="mx-auto mb-8 max-w-lg text-sm text-sky-100/90">
-            Start with one question: where to sleep, eat, get around, or what to do today.
-          </p>
+          <p className="mx-auto mb-8 max-w-lg text-sm text-sky-100/90">{t.home.heroHint}</p>
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link to="/today">
               <Button size="lg" className="w-full bg-white text-sky-700 hover:bg-sky-50 sm:w-auto">
-                <Sun className="h-5 w-5" /> Today in Bahir Dar
+                <Sun className="h-5 w-5" /> {t.home.todayTitle}
               </Button>
             </Link>
             <Link to="/trip-planner">
@@ -119,7 +115,7 @@ export default function HomePage() {
                 variant="outline"
                 className="w-full border-white/40 bg-white/10 text-white hover:bg-white/20 sm:w-auto"
               >
-                <Sparkles className="h-5 w-5" /> Plan 2–5 days
+                <Sparkles className="h-5 w-5" /> {t.home.planMultiDay}
               </Button>
             </Link>
             <Link to="/ai-guide">
@@ -131,16 +127,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Visitor desk — Stay / Eat / Go / See */}
       <section className="mx-auto max-w-6xl px-4 py-10">
-        <div className="mb-5 flex items-end justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-semibold sm:text-2xl">What do you need?</h2>
-            <p className="text-sm text-slate-500">Four clear paths — the rest is optional</p>
-          </div>
+        <div className="mb-5">
+          <h2 className="text-xl font-semibold sm:text-2xl">{t.home.whatNeed}</h2>
+          <p className="text-sm text-slate-500">{t.home.whatNeedSub}</p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {DESK.map((item) => (
+          {desk.map((item) => (
             <Link key={item.to} to={item.to} className="group block h-full">
               <Card
                 className={`h-full overflow-hidden transition hover:shadow-lg hover:ring-2 ${item.ring}`}
@@ -158,7 +151,6 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Today highlight strip */}
         <Link to="/today" className="mt-4 block">
           <Card className="overflow-hidden border-amber-200 bg-gradient-to-r from-amber-50 to-sky-50 transition hover:border-amber-400 dark:border-amber-900 dark:from-amber-950/30 dark:to-sky-950/30">
             <CardContent className="flex flex-wrap items-center gap-4 p-4 sm:p-5">
@@ -166,21 +158,18 @@ export default function HomePage() {
                 <Sun className="h-6 w-6" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-slate-900 dark:text-white">Today in Bahir Dar</p>
-                <p className="text-sm text-slate-500">
-                  Morning lake → viewpoint → market → sunset dinner. Roughly ~1,200 ETB/person.
-                </p>
+                <p className="font-semibold text-slate-900 dark:text-white">{t.home.todayTitle}</p>
+                <p className="text-sm text-slate-500">{t.home.todayBody}</p>
               </div>
-              <span className="text-sm font-medium text-amber-800 dark:text-amber-200">Open plan →</span>
+              <span className="text-sm font-medium text-amber-800 dark:text-amber-200">{t.home.openPlan}</span>
             </CardContent>
           </Card>
         </Link>
       </section>
 
-      {/* More tools — secondary */}
       <section className="border-t border-slate-100 bg-slate-50 px-4 py-8 dark:border-slate-800 dark:bg-slate-900/40">
         <div className="mx-auto max-w-6xl">
-          <h2 className="mb-4 text-lg font-semibold text-slate-700 dark:text-slate-200">More tools</h2>
+          <h2 className="mb-4 text-lg font-semibold text-slate-700 dark:text-slate-200">{t.home.moreTools}</h2>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7">
             {moreTools.map((a) => (
               <Link key={a.path + a.label} to={a.path}>
@@ -200,7 +189,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Events */}
       <section className="px-4 py-10">
         <div className="mx-auto max-w-6xl">
           <div className="mb-6 flex items-center justify-between">
@@ -225,7 +213,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured places */}
       <section className="bg-slate-50 px-4 py-10 dark:bg-slate-900/50">
         <div className="mx-auto max-w-6xl">
           <h2 className="mb-6 text-xl font-semibold">{t.home.featured}</h2>
@@ -233,7 +220,7 @@ export default function HomePage() {
             <Link to="/places/lake-tana">
               <Card className="overflow-hidden transition hover:shadow-lg">
                 <div className="relative h-40 bg-sky-200">
-                  <img src={LAKE_TANA_IMG} alt="Lake Tana" className="h-full w-full object-cover" loading="lazy" />
+                  <img src={LAKE_TANA_IMG} alt="" className="h-full w-full object-cover" loading="lazy" />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                 </div>
                 <CardContent className="p-4">
@@ -245,7 +232,7 @@ export default function HomePage() {
             <Link to="/places/blue-nile-falls-tis-issat">
               <Card className="overflow-hidden transition hover:shadow-lg">
                 <div className="relative h-40 bg-emerald-200">
-                  <img src={FALLS_IMG} alt="Blue Nile Falls" className="h-full w-full object-cover" loading="lazy" />
+                  <img src={FALLS_IMG} alt="" className="h-full w-full object-cover" loading="lazy" />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                 </div>
                 <CardContent className="p-4">
@@ -257,7 +244,7 @@ export default function HomePage() {
             <Link to="/todo">
               <Card className="overflow-hidden transition hover:shadow-lg">
                 <div className="relative h-40 bg-violet-200">
-                  <img src={CITY_IMG} alt="Bahir Dar" className="h-full w-full object-cover" loading="lazy" />
+                  <img src={CITY_IMG} alt="" className="h-full w-full object-cover" loading="lazy" />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 </div>
                 <CardContent className="p-4">
@@ -272,7 +259,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Travel smart */}
       <section className="border-t border-slate-200 bg-white px-4 py-10 dark:border-slate-800 dark:bg-slate-950">
         <div className="mx-auto max-w-6xl">
           <div className="mb-6 flex items-center justify-between">
@@ -322,12 +308,12 @@ export default function HomePage() {
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link to="/today">
             <Button size="lg">
-              <Sun className="h-5 w-5" /> Start with today
+              <Sun className="h-5 w-5" /> {t.home.startWithToday}
             </Button>
           </Link>
           <Link to="/trip-planner">
             <Button size="lg" variant="outline">
-              <Sparkles className="h-5 w-5" /> Multi-day planner
+              <Sparkles className="h-5 w-5" /> {t.home.multiDayPlanner}
             </Button>
           </Link>
         </div>
