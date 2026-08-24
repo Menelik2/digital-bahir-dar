@@ -76,6 +76,7 @@ export function buildSpendGuide(input: SpendGuideInput): SpendGuideResult {
   const days = Math.max(1, Math.floor(n(input.days)) || 1)
   const travelers = Math.max(1, Math.floor(n(input.travelers)) || 1)
   const priority = input.priority ?? 'balanced'
+  // Day-trip (1 day): still count 1 night if they sleep in town; keep simple = days
   const nights = Math.max(1, days)
 
   const perPersonTotal = cash / travelers
@@ -204,6 +205,7 @@ export function buildSpendGuide(input: SpendGuideInput): SpendGuideResult {
     },
   ]
 
+  // All sampleDay.estCost values are **group totals** for the party (consistent units)
   const sampleDay: DayPlanItem[] =
     tier === 'budget'
       ? [
@@ -283,11 +285,12 @@ export function buildSpendGuide(input: SpendGuideInput): SpendGuideResult {
               time: 'Day',
               title: 'Lake Tana boat + monastery',
               category: 'attraction',
+              // Group total: private half-day boat + 2 monastery entries per person
               estCost: Math.round(
-                (ATTRACTION_ETB.lakeTanaBoatPrivateHalfDay.typical + ATTRACTION_ETB.monasteryEntry.typical * 2) /
-                  Math.max(travelers, 1)
+                ATTRACTION_ETB.lakeTanaBoatPrivateHalfDay.typical +
+                  ATTRACTION_ETB.monasteryEntry.typical * 2 * travelers
               ),
-              note: 'Private boat share + entries',
+              note: 'Private boat (group) + monastery entries',
             },
             {
               time: 'Lunch',
