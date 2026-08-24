@@ -178,18 +178,11 @@ export function sumTripSpending(trip: Trip): BudgetBreakdown {
     remaining,
     perPerson,
     currency: trip.currency || 'ETB',
-    // extended fields used by UI when present
     estimatedOnly,
     actualOnly,
     stopEstimates,
     usedPercent,
     travelers,
-  } as BudgetBreakdown & {
-    estimatedOnly: number
-    actualOnly: number
-    stopEstimates: number
-    usedPercent: number | null
-    travelers: number
   }
 }
 
