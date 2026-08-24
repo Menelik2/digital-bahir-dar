@@ -78,7 +78,10 @@ export interface TripInput {
 
 export interface BudgetBreakdown {
   byCategory: Record<string, number>
+  /** Projected total = logged expenses + stop estimates */
   totalExpenses: number
+  /** Sum of trip_expenses only (excludes stop estimates) */
+  loggedExpenses?: number
   budgetTotal: number | null
   remaining: number | null
   perPerson: number | null

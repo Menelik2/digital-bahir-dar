@@ -3,7 +3,7 @@
  *
  * Two modes:
  * 1) estimateTripBudget — planning calculator (Budget page)
- * 2) sumTripSpending — actual/estimated expenses + stop costs (Trips)
+ * 2) sumTripSpending — logged expenses + optional stop cost estimates (Trips)
  *
  * All amounts are in the trip/planner currency (default ETB).
  */
@@ -51,9 +51,16 @@ export type BudgetEstimateResult = {
   byCategory: Record<ExpenseCategory, number>
 }
 
+/** Non-negative finite number; invalid → 0 */
 function n(v: unknown): number {
   const x = Number(v)
   return Number.isFinite(x) && x > 0 ? x : 0
+}
+
+/** Allow zero (e.g. free stop, zero budget edge cases) */
+function n0(v: unknown): number {
+  const x = Number(v)
+  return Number.isFinite(x) && x >= 0 ? x : 0
 }
 
 function clampTravelers(t: number): number {
@@ -78,9 +85,9 @@ function clampTravelers(t: number): number {
  */
 export function estimateTripBudget(input: BudgetEstimateInput): BudgetEstimateResult {
   const travelers = clampTravelers(input.travelers)
-  const nights = Math.max(0, Math.floor(n(input.nights)))
+  const nights = Math.max(0, Math.floor(n0(input.nights)))
   const rooms = Math.max(1, Math.ceil(travelers / 2))
-  const foodDays = Math.max(1, input.foodDays != null ? Math.floor(n(input.foodDays)) : nights + 1)
+  const foodDays = Math.max(1, input.foodDays != null ? Math.floor(n(input.foodDays)) || 1 : nights + 1)
 
   const lodging = n(input.lodgingPerNight) * nights * rooms
   const food = n(input.foodPerDay) * foodDays * travelers
@@ -130,21 +137,29 @@ export function estimateTripBudget(input: BudgetEstimateInput): BudgetEstimateRe
 }
 
 /**
- * Sum logged trip expenses + optional stop estimated costs.
- * Stop costs are added under category "other" unless already counted in expenses.
+ * Sum logged trip expenses + optional itinerary stop estimates.
+ *
+ * Important: stop `estimated_cost` values are **planning** figures on the itinerary.
+ * Logged expenses are the source of truth for “spent”. To avoid double-counting
+ * (e.g. boat cost both on a stop and as an expense), we keep them separate:
+ *
+ * - `loggedExpenses` — sum of trip_expenses only
+ * - `stopEstimates` — sum of stop.estimated_cost
+ * - `totalExpenses` — projected = logged + stops (what remaining / % use)
+ * - `byCategory` — from logged expenses only (stops stay in `stopEstimates`)
  */
 export function sumTripSpending(trip: Trip): BudgetBreakdown {
   const expenses = trip.expenses ?? []
   const byCategory: Record<string, number> = {}
-  let totalExpenses = 0
+  let loggedExpenses = 0
   let estimatedOnly = 0
   let actualOnly = 0
 
   for (const e of expenses) {
-    const amt = n(e.amount)
+    const amt = n0(e.amount)
     const cat = (e.category || 'other').toString()
     byCategory[cat] = (byCategory[cat] ?? 0) + amt
-    totalExpenses += amt
+    loggedExpenses += amt
     if (e.is_estimated) estimatedOnly += amt
     else actualOnly += amt
   }
@@ -153,17 +168,20 @@ export function sumTripSpending(trip: Trip): BudgetBreakdown {
   for (const day of trip.days ?? []) {
     for (const stop of day.stops ?? []) {
       if (stop.estimated_cost != null) {
-        const amt = n(stop.estimated_cost)
-        stopEstimates += amt
-        byCategory.other = (byCategory.other ?? 0) + amt
-        totalExpenses += amt
-        estimatedOnly += amt
+        stopEstimates += n0(stop.estimated_cost)
       }
     }
   }
 
+  // Projected spend = logged expenses + itinerary stop estimates (no merge into categories)
+  const totalExpenses = loggedExpenses + stopEstimates
+
   const travelers = clampTravelers(trip.traveler_count)
-  const budgetTotal = trip.budget_total != null ? n(trip.budget_total) : null
+  // budget_total may be 0; treat null/undefined as “no cap”
+  const budgetTotal =
+    trip.budget_total != null && Number.isFinite(Number(trip.budget_total))
+      ? Math.max(0, Number(trip.budget_total))
+      : null
   const remaining = budgetTotal != null ? budgetTotal - totalExpenses : null
   const perPerson = totalExpenses / travelers
   const usedPercent =
@@ -174,6 +192,7 @@ export function sumTripSpending(trip: Trip): BudgetBreakdown {
   return {
     byCategory,
     totalExpenses,
+    loggedExpenses,
     budgetTotal,
     remaining,
     perPerson,
@@ -214,7 +233,7 @@ export function expensesByCategory(expenses: TripExpense[]): Record<string, numb
   const out: Record<string, number> = {}
   for (const e of expenses) {
     const cat = (e.category || 'other').toString()
-    out[cat] = (out[cat] ?? 0) + n(e.amount)
+    out[cat] = (out[cat] ?? 0) + n0(e.amount)
   }
   return out
 }

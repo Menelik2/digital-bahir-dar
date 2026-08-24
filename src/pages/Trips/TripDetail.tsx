@@ -65,6 +65,8 @@ export default function TripDetailPage() {
   const budget = computeBudget(trip)
   const nextDayNum = (trip.days?.length ?? 0) + 1
   const usedPct = budget.usedPercent ?? null
+  const logged = budget.loggedExpenses ?? 0
+  const stops = budget.stopEstimates ?? 0
 
   const handleAddStop = async (dayId: string) => {
     if (!stopName.trim() || isDemo) return
@@ -131,7 +133,7 @@ export default function TripDetailPage() {
           {usedPct != null && (
             <div className="mb-3">
               <div className="mb-1 flex justify-between text-xs text-slate-500">
-                <span>Budget used</span>
+                <span>Budget used (logged + stop estimates)</span>
                 <span>{usedPct}%</span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
@@ -156,7 +158,7 @@ export default function TripDetailPage() {
               </p>
             </div>
             <div>
-              <p className="text-xs text-slate-400">Spent / estimated</p>
+              <p className="text-xs text-slate-400">Projected total</p>
               <p className="font-semibold">
                 {formatMoney(budget.totalExpenses, budget.currency)}
               </p>
@@ -182,13 +184,19 @@ export default function TripDetailPage() {
             </div>
           </div>
 
-          {(budget.estimatedOnly != null || budget.actualOnly != null) && (
-            <p className="mt-2 text-xs text-slate-400">
-              Actual: {formatMoney(budget.actualOnly ?? 0, budget.currency)} · Estimated:{' '}
-              {formatMoney(budget.estimatedOnly ?? 0, budget.currency)}
-              {budget.stopEstimates ? ` · Stops: ${formatMoney(budget.stopEstimates, budget.currency)}` : ''}
-            </p>
-          )}
+          <p className="mt-2 text-xs text-slate-400">
+            Logged expenses: {formatMoney(logged, budget.currency)}
+            {' · '}
+            Actual: {formatMoney(budget.actualOnly ?? 0, budget.currency)}
+            {' · '}
+            Estimated (logged): {formatMoney(budget.estimatedOnly ?? 0, budget.currency)}
+            {stops > 0 && (
+              <>
+                {' · '}
+                Stop estimates: {formatMoney(stops, budget.currency)}
+              </>
+            )}
+          </p>
 
           {Object.keys(budget.byCategory).length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
@@ -200,6 +208,11 @@ export default function TripDetailPage() {
                   {cat}: {Number(amt).toLocaleString()}
                 </span>
               ))}
+              {stops > 0 && (
+                <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                  stops (plan): {stops.toLocaleString()}
+                </span>
+              )}
             </div>
           )}
         </CardContent>
