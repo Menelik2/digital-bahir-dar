@@ -14,7 +14,7 @@ export function Header() {
 
   const navItems = [
     { path: '/', label: t.nav.home },
-    { path: '/today', label: 'Today' },
+    { path: '/today', label: t.nav.today },
     { path: '/todo', label: t.nav.todo },
     { path: '/city', label: t.nav.city },
     { path: '/discover', label: t.nav.discover },
@@ -23,7 +23,7 @@ export function Header() {
     { path: '/restaurants', label: t.nav.restaurants },
     { path: '/transport', label: t.nav.transport },
     { path: '/trips', label: t.nav.trips },
-    { path: '/trip-planner', label: 'Planner' },
+    { path: '/trip-planner', label: t.nav.planner },
     { path: '/ai-guide', label: t.nav.aiGuide },
   ]
 
