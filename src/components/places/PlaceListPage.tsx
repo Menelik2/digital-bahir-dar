@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Search,
-  forHorizontal as SlidersHorizontal,
+  SlidersHorizontal,
   MapPin,
   Loader2,
   AlertCircle,
@@ -343,7 +343,7 @@ export function PlaceListPage({
                         href={links.googleDirections}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-lg bg-teal-50 px-2 py-1 text-xs font-medium text-teal-800 dark:bg-teal-950 dark:text-teal-300"
+                        className="inline-flex items-center gap-1 rounded-lg bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 dark:bg-teal-950 dark:text-teal-300"
                       >
                         {t.common.directions}
                       </a>
