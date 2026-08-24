@@ -31,8 +31,10 @@ export function useToggleFavorite(placeId: string) {
   return useMutation({
     mutationFn: async (currentlyFavorited: boolean) => {
       if (!user) throw new Error('Sign in to save places')
-      if (currentlyFavorited) return removeFavorite(user.id, placeId)
-      return addFavorite(user.id, placeId)
+      const res = currentlyFavorited
+        ? await removeFavorite(user.id, placeId)
+        : await addFavorite(user.id, placeId)
+      if (res.error) throw new Error(res.error)
     },
     onMutate: async (currentlyFavorited) => {
       if (!user) return
