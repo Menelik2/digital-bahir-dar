@@ -10,6 +10,7 @@ import ExplorePage from '@/pages/Explore'
 import DiscoverPage from '@/pages/Discover'
 import CityHubPage from '@/pages/City'
 import TodoPage from '@/pages/Todo'
+import TodayPage from '@/pages/Today'
 import HotelsPage from '@/pages/Hotels'
 import RestaurantsPage from '@/pages/Restaurants'
 import AttractionsPage from '@/pages/Attractions'
@@ -41,6 +42,7 @@ export default function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/city" element={<CityHubPage />} />
               <Route path="/todo" element={<TodoPage />} />
+              <Route path="/today" element={<TodayPage />} />
               <Route path="/explore" element={<ExplorePage />} />
               <Route path="/discover" element={<DiscoverPage />} />
               <Route path="/map" element={<MapPage />} />
