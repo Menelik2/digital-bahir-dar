@@ -17,6 +17,7 @@ import {
   ListTodo,
   Building,
   Compass,
+  Search,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -24,6 +25,13 @@ import { CITY_EVENTS, PRACTICAL_TIPS } from '@/data/cityLife'
 import { CITY_TODOS } from '@/data/thingsToDo'
 import { useTodoStore } from '@/store/todoStore'
 import { useT } from '@/hooks/useT'
+
+const LAKE_TANA_IMG =
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Lake_Tana_from_the_air_%28Ethiopia%29.jpg/640px-Lake_Tana_from_the_air_%28Ethiopia%29.jpg'
+const FALLS_IMG =
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Blue_Nile_Falls.jpg/640px-Blue_Nile_Falls.jpg'
+const CITY_IMG =
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Bahir_Dar_Ethiopia.jpg/640px-Bahir_Dar_Ethiopia.jpg'
 
 export default function HomePage() {
   const t = useT()
@@ -35,6 +43,7 @@ export default function HomePage() {
   const quickActions = [
     { label: t.home.thingsToDo, icon: ListTodo, path: '/todo', color: 'bg-sky-50 text-sky-700' },
     { label: t.nav.city, icon: Building, path: '/city', color: 'bg-slate-100 text-slate-700' },
+    { label: t.nav.explore, icon: Search, path: '/explore', color: 'bg-sky-50 text-sky-700' },
     { label: t.nav.discover, icon: Compass, path: '/discover', color: 'bg-teal-50 text-teal-700' },
     { label: t.nav.hotels, icon: Hotel, path: '/hotels', color: 'bg-blue-50 text-blue-600' },
     { label: t.nav.restaurants, icon: UtensilsCrossed, path: '/restaurants', color: 'bg-orange-50 text-orange-600' },
@@ -125,18 +134,34 @@ export default function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-10">
         <h2 className="mb-6 text-xl font-semibold">{t.home.featured}</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Link to="/attractions">
+          <Link to="/places/lake-tana">
             <Card className="overflow-hidden transition hover:shadow-lg">
-              <div className="h-40 bg-gradient-to-br from-sky-400 to-blue-600" />
+              <div className="relative h-40 bg-sky-200">
+                <img
+                  src={LAKE_TANA_IMG}
+                  alt="Lake Tana"
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+              </div>
               <CardContent className="p-4">
                 <h3 className="font-semibold">{t.home.lakeTana}</h3>
                 <p className="text-sm text-slate-500">{t.home.lakeTanaDesc}</p>
               </CardContent>
             </Card>
           </Link>
-          <Link to="/attractions">
+          <Link to="/places/blue-nile-falls-tis-issat">
             <Card className="overflow-hidden transition hover:shadow-lg">
-              <div className="h-40 bg-gradient-to-br from-emerald-400 to-teal-600" />
+              <div className="relative h-40 bg-emerald-200">
+                <img
+                  src={FALLS_IMG}
+                  alt="Blue Nile Falls"
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+              </div>
               <CardContent className="p-4">
                 <h3 className="font-semibold">{t.home.blueNileFalls}</h3>
                 <p className="text-sm text-slate-500">{t.home.blueNileFallsDesc}</p>
@@ -145,7 +170,15 @@ export default function HomePage() {
           </Link>
           <Link to="/todo">
             <Card className="overflow-hidden transition hover:shadow-lg">
-              <div className="h-40 bg-gradient-to-br from-violet-500 to-sky-600" />
+              <div className="relative h-40 bg-violet-200">
+                <img
+                  src={CITY_IMG}
+                  alt="Bahir Dar"
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              </div>
               <CardContent className="p-4">
                 <h3 className="font-semibold">{t.home.checklist}</h3>
                 <p className="text-sm text-slate-500">
