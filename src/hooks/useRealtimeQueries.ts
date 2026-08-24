@@ -59,8 +59,11 @@ export function useTripsRealtime() {
 }
 
 export function useTripDetailRealtime(tripId: string | undefined) {
-  const active = !!tripId && !tripId.startsWith('demo-')
+  const active = !!tripId && !tripId.startsWith('demo-') && !tripId.startsWith('guide-')
 
+  // trip_stops are keyed by trip_day_id (not trip_id), so we cannot filter them
+  // by trip without knowing day IDs. Mutations already invalidate the trip detail
+  // query; we subscribe to trips + trip_days + trip_expenses only.
   return useRealtimeSubscription({
     table: 'trips',
     filter: tripId ? `id=eq.${tripId}` : undefined,
@@ -69,7 +72,6 @@ export function useTripDetailRealtime(tripId: string | undefined) {
       ? [
           { table: 'trip_days', filter: `trip_id=eq.${tripId}` },
           { table: 'trip_expenses', filter: `trip_id=eq.${tripId}` },
-          { table: 'trip_stops' },
         ]
       : [],
     invalidateKeys: tripId
