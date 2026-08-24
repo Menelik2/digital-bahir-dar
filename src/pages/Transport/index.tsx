@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Bus, ExternalLink, ChevronDown, Plane, Ship, Car, MapPin } from 'lucide-react'
 import { PlaceListPage } from '@/components/places/PlaceListPage'
@@ -8,94 +8,78 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
 
-type HowItem = {
-  id: string
-  question: string
-  answer: string
-  priceHint: string
-  tips: string[]
-  fareIds: string[]
-  icon: typeof Plane
-  links?: { label: string; to?: string; href?: string }[]
-}
-
-const HOW_TO: HowItem[] = [
-  {
-    id: 'airport',
-    question: 'Airport (BJR) → city?',
-    answer:
-      'Bahir Dar Airport is about 15–40 minutes from the center depending on traffic. Hotel pickup is the easiest after landing. Bajaj or taxi work if you prefer to negotiate on the spot.',
-    priceHint: '~300–1,500 ETB / trip',
-    tips: ['Agree price before you leave the curb', 'Have small ETB notes ready'],
-    fareIds: ['tf-6', 'tf-1', 'tf-2'],
-    icon: Plane,
-    links: [{ label: 'Map', to: '/map' }, { label: 'Hotels', to: '/hotels' }],
-  },
-  {
-    id: 'boat',
-    question: 'Boat to the monasteries?',
-    answer:
-      'Go to the Lake Tana pier in the morning. Compare shared vs private boats. Agree which islands, return time, and whether monastery entry is included before boarding.',
-    priceHint: '~800–15,000 ETB (shared person → private half day)',
-    tips: ['Modest dress for churches', 'Morning departures are usually calmer'],
-    fareIds: ['tf-4'],
-    icon: Ship,
-    links: [
-      { label: 'Lake Tana', to: '/places/lake-tana' },
-      { label: 'Today plan', to: '/today' },
-    ],
-  },
-  {
-    id: 'falls',
-    question: 'Day trip to Blue Nile Falls?',
-    answer:
-      'Tis Issat is about 30 km toward Tis Abay. Private car + driver is simplest for a group; bus/minibus is cheaper. Entry and optional guide are separate from the vehicle.',
-    priceHint: 'Car ~800–3,500 ETB vehicle round trip (est.)',
-    tips: ['Paths can be steep — good shoes', 'Pack water and a snack'],
-    fareIds: ['tf-5'],
-    icon: Car,
-    links: [
-      { label: 'Falls place', to: '/places/blue-nile-falls-tis-issat' },
-      { label: 'Plan a day', to: '/trip-planner' },
-    ],
-  },
-  {
-    id: 'town',
-    question: 'Short ride in town (bajaj / taxi)?',
-    answer:
-      'Bajaj (tuk-tuk) for short hops; taxi for longer cross-town trips. Always agree the price before you start. Minibuses are cheapest on fixed routes if you know the line.',
-    priceHint: 'Bajaj ~50–200 · Taxi ~150–500 ETB',
-    tips: ['Night and rain often cost more', 'Hotel staff can help set a fair price'],
-    fareIds: ['tf-1', 'tf-2', 'tf-3'],
-    icon: MapPin,
-    links: [{ label: 'Live map', to: '/map' }],
-  },
-  {
-    id: 'bus',
-    question: 'Bus to Gondar / Addis / other cities?',
-    answer:
-      'Use the main bus station for intercity routes. Prices depend on distance and bus type. Buy early on busy days and keep valuables close.',
-    priceHint: '~100–800+ ETB / seat (route-dependent)',
-    tips: ['Confirm departure time the day before', 'Arrive early for a seat'],
-    fareIds: ['tf-7'],
-    icon: Bus,
-    links: [{ label: 'Discover transport', to: '/discover' }],
-  },
-]
-
 function HowDoISection() {
+  const t = useT()
   const [openId, setOpenId] = useState<string | null>('airport')
+
+  const items = useMemo(
+    () => [
+      {
+        id: 'airport',
+        question: t.transportPage.qAirport,
+        answer: t.transportPage.aAirport,
+        priceHint: t.transportPage.pAirport,
+        fareIds: ['tf-6', 'tf-1', 'tf-2'],
+        icon: Plane,
+        links: [
+          { label: t.nav.map, to: '/map' },
+          { label: t.nav.hotels, to: '/hotels' },
+        ],
+      },
+      {
+        id: 'boat',
+        question: t.transportPage.qBoat,
+        answer: t.transportPage.aBoat,
+        priceHint: t.transportPage.pBoat,
+        fareIds: ['tf-4'],
+        icon: Ship,
+        links: [
+          { label: t.home.lakeTana, to: '/places/lake-tana' },
+          { label: t.nav.today, to: '/today' },
+        ],
+      },
+      {
+        id: 'falls',
+        question: t.transportPage.qFalls,
+        answer: t.transportPage.aFalls,
+        priceHint: t.transportPage.pFalls,
+        fareIds: ['tf-5'],
+        icon: Car,
+        links: [
+          { label: t.home.blueNileFalls, to: '/places/blue-nile-falls-tis-issat' },
+          { label: t.nav.planner, to: '/trip-planner' },
+        ],
+      },
+      {
+        id: 'town',
+        question: t.transportPage.qTown,
+        answer: t.transportPage.aTown,
+        priceHint: t.transportPage.pTown,
+        fareIds: ['tf-1', 'tf-2', 'tf-3'],
+        icon: MapPin,
+        links: [{ label: t.nav.map, to: '/map' }],
+      },
+      {
+        id: 'bus',
+        question: t.transportPage.qBus,
+        answer: t.transportPage.aBus,
+        priceHint: t.transportPage.pBus,
+        fareIds: ['tf-7'],
+        icon: Bus,
+        links: [{ label: t.nav.discover, to: '/discover' }],
+      },
+    ],
+    [t]
+  )
 
   return (
     <section className="mx-auto max-w-6xl px-4 pb-4 pt-8">
       <div className="mb-4">
-        <h2 className="text-xl font-bold sm:text-2xl">How do I…?</h2>
-        <p className="text-sm text-slate-500">
-          Plain answers first. Fares are planning estimates in ETB — confirm on site.
-        </p>
+        <h2 className="text-xl font-bold sm:text-2xl">{t.transportPage.howDoI}</h2>
+        <p className="text-sm text-slate-500">{t.transportPage.howDoISub}</p>
       </div>
       <div className="space-y-2">
-        {HOW_TO.map((item) => {
+        {items.map((item) => {
           const open = openId === item.id
           const Icon = item.icon
           const fares = TRANSPORT_FARES.filter((f) => item.fareIds.includes(f.id))
@@ -122,11 +106,6 @@ function HowDoISection() {
               {open && (
                 <CardContent className="border-t border-slate-100 px-4 pb-4 pt-3 dark:border-slate-800">
                   <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{item.answer}</p>
-                  <ul className="mt-2 space-y-1 text-xs text-slate-500">
-                    {item.tips.map((t) => (
-                      <li key={t}>· {t}</li>
-                    ))}
-                  </ul>
                   {fares.length > 0 && (
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       {fares.map((f) => (
@@ -142,19 +121,17 @@ function HowDoISection() {
                       ))}
                     </div>
                   )}
-                  {item.links && item.links.length > 0 && (
+                  {item.links.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {item.links.map((l) =>
-                        l.to ? (
-                          <Link
-                            key={l.label}
-                            to={l.to}
-                            className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-sky-700 dark:border-slate-700"
-                          >
-                            {l.label}
-                          </Link>
-                        ) : null
-                      )}
+                      {item.links.map((l) => (
+                        <Link
+                          key={l.label + l.to}
+                          to={l.to}
+                          className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-sky-700 dark:border-slate-700"
+                        >
+                          {l.label}
+                        </Link>
+                      ))}
                     </div>
                   )}
                 </CardContent>
