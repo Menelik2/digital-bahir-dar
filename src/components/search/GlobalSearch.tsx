@@ -3,10 +3,13 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Search, MapPin, X, Loader2 } from 'lucide-react'
 import { usePlaces } from '@/hooks/usePlaces'
 import { searchPlaces } from '@/services/places'
+import { cacheOsmPlaceForDetail, isOsmPlaceId } from '@/services/osmPlaces'
 import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
+import type { Place } from '@/types/place'
 
 const QUICK = [
+  { to: '/explore', labelKey: 'explore' as const },
   { to: '/discover', label: 'Discover (live map)' },
   { to: '/hotels', labelKey: 'hotels' as const },
   { to: '/restaurants', labelKey: 'restaurants' as const },
@@ -16,6 +19,29 @@ const QUICK = [
   { to: '/ai-guide', labelKey: 'aiGuide' as const },
 ]
 
+const LS_PREFIX = 'dbd-osm-v3:'
+
+/** Read OSM places previously cached by Discover / list pages (localStorage) */
+function readCachedOsmPlaces(): Place[] {
+  const out: Place[] = []
+  const seen = new Set<string>()
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (!k?.startsWith(LS_PREFIX)) continue
+      const parsed = JSON.parse(localStorage.getItem(k) || '{}') as { data?: Place[] }
+      for (const p of parsed.data || []) {
+        if (seen.has(p.id)) continue
+        seen.add(p.id)
+        out.push(p)
+      }
+    }
+  } catch {
+    /* */
+  }
+  return out
+}
+
 export function GlobalSearch({ className }: { className?: string }) {
   const t = useT()
   const navigate = useNavigate()
@@ -23,11 +49,24 @@ export function GlobalSearch({ className }: { className?: string }) {
   const [q, setQ] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const { data: places = [], isLoading } = usePlaces()
+  const [osmCache, setOsmCache] = useState<Place[]>([])
+
+  // Refresh OSM cache when the dialog opens (after user visited Discover/Explore)
+  useEffect(() => {
+    if (open) setOsmCache(readCachedOsmPlaces())
+  }, [open])
 
   const results = useMemo(() => {
     if (!q.trim()) return []
-    return searchPlaces(places, q).slice(0, 8)
-  }, [places, q])
+    const merged = [...places]
+    const seen = new Set(places.map((p) => p.id))
+    for (const p of osmCache) {
+      if (seen.has(p.id)) continue
+      seen.add(p.id)
+      merged.push(p)
+    }
+    return searchPlaces(merged, q).slice(0, 10)
+  }, [places, osmCache, q])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -49,6 +88,11 @@ export function GlobalSearch({ className }: { className?: string }) {
   const goExplore = () => {
     setOpen(false)
     navigate(`/explore?q=${encodeURIComponent(q.trim())}`)
+  }
+
+  const onPickPlace = (p: Place) => {
+    if (isOsmPlaceId(p.id)) cacheOsmPlaceForDetail(p)
+    setOpen(false)
   }
 
   return (
@@ -130,7 +174,7 @@ export function GlobalSearch({ className }: { className?: string }) {
                 <Link
                   key={p.id}
                   to={`/places/${p.slug}`}
-                  onClick={() => setOpen(false)}
+                  onClick={() => onPickPlace(p)}
                   className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-900"
                 >
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400">
@@ -140,7 +184,10 @@ export function GlobalSearch({ className }: { className?: string }) {
                     <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
                       {p.name.replace(' (DEMO)', '')}
                     </p>
-                    <p className="truncate text-xs text-slate-500">{p.category?.name}</p>
+                    <p className="truncate text-xs text-slate-500">
+                      {p.category?.name}
+                      {isOsmPlaceId(p.id) ? ' · OSM' : ''}
+                    </p>
                   </div>
                 </Link>
               ))}
