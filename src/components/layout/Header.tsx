@@ -22,6 +22,7 @@ export function Header() {
     { path: '/restaurants', label: t.nav.restaurants },
     { path: '/transport', label: t.nav.transport },
     { path: '/trips', label: t.nav.trips },
+    { path: '/trip-planner', label: 'Planner' },
     { path: '/ai-guide', label: t.nav.aiGuide },
   ]
 
@@ -55,9 +56,7 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-1 sm:gap-2">
-          {/* Desktop search */}
           <GlobalSearch className="hidden sm:flex" />
-          {/* Mobile search — standalone control, not nested inside the menu button */}
           <div className="sm:hidden">
             <GlobalSearch className="flex h-10 w-10 items-center justify-center rounded-lg border-0 bg-transparent px-0 py-0" />
           </div>
