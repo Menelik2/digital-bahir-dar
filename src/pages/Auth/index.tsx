@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
 
 const loginSchema = z.object({ email: z.string().email(), password: z.string().min(6) })
 const registerSchema = loginSchema.extend({ fullName: z.string().min(2) })
@@ -16,6 +17,7 @@ export default function AuthPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const redirectTo = searchParams.get('redirect') || '/'
+  const { isAuthenticated, loading: authLoading } = useAuth()
 
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [error, setError] = useState<string | null>(null)
@@ -23,6 +25,13 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false)
   const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) })
   const registerForm = useForm<RegisterForm>({ resolver: zodResolver(registerSchema) })
+
+  // Already signed in — send them where they were going
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      navigate(redirectTo, { replace: true })
+    }
+  }, [authLoading, isAuthenticated, navigate, redirectTo])
 
   const switchMode = (next: 'login' | 'register') => {
     setMode(next)
@@ -64,6 +73,14 @@ export default function AuthPage() {
       setInfo('Check your email to confirm your account, then sign in.')
       setMode('login')
     }
+  }
+
+  if (authLoading || isAuthenticated) {
+    return (
+      <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center text-sm text-slate-500">
+        Loading…
+      </div>
+    )
   }
 
   return (

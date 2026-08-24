@@ -26,7 +26,9 @@ export default function ProfilePage() {
         <User className="mx-auto mb-4 h-12 w-12 text-slate-300" />
         <h1 className="mb-2 text-2xl font-bold">Your profile</h1>
         <p className="mb-6 text-slate-500">Sign in to save places, write reviews, and manage trips.</p>
-        <Link to="/auth"><Button size="lg">Log in / Register</Button></Link>
+        <Link to="/auth?redirect=%2Fprofile">
+          <Button size="lg">Log in / Register</Button>
+        </Link>
       </div>
     )
   }
@@ -59,10 +61,16 @@ export default function ProfilePage() {
               </span>
               <div className="flex gap-2">
                 {(['en', 'am'] as const).map((l) => (
-                  <button key={l} type="button" onClick={() => setLanguage(l)}
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => setLanguage(l)}
                     className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
                       language === l ? 'bg-sky-500 text-white' : 'bg-slate-100 dark:bg-slate-800'
-                    }`}>{l === 'en' ? 'English' : 'አማርኛ'}</button>
+                    }`}
+                  >
+                    {l === 'en' ? 'English' : 'አማርኛ'}
+                  </button>
                 ))}
               </div>
             </div>
@@ -72,10 +80,16 @@ export default function ProfilePage() {
               </span>
               <div className="flex gap-1">
                 {(['ETB', 'USD', 'EUR', 'GBP'] as const).map((c) => (
-                  <button key={c} type="button" onClick={() => setCurrency(c)}
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCurrency(c)}
                     className={`rounded-lg px-2.5 py-1.5 text-xs font-medium ${
                       currency === c ? 'bg-sky-500 text-white' : 'bg-slate-100 dark:bg-slate-800'
-                    }`}>{c}</button>
+                    }`}
+                  >
+                    {c}
+                  </button>
                 ))}
               </div>
             </div>
@@ -96,7 +110,11 @@ export default function ProfilePage() {
             <CardContent className="flex flex-col items-center py-10 text-center">
               <MapPin className="mb-2 h-8 w-8 text-slate-300" />
               <p className="text-sm text-slate-500">No saved places yet.</p>
-              <Link to="/explore" className="mt-3"><Button size="sm" variant="outline">Explore places</Button></Link>
+              <Link to="/explore" className="mt-3">
+                <Button size="sm" variant="outline">
+                  Explore places
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         )}
@@ -116,8 +134,11 @@ export default function ProfilePage() {
             { to: '/explore', label: 'Explore' },
             { to: '/ai-guide', label: 'AI Guide' },
           ].map((l) => (
-            <Link key={l.to} to={l.to}
-              className="rounded-xl border border-slate-200 px-4 py-3 text-center text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900">
+            <Link
+              key={l.to}
+              to={l.to}
+              className="rounded-xl border border-slate-200 px-4 py-3 text-center text-sm font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900"
+            >
               {l.label}
             </Link>
           ))}
