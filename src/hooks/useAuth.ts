@@ -16,12 +16,15 @@ export function useAuth() {
     })
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
-      // Drop previous user's private cache on logout / user switch
-      if (event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
-        if (event === 'SIGNED_OUT') clearUserQueryCache()
-      }
-      if (event === 'SIGNED_IN') {
-        // Ensure we don't keep another account's leftovers
+      // Drop previous user's private cache on logout or when switching accounts.
+      // Do NOT clear on USER_UPDATED (profile/metadata refresh) — that would
+      // needlessly flush favorites/trips for the same signed-in user.
+      if (event === 'SIGNED_OUT') {
+        clearUserQueryCache()
+      } else if (event === 'SIGNED_IN') {
+        // If a different user signs in on the same browser, drop leftovers.
+        // Comparing against current state is racy inside the callback, so clear
+        // on every SIGNED_IN — cheap and keeps multi-account safe.
         clearUserQueryCache()
       }
 
