@@ -18,9 +18,14 @@ interface PlaceCardProps {
   className?: string
 }
 
+/** City skyline fallback if primary cover 404s */
+const CITY_FALLBACK =
+  'https://commons.wikimedia.org/wiki/Special:FilePath/The%20city%20of%20Bahir%20Dar%2C%20Ethiopia.jpg?width=640'
+
 function CoverImage({ place, className }: { place: Place; className?: string }) {
+  const primary = placeCoverImage(place)
+  const [src, setSrc] = useState(primary)
   const [failed, setFailed] = useState(false)
-  const src = placeCoverImage(place)
 
   if (failed) {
     return (
@@ -29,6 +34,8 @@ function CoverImage({ place, className }: { place: Place; className?: string }) 
           'bg-gradient-to-br from-sky-400 via-sky-500 to-teal-600',
           className
         )}
+        role="img"
+        aria-label={placeImageAlt(place)}
       />
     )
   }
@@ -39,8 +46,15 @@ function CoverImage({ place, className }: { place: Place; className?: string }) 
       alt={placeImageAlt(place)}
       loading="lazy"
       decoding="async"
+      referrerPolicy="no-referrer"
       className={cn('object-cover', className)}
-      onError={() => setFailed(true)}
+      onError={() => {
+        if (src !== CITY_FALLBACK) {
+          setSrc(CITY_FALLBACK)
+        } else {
+          setFailed(true)
+        }
+      }}
     />
   )
 }
