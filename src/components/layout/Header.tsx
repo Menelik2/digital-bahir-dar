@@ -14,6 +14,7 @@ export function Header() {
 
   const navItems = [
     { path: '/', label: t.nav.home },
+    { path: '/today', label: 'Today' },
     { path: '/todo', label: t.nav.todo },
     { path: '/city', label: t.nav.city },
     { path: '/discover', label: t.nav.discover },
