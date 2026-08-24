@@ -2,12 +2,13 @@ import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Search,
-  SlidersHorizontal,
+  forHorizontal as SlidersHorizontal,
   MapPin,
   Loader2,
   AlertCircle,
   RefreshCw,
   ExternalLink,
+  X,
 } from 'lucide-react'
 import { PlaceCard } from './PlaceCard'
 import { Button } from '@/components/ui/button'
@@ -44,6 +45,31 @@ function mergePlaces(primary: Place[], secondary: Place[]): Place[] {
   return out
 }
 
+/** Map price_level (1–4) or hotel nightly rates to budget / mid / luxury */
+function matchesPriceTier(place: Place, tier: string): boolean {
+  const level = place.price_level
+  const min = place.hotel?.minimum_price ?? null
+  const max = place.hotel?.maximum_price ?? null
+  const mid = min != null && max != null ? (min + max) / 2 : min ?? max
+
+  if (tier === 'budget') {
+    if (level != null) return level <= 2
+    if (mid != null) return mid < 4000
+    return false
+  }
+  if (tier === 'mid') {
+    if (level != null) return level === 3
+    if (mid != null) return mid >= 4000 && mid < 9000
+    return false
+  }
+  if (tier === 'luxury') {
+    if (level != null) return level >= 4
+    if (mid != null) return mid >= 9000
+    return false
+  }
+  return true
+}
+
 export function PlaceListPage({
   title,
   subtitle,
@@ -62,7 +88,7 @@ export function PlaceListPage({
   useGeolocation(true)
 
   const { places, isLoading, error, refetch } = useFilteredPlaces({
-    search,
+    search: undefined,
     categorySlug,
     verifiedOnly: activeFilter === 'verified',
   })
@@ -77,11 +103,13 @@ export function PlaceListPage({
 
   const combined = useMemo(() => {
     if (!mergeOsm) return places
-    return mergePlaces(places, osmPlaces)
+    // Prefer OSM live POIs first for hotels/food/transport; curated fills gaps
+    return mergePlaces(osmPlaces, places)
   }, [places, osmPlaces, mergeOsm])
 
   const sorted = useMemo(() => {
     let list: Place[] = [...combined]
+
     if (search.trim()) {
       const q = search.trim().toLowerCase()
       list = list.filter(
@@ -91,17 +119,24 @@ export function PlaceListPage({
           p.address?.toLowerCase().includes(q)
       )
     }
+
     if (activeFilter === 'traditional') list = list.filter((p) => p.restaurant?.traditional_food)
     if (activeFilter === 'vegetarian') list = list.filter((p) => p.restaurant?.vegetarian)
-    if (activeFilter === 'atm')
+    if (activeFilter === 'atm') {
       list = list.filter(
         (p) => p.bank?.has_atm || p.bank?.is_atm_only || p.category?.slug === 'atm'
       )
+    }
+    if (activeFilter === 'budget' || activeFilter === 'mid' || activeFilter === 'luxury') {
+      list = list.filter((p) => matchesPriceTier(p, activeFilter))
+    }
+
     if (sort === 'distance' && location.latitude != null && location.longitude != null) {
       return rankNearby(list, location.latitude, location.longitude, 50_000)
     }
-    if (sort === 'name') return list.sort((a, b) => a.name.localeCompare(b.name))
-    return list.sort(
+    if (sort === 'name') return [...list].sort((a, b) => a.name.localeCompare(b.name))
+
+    return [...list].sort(
       (a, b) =>
         Number(b.featured) - Number(a.featured) ||
         Number(b.verified) - Number(a.verified) ||
@@ -109,7 +144,8 @@ export function PlaceListPage({
     )
   }, [combined, search, sort, location.latitude, location.longitude, activeFilter])
 
-  const loading = isLoading && (osmLoading || !mergeOsm)
+  // Show curated immediately; don't block on OSM
+  const loading = isLoading && sorted.length === 0 && (osmLoading || !mergeOsm)
   const empty = emptyMessage ?? t.list.loadFail
 
   return (
@@ -153,12 +189,23 @@ export function PlaceListPage({
             placeholder={`${t.list.searchPrefix} ${title}…`}
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400 dark:text-slate-100"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="rounded p-0.5 hover:bg-slate-100 dark:hover:bg-slate-800"
+              aria-label={t.common.close}
+            >
+              <X className="h-4 w-4 text-slate-400" />
+            </button>
+          )}
         </div>
         <Button
           variant="outline"
           size="icon"
           className="h-11 w-11 shrink-0 rounded-xl"
           onClick={() => setShowSort(!showSort)}
+          aria-expanded={showSort}
         >
           <SlidersHorizontal className="h-5 w-5" />
         </Button>
@@ -253,6 +300,11 @@ export function PlaceListPage({
         <div className="flex flex-col items-center py-20 text-center">
           <MapPin className="mb-3 h-10 w-10 text-slate-300" />
           <p className="font-medium text-slate-700 dark:text-slate-300">{empty}</p>
+          {activeFilter && (
+            <Button variant="outline" size="sm" className="mt-3" onClick={() => setActiveFilter(null)}>
+              Clear filter
+            </Button>
+          )}
           <Link to="/discover" className="mt-4 text-sm font-medium text-sky-600 hover:underline">
             {t.list.tryDiscover}
           </Link>
@@ -268,6 +320,7 @@ export function PlaceListPage({
                 {' '}· {osmPlaces.length} {t.list.fromOsmCount}
               </span>
             )}
+            {osmFetching && <span className="text-slate-400"> · updating…</span>}
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {sorted.map((place) => {
