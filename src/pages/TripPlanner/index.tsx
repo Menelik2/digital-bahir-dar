@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   buildTripPlan,
+  dayActivityTotal,
   narrateTripPlan,
   planToPlainText,
   type PlannerBudget,
@@ -51,6 +52,11 @@ const INTEREST_OPTIONS: { id: PlannerInterest; label: string; icon: typeof Trees
   { id: 'photography', label: 'Photos', icon: Camera },
   { id: 'family', label: 'Family', icon: Baby },
 ]
+
+function pct(amount: number, total: number) {
+  if (!total) return 0
+  return Math.round((amount / total) * 1000) / 10
+}
 
 export default function TripPlannerPage() {
   const [days, setDays] = useState(2)
@@ -130,12 +136,10 @@ export default function TripPlannerPage() {
         </div>
       </div>
 
-      {/* Form */}
       {!plan && (
         <Card className="mb-8 overflow-hidden border-sky-100 dark:border-sky-900">
           <div className="h-1.5 bg-gradient-to-r from-sky-500 via-teal-500 to-amber-400" />
           <CardContent className="space-y-6 p-5 sm:p-6">
-            {/* Days */}
             <section>
               <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
                 <Calendar className="h-4 w-4 text-sky-600" /> How many days?
@@ -159,7 +163,6 @@ export default function TripPlannerPage() {
               </div>
             </section>
 
-            {/* Travelers */}
             <section>
               <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
                 <Users className="h-4 w-4 text-sky-600" /> Travelers
@@ -187,7 +190,6 @@ export default function TripPlannerPage() {
               </div>
             </section>
 
-            {/* Budget */}
             <section>
               <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
                 <Wallet className="h-4 w-4 text-sky-600" /> Budget style
@@ -212,7 +214,6 @@ export default function TripPlannerPage() {
               </div>
             </section>
 
-            {/* Pace */}
             <section>
               <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
                 <Clock className="h-4 w-4 text-sky-600" /> Pace
@@ -236,7 +237,6 @@ export default function TripPlannerPage() {
               </div>
             </section>
 
-            {/* Interests */}
             <section>
               <label className="mb-2 block text-sm font-semibold">What do you care about?</label>
               <div className="flex flex-wrap gap-2">
@@ -263,7 +263,6 @@ export default function TripPlannerPage() {
               </div>
             </section>
 
-            {/* Must-dos */}
             <section className="flex flex-col gap-2 sm:flex-row sm:gap-6">
               <label className="flex cursor-pointer items-center gap-2 text-sm">
                 <input
@@ -295,14 +294,15 @@ export default function TripPlannerPage() {
         </Card>
       )}
 
-      {/* Result */}
       {plan && (
         <div className="space-y-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-xl font-bold">{plan.title}</h2>
               <p className="text-sm text-slate-500">{plan.subtitle}</p>
-              <p className="mt-1 text-xs text-slate-400">{totalStops} stops across {plan.days.length} day(s)</p>
+              <p className="mt-1 text-xs text-slate-400">
+                {totalStops} stops across {plan.days.length} day(s)
+              </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={() => setPlan(null)}>
@@ -315,29 +315,136 @@ export default function TripPlannerPage() {
             </div>
           </div>
 
-          {/* Budget strip */}
+          {/* Summary strip */}
           <Card className="border-teal-100 bg-gradient-to-br from-teal-50 to-sky-50 dark:border-teal-900 dark:from-teal-950/40 dark:to-sky-950/40">
             <CardContent className="p-4">
-              <div className="flex flex-wrap items-end justify-between gap-3">
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-teal-700 dark:text-teal-300">
-                    Estimated budget
-                  </p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                    {plan.budget.total.toLocaleString()} {plan.budget.currency}
-                  </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-300">
-                    ~{plan.budget.perPerson.toLocaleString()} / person · ~{plan.budget.perDay.toLocaleString()} / day
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
-                  <span>Stay {plan.budget.lodging.toLocaleString()}</span>
-                  <span>Food {plan.budget.food.toLocaleString()}</span>
-                  <span>Transport {plan.budget.transport.toLocaleString()}</span>
-                  <span>Activities {plan.budget.attraction.toLocaleString()}</span>
-                </div>
-              </div>
+              <p className="text-xs font-medium uppercase tracking-wide text-teal-700 dark:text-teal-300">
+                Estimated total
+              </p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                {plan.budget.total.toLocaleString()} {plan.budget.currency}
+              </p>
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                ~{plan.budget.perPerson.toLocaleString()} / person · ~{plan.budget.perDay.toLocaleString()} / day
+                {' · '}
+                {plan.budget.travelers} traveler{plan.budget.travelers > 1 ? 's' : ''}
+                {plan.budget.nights > 0 ? ` · ${plan.budget.nights} night(s)` : ''}
+              </p>
               <p className="mt-2 text-[11px] text-slate-500">{plan.budget.disclaimer}</p>
+            </CardContent>
+          </Card>
+
+          {/* Pricing breakdown table */}
+          <Card className="overflow-hidden">
+            <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+              <h3 className="flex items-center gap-2 font-semibold">
+                <Wallet className="h-4 w-4 text-teal-600" /> Pricing breakdown
+              </h3>
+              <p className="text-xs text-slate-500">All figures in ETB · planning estimates</p>
+            </div>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[320px] text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-100 bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:border-slate-800 dark:bg-slate-900/60">
+                      <th className="px-4 py-2.5 font-medium">Category</th>
+                      <th className="px-4 py-2.5 text-right font-medium">Amount</th>
+                      <th className="hidden px-4 py-2.5 text-right font-medium sm:table-cell">Share</th>
+                      <th className="px-4 py-2.5 text-right font-medium">/ person</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {plan.budget.lines.map((line) => (
+                      <tr
+                        key={line.key}
+                        className="border-b border-slate-50 dark:border-slate-900"
+                      >
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-slate-800 dark:text-slate-100">{line.label}</p>
+                          {line.note && (
+                            <p className="text-[11px] text-slate-400">{line.note}</p>
+                          )}
+                          {/* Mini bar */}
+                          <div className="mt-1.5 h-1 max-w-[12rem] overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                            <div
+                              className="h-full rounded-full bg-teal-500/80"
+                              style={{
+                                width: `${Math.min(100, pct(line.amount, plan.budget.total))}%`,
+                              }}
+                            />
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-right font-semibold tabular-nums">
+                          {line.amount.toLocaleString()}
+                        </td>
+                        <td className="hidden px-4 py-3 text-right tabular-nums text-slate-500 sm:table-cell">
+                          {pct(line.amount, plan.budget.total)}%
+                        </td>
+                        <td className="px-4 py-3 text-right tabular-nums text-slate-600 dark:text-slate-300">
+                          {Math.round(line.amount / plan.budget.travelers).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-slate-50 font-semibold dark:bg-slate-900/60">
+                      <td className="px-4 py-3">Total</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-teal-700 dark:text-teal-400">
+                        {plan.budget.total.toLocaleString()}
+                      </td>
+                      <td className="hidden px-4 py-3 text-right sm:table-cell">100%</td>
+                      <td className="px-4 py-3 text-right tabular-nums">
+                        {plan.budget.perPerson.toLocaleString()}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* Daily activity costs from itinerary stops */}
+              <div className="border-t border-slate-100 px-4 py-3 dark:border-slate-800">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Activity costs on the plan (from stops)
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="text-xs text-slate-400">
+                        <th className="pb-1 font-medium">Day</th>
+                        <th className="pb-1 font-medium">Focus</th>
+                        <th className="pb-1 text-right font-medium">Stop costs</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {plan.days.map((d) => (
+                        <tr key={d.dayNumber} className="border-t border-slate-50 dark:border-slate-900">
+                          <td className="py-1.5 pr-2 font-medium">Day {d.dayNumber}</td>
+                          <td className="py-1.5 text-slate-500">{d.title}</td>
+                          <td className="py-1.5 text-right tabular-nums">
+                            ~{dayActivityTotal(d).toLocaleString()} ETB
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="border-t border-slate-200 font-medium dark:border-slate-700">
+                        <td className="py-2" colSpan={2}>
+                          Sum of stop estimates
+                        </td>
+                        <td className="py-2 text-right tabular-nums">
+                          ~
+                          {plan.days
+                            .reduce((s, d) => s + dayActivityTotal(d), 0)
+                            .toLocaleString()}{' '}
+                          ETB
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mt-2 text-[11px] text-slate-400">
+                  Stop costs are a day-level view (often per person for boats/meals). The category table above is
+                  the full group budget including lodging.
+                </p>
+              </div>
             </CardContent>
           </Card>
 
@@ -370,14 +477,20 @@ export default function TripPlannerPage() {
             </CardContent>
           </Card>
 
-          {/* Days */}
           {plan.days.map((d) => (
             <Card key={d.dayNumber} className="overflow-hidden">
               <div className="border-b border-slate-100 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/50">
-                <p className="text-xs font-semibold uppercase tracking-wide text-sky-600">
-                  Day {d.dayNumber}
-                </p>
-                <h3 className="text-lg font-semibold">{d.title}</h3>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-sky-600">
+                      Day {d.dayNumber}
+                    </p>
+                    <h3 className="text-lg font-semibold">{d.title}</h3>
+                  </div>
+                  <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-800 dark:bg-teal-950 dark:text-teal-200">
+                    ~{dayActivityTotal(d).toLocaleString()} ETB on stops
+                  </span>
+                </div>
                 <p className="text-sm text-slate-500">{d.summary}</p>
               </div>
               <CardContent className="space-y-3 p-4">
@@ -407,9 +520,7 @@ export default function TripPlannerPage() {
                           </span>
                         )}
                       </div>
-                      {s.duration && (
-                        <p className="text-xs text-slate-400">{s.duration}</p>
-                      )}
+                      {s.duration && <p className="text-xs text-slate-400">{s.duration}</p>}
                       {s.notes && <p className="mt-0.5 text-sm text-slate-500">{s.notes}</p>}
                     </div>
                   </div>
@@ -424,7 +535,6 @@ export default function TripPlannerPage() {
             </Card>
           ))}
 
-          {/* Tips */}
           <Card>
             <CardContent className="p-4">
               <p className="mb-2 text-sm font-semibold">Tips</p>
@@ -439,7 +549,6 @@ export default function TripPlannerPage() {
             </CardContent>
           </Card>
 
-          {/* Next actions */}
           <div className="grid gap-2 sm:grid-cols-2">
             <Link to="/map">
               <Button variant="outline" className="w-full justify-start">

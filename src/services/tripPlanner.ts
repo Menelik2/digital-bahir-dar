@@ -55,6 +55,13 @@ export type PlannerDay = {
   transportTip?: string
 }
 
+export type BudgetLine = {
+  key: string
+  label: string
+  amount: number
+  note?: string
+}
+
 export type PlannerResult = {
   title: string
   subtitle: string
@@ -68,8 +75,15 @@ export type PlannerResult = {
     food: number
     transport: number
     attraction: number
+    shopping: number
+    other: number
     currency: 'ETB'
     disclaimer: string
+    /** Full category rows for the pricing table */
+    lines: BudgetLine[]
+    travelers: number
+    nights: number
+    daysCount: number
   }
   matchedGuideId?: string
   interests: PlannerInterest[]
@@ -328,6 +342,11 @@ function slowDay(opts: { food: number; interest: PlannerInterest[] }): PlannerDa
   }
 }
 
+/** Sum stop costs for a day (per-person-ish activity totals shown on the plan) */
+export function dayActivityTotal(day: PlannerDay): number {
+  return day.stops.reduce((sum, s) => sum + (s.estimatedCostEtb ?? 0), 0)
+}
+
 export function buildTripPlan(input: PlannerInput): PlannerResult {
   const days = clampDays(input.days)
   const travelers = Math.max(1, Math.floor(input.travelers) || 1)
@@ -338,7 +357,6 @@ export function buildTripPlan(input: PlannerInput): PlannerResult {
   const planDays: PlannerDay[] = []
   let dayNum = 1
 
-  // Day 1 always orient in the city unless single-day with only boat preference
   if (days === 1 && input.includeBoat && !input.includeFalls) {
     const d = boatDay({ food: foodPer, budget: input.budget })
     d.dayNumber = 1
@@ -392,7 +410,6 @@ export function buildTripPlan(input: PlannerInput): PlannerResult {
     planDays.push(d)
   }
 
-  // Trim to requested days
   const finalDays = planDays.slice(0, days).map((d, i) => ({ ...d, dayNumber: i + 1 }))
 
   const attractionPer =
@@ -401,6 +418,9 @@ export function buildTripPlan(input: PlannerInput): PlannerResult {
       ? ATTRACTION_ETB.blueNileFallsEntry.typical + ATTRACTION_ETB.busToTisAbay.typical
       : 200)
 
+  const shoppingTotal = input.interests.includes('shopping') ? 500 * travelers : 200 * travelers
+  const otherTotal = 300 * travelers
+
   const est = estimateTripBudget({
     travelers,
     nights,
@@ -408,9 +428,56 @@ export function buildTripPlan(input: PlannerInput): PlannerResult {
     foodPerDay: foodPer,
     transportTotal: transportDay(input.budget) * days * Math.max(1, Math.ceil(travelers / 2)),
     attractionsPerPerson: attractionPer,
-    shopping: input.interests.includes('shopping') ? 500 * travelers : 200 * travelers,
-    other: 300 * travelers,
+    shopping: shoppingTotal,
+    other: otherTotal,
   })
+
+  const lodging = Math.round(est.lodging)
+  const food = Math.round(est.food)
+  const transport = Math.round(est.transport)
+  const attraction = Math.round(est.attraction)
+  const shopping = Math.round(est.shopping)
+  const other = Math.round(est.other)
+  const total = Math.round(est.total)
+
+  const lines: BudgetLine[] = [
+    {
+      key: 'lodging',
+      label: 'Lodging / hotel',
+      amount: lodging,
+      note: nights > 0 ? `${nights} night(s) · ~${lodgingRate(input.budget).toLocaleString()} ETB/room` : 'Day trip — little or no lodging',
+    },
+    {
+      key: 'food',
+      label: 'Food & drinks',
+      amount: food,
+      note: `~${foodPer.toLocaleString()} ETB/person/day × ${days} day(s)`,
+    },
+    {
+      key: 'transport',
+      label: 'Local transport',
+      amount: transport,
+      note: 'Bajaj, taxis, local hops (shared estimate)',
+    },
+    {
+      key: 'attraction',
+      label: 'Activities & entries',
+      amount: attraction,
+      note: 'Boats, falls, viewpoints (per-person band scaled to group)',
+    },
+    {
+      key: 'shopping',
+      label: 'Shopping / souvenirs',
+      amount: shopping,
+      note: input.interests.includes('shopping') ? 'Higher — shopping focus' : 'Light buffer',
+    },
+    {
+      key: 'other',
+      label: 'Misc / buffer',
+      amount: other,
+      note: 'ATM fees, tips, unexpected costs',
+    },
+  ]
 
   const tips = [
     'Prices are estimates in ETB — confirm boats, cars, and meals on site.',
@@ -423,9 +490,7 @@ export function buildTripPlan(input: PlannerInput): PlannerResult {
   ]
 
   const title =
-    days === 1
-      ? 'Your 1-day Bahir Dar plan'
-      : `Your ${days}-day Bahir Dar plan`
+    days === 1 ? 'Your 1-day Bahir Dar plan' : `Your ${days}-day Bahir Dar plan`
 
   const interestLabels = input.interests.length
     ? input.interests.join(', ')
@@ -437,22 +502,27 @@ export function buildTripPlan(input: PlannerInput): PlannerResult {
     days: finalDays,
     tips,
     budget: {
-      total: Math.round(est.total),
+      total,
       perPerson: Math.round(est.perPerson),
       perDay: Math.round(est.perDay),
-      lodging: Math.round(est.lodging),
-      food: Math.round(est.food),
-      transport: Math.round(est.transport),
-      attraction: Math.round(est.attraction),
+      lodging,
+      food,
+      transport,
+      attraction,
+      shopping,
+      other,
       currency: 'ETB',
       disclaimer: 'Planning estimate only — not a quote. Verify locally.',
+      lines,
+      travelers,
+      nights,
+      daysCount: days,
     },
     matchedGuideId: matched?.id,
     interests: input.interests,
   }
 }
 
-/** Optional AI narrative over the structured plan */
 export async function narrateTripPlan(
   plan: PlannerResult,
   locale = 'en'
@@ -460,8 +530,7 @@ export async function narrateTripPlan(
   const outline = plan.days
     .map(
       (d) =>
-        `Day ${d.dayNumber}: ${d.title} — ` +
-        d.stops.map((s) => s.name).join('; ')
+        `Day ${d.dayNumber}: ${d.title} — ` + d.stops.map((s) => s.name).join('; ')
     )
     .join('\n')
 
@@ -499,7 +568,13 @@ export function planToPlainText(plan: PlannerResult): string {
     plan.title,
     plan.subtitle,
     '',
-    `Budget (est.): ${plan.budget.total.toLocaleString()} ETB total · ${plan.budget.perPerson.toLocaleString()} / person`,
+    'PRICING BREAKDOWN (ETB, estimates)',
+    ...plan.budget.lines.map(
+      (l) =>
+        `  ${l.label}: ${l.amount.toLocaleString()}` +
+        (l.note ? ` — ${l.note}` : '')
+    ),
+    `  TOTAL: ${plan.budget.total.toLocaleString()}  (~${plan.budget.perPerson.toLocaleString()} / person)`,
     plan.budget.disclaimer,
     '',
   ]
