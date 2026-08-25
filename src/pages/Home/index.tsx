@@ -129,43 +129,41 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-10">
-        <div className="mb-5">
-          <h2 className="ethio-title text-xl sm:text-2xl">{t.home.whatNeed}</h2>
-          <p className="mt-2 text-sm text-slate-500">{t.home.whatNeedSub}</p>
+      <section className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
+        <div className="mb-3 flex items-end justify-between gap-2">
+          <div>
+            <h2 className="ethio-title text-lg sm:text-xl">{t.home.whatNeed}</h2>
+            <p className="mt-1.5 text-xs text-slate-500 sm:text-sm">{t.home.whatNeedSub}</p>
+          </div>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
           {desk.map((item) => (
-            <Link key={item.to} to={item.to} className="group block h-full">
-              <Card
-                className={`h-full overflow-hidden border-[#078930]/10 transition hover:shadow-lg hover:ring-2 ${item.ring}`}
+            <Link key={item.to} to={item.to} className="group block">
+              <div
+                className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${item.gradient} p-3.5 text-white shadow-sm transition active:scale-[0.98] group-hover:shadow-md sm:p-4 ${item.ring}`}
               >
-                <div className={`bg-gradient-to-br ${item.gradient} px-4 py-5 text-white`}>
-                  <item.icon className="mb-2 h-8 w-8 opacity-95" />
-                  <p className="text-2xl font-bold tracking-tight">{item.title}</p>
-                </div>
-                <CardContent className="flex items-center justify-between gap-2 p-4">
-                  <p className="text-sm text-slate-600 dark:text-slate-300">{item.body}</p>
-                  <ChevronRight className="h-5 w-5 shrink-0 text-slate-300 transition group-hover:text-[#078930]" />
-                </CardContent>
-              </Card>
+                <item.icon className="mb-2 h-6 w-6 opacity-95 sm:h-7 sm:w-7" />
+                <p className="text-base font-bold tracking-tight sm:text-lg">{item.title}</p>
+                <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white/85 sm:text-xs">
+                  {item.body}
+                </p>
+              </div>
             </Link>
           ))}
         </div>
 
-        <Link to="/today" className="mt-4 block">
-          <Card className="overflow-hidden border-[#f5c518]/50 bg-gradient-to-r from-[#f5c518]/15 via-[#faf8f5] to-[#078930]/10 transition hover:border-[#f5c518] dark:border-[#f5c518]/30 dark:from-[#f5c518]/10 dark:to-[#078930]/15">
-            <CardContent className="flex flex-wrap items-center gap-4 p-4 sm:p-5">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#f5c518] text-[#3d3200">
-                <Sun className="h-6 w-6" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold text-slate-900 dark:text-white">{t.home.todayTitle}</p>
-                <p className="text-sm text-slate-500">{t.home.todayBody}</p>
-              </div>
-              <span className="text-sm font-medium text-[#056b24] dark:text-[#7dcea0]">{t.home.openPlan}</span>
-            </CardContent>
-          </Card>
+        <Link to="/today" className="mt-3 block">
+          <div className="flex items-center gap-3 rounded-2xl border border-[#f5c518]/45 bg-gradient-to-r from-[#f5c518]/15 to-[#078930]/8 px-3.5 py-3 transition hover:border-[#f5c518] dark:from-[#f5c518]/10 dark:to-[#078930]/15">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f5c518] text-[#3d3200]">
+              <Sun className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">{t.home.todayTitle}</p>
+              <p className="truncate text-xs text-slate-500">{t.home.todayBody}</p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-[#056b24] dark:text-[#7dcea0]" />
+          </div>
         </Link>
       </section>
 
