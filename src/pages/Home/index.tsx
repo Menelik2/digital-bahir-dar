@@ -28,11 +28,14 @@ import { CITY_TODOS } from '@/data/thingsToDo'
 import { useTodoStore } from '@/store/todoStore'
 import { useT } from '@/hooks/useT'
 
-const LAKE_TANA_IMG =
+const LAKE_TANA_IMG = '/images/lake-tana.jpg'
+const FALLS_IMG = '/images/blue-nile-falls.jpg'
+const CITY_IMG = '/images/bahir-dar.jpg'
+const LAKE_TANA_FALLBACK =
   'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/ET_Amhara_asv2018-02_img112_Lake_Tana_at_Bahir_Dar.jpg/800px-ET_Amhara_asv2018-02_img112_Lake_Tana_at_Bahir_Dar.jpg'
-const FALLS_IMG =
+const FALLS_FALLBACK =
   'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Blue_Nile_Falls-03%2C_by_CT_Snow.jpg/800px-Blue_Nile_Falls-03%2C_by_CT_Snow.jpg'
-const CITY_IMG =
+const CITY_FALLBACK =
   'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/The_city_of_Bahir_Dar%2C_Ethiopia.jpg/800px-The_city_of_Bahir_Dar%2C_Ethiopia.jpg'
 
 export default function HomePage() {
@@ -227,6 +230,13 @@ export default function HomePage() {
                     loading="lazy"
                     decoding="async"
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const el = e.currentTarget
+                      if (el.dataset.fb !== '1') {
+                        el.dataset.fb = '1'
+                        el.src = LAKE_TANA_FALLBACK
+                      }
+                    }}
                   />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                 </div>
@@ -246,6 +256,13 @@ export default function HomePage() {
                     loading="lazy"
                     decoding="async"
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const el = e.currentTarget
+                      if (el.dataset.fb !== '1') {
+                        el.dataset.fb = '1'
+                        el.src = FALLS_FALLBACK
+                      }
+                    }}
                   />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                 </div>
@@ -265,6 +282,13 @@ export default function HomePage() {
                     loading="lazy"
                     decoding="async"
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const el = e.currentTarget
+                      if (el.dataset.fb !== '1') {
+                        el.dataset.fb = '1'
+                        el.src = CITY_FALLBACK
+                      }
+                    }}
                   />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 </div>
