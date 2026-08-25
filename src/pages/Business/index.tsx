@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   Building2, Loader2, CheckCircle2, Clock, XCircle, Search, MapPin, BarChart3, Pencil,
 } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
@@ -15,7 +16,7 @@ import {
   useUpdateOwnedPlace,
   useSearchPlacesForClaim,
 } from '@/hooks/useBusiness'
-import { computeAnalytics } from '@/services/business'
+import { computeBusinessAnalytics } from '@/services/business'
 import { cn } from '@/lib/utils'
 import type { Place } from '@/types/place'
 
@@ -62,7 +63,22 @@ export default function BusinessPage() {
     }
   }, [profile, formReady])
 
-  const analytics = computeAnalytics(profile ?? null, claims, owned.length)
+  const { data: analytics } = useQuery({
+    queryKey: ['business-analytics', profile?.id, claims.length, owned.map((p) => p.id).join(',')],
+    queryFn: () => computeBusinessAnalytics(profile ?? null, claims, owned),
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+  })
+  const stats = analytics ?? {
+    ownedPlaces: owned.length,
+    pendingClaims: claims.filter((c) => c.status === 'pending').length,
+    approvedClaims: claims.filter((c) => c.status === 'approved').length,
+    profileStatus: profile?.status ?? null,
+    publishedPlaces: 0,
+    verifiedPlaces: 0,
+    totalReviews: 0,
+    avgRating: null as number | null,
+  }
 
   if (authLoading || profileLoading) {
     return (
@@ -173,15 +189,30 @@ export default function BusinessPage() {
             </CardContent></Card>
             <Card><CardContent className="flex items-center gap-3 p-4">
               <MapPin className="h-8 w-8 text-teal-500" />
-              <div><p className="text-xs text-slate-400">Owned listings</p><p className="text-xl font-bold">{analytics.ownedPlaces}</p></div>
+              <div><p className="text-xs text-slate-400">Owned listings</p><p className="text-xl font-bold">{stats.ownedPlaces}</p></div>
             </CardContent></Card>
             <Card><CardContent className="flex items-center gap-3 p-4">
               <Clock className="h-8 w-8 text-amber-500" />
-              <div><p className="text-xs text-slate-400">Pending claims</p><p className="text-xl font-bold">{analytics.pendingClaims}</p></div>
+              <div><p className="text-xs text-slate-400">Pending claims</p><p className="text-xl font-bold">{stats.pendingClaims}</p></div>
             </CardContent></Card>
             <Card><CardContent className="flex items-center gap-3 p-4">
               <CheckCircle2 className="h-8 w-8 text-emerald-500" />
-              <div><p className="text-xs text-slate-400">Approved claims</p><p className="text-xl font-bold">{analytics.approvedClaims}</p></div>
+              <div><p className="text-xs text-slate-400">Approved claims</p><p className="text-xl font-bold">{stats.approvedClaims}</p></div>
+            </CardContent></Card>
+            <Card><CardContent className="flex items-center gap-3 p-4">
+              <BarChart3 className="h-8 w-8 text-violet-500" />
+              <div><p className="text-xs text-slate-400">Published listings</p><p className="text-xl font-bold">{stats.publishedPlaces ?? 0}</p></div>
+            </CardContent></Card>
+            <Card><CardContent className="flex items-center gap-3 p-4">
+              <CheckCircle2 className="h-8 w-8 text-sky-500" />
+              <div><p className="text-xs text-slate-400">Verified listings</p><p className="text-xl font-bold">{stats.verifiedPlaces ?? 0}</p></div>
+            </CardContent></Card>
+            <Card><CardContent className="flex items-center gap-3 p-4">
+              <BarChart3 className="h-8 w-8 text-rose-500" />
+              <div>
+                <p className="text-xs text-slate-400">Reviews · avg rating</p>
+                <p className="text-xl font-bold">{stats.totalReviews ?? 0}{stats.avgRating != null ? ` · ${stats.avgRating}★` : ''}</p>
+              </div>
             </CardContent></Card>
           </div>
 
