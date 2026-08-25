@@ -47,4 +47,12 @@ export interface BusinessAnalytics {
   pendingClaims: number
   approvedClaims: number
   profileStatus: BusinessStatus | null
+  /** Published owned listings */
+  publishedPlaces?: number
+  /** Sum of published reviews on owned places */
+  totalReviews?: number
+  /** Average rating across owned places (1–5), null if none */
+  avgRating?: number | null
+  /** Verified owned places */
+  verifiedPlaces?: number
 }
