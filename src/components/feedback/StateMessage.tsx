@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Loader2, AlertCircle, MapPin, Inbox } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useT } from '@/hooks/useT'
 
 type Variant = 'loading' | 'error' | 'empty'
 
@@ -26,11 +27,13 @@ export function StateMessage({
   title,
   body,
   onRetry,
-  retryLabel = 'Retry',
+  retryLabel,
   action,
   className,
 }: StateMessageProps) {
+  const t = useT()
   const Icon = variant === 'empty' ? MapPin : icons[variant]
+  const label = retryLabel ?? t.common.retry
 
   return (
     <div
@@ -64,7 +67,7 @@ export function StateMessage({
       {body && <p className="mt-1 max-w-sm text-sm text-slate-500">{body}</p>}
       {onRetry && (
         <Button variant="outline" size="sm" className="mt-4" onClick={onRetry}>
-          {retryLabel}
+          {label}
         </Button>
       )}
       {action && <div className="mt-4">{action}</div>}

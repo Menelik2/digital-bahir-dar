@@ -9,7 +9,7 @@ export default function BanksPage() {
       subtitle={t.pages.banksSubtitle}
       categorySlug="bank"
       osmCategories={['bank', 'atm']}
-      filters={[{ id: 'atm', label: 'ATM' }]}
+      filters={[{ id: 'atm', label: t.directory.atms }]}
       emptyMessage={t.pages.banksEmpty}
     />
   )

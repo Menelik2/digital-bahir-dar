@@ -44,7 +44,6 @@ function mergePlaces(primary: Place[], secondary: Place[]): Place[] {
   return out
 }
 
-/** Map price_level (1–4) or hotel nightly rates to budget / mid / luxury */
 function matchesPriceTier(place: Place, tier: string): boolean {
   const level = place.price_level
   const min = place.hotel?.minimum_price ?? null
@@ -203,6 +202,7 @@ export function PlaceListPage({
           className="h-11 w-11 shrink-0 rounded-xl"
           onClick={() => setShowSort(!showSort)}
           aria-expanded={showSort}
+          aria-label={t.common.search}
         >
           <SlidersHorizontal className="h-5 w-5" />
         </Button>
@@ -295,7 +295,7 @@ export function PlaceListPage({
             <div className="flex flex-col items-center gap-2">
               {activeFilter && (
                 <Button variant="outline" size="sm" onClick={() => setActiveFilter(null)}>
-                  Clear filter
+                  {t.common.showAll}
                 </Button>
               )}
               <Link to="/discover" className="text-sm font-medium text-sky-600 hover:underline">
@@ -315,7 +315,9 @@ export function PlaceListPage({
                 {' '}· {osmPlaces.length} {t.list.fromOsmCount}
               </span>
             )}
-            {osmFetching && <span className="text-slate-400"> · updating…</span>}
+            {osmFetching && (
+              <span className="text-slate-400"> · {t.discover.updatingOsm}</span>
+            )}
           </p>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {sorted.map((place) => {
