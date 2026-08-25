@@ -5,10 +5,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
-const parts = ["lock-q1.b64", "lock-q2.b64", "lock-q3.b64", "lock-q4.b64"].map((f) =>
-  readFileSync(join(__dir, f), "utf8").trim()
-);
-const b64 = parts.join("");
+const partNames = ["lock-q1.b64", "lock-q2.b64", "lock-q3.b64", "lock-q4.b64"];
 const out = "package-lock.json";
 
 function needsRestore() {
@@ -22,10 +19,18 @@ function needsRestore() {
   }
 }
 
-if (needsRestore()) {
-  const json = inflateSync(Buffer.from(b64, "base64")).toString("utf8");
-  writeFileSync(out, json);
-  console.log("wrote", out, json.length, "bytes");
-} else {
+if (!needsRestore()) {
   console.log("package-lock.json ok, skip restore");
+  process.exit(0);
 }
+
+const missing = partNames.filter((f) => !existsSync(join(__dir, f)));
+if (missing.length) {
+  console.log("lock fragments missing (" + missing.join(", ") + ") — run npm install to generate package-lock.json");
+  process.exit(0);
+}
+
+const b64 = partNames.map((f) => readFileSync(join(__dir, f), "utf8").trim()).join("");
+const json = inflateSync(Buffer.from(b64, "base64")).toString("utf8");
+writeFileSync(out, json);
+console.log("wrote", out, json.length, "bytes");
