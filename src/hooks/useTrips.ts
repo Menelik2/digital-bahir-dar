@@ -25,8 +25,8 @@ export function useMyTrips() {
     queryFn: async () => {
       if (!user) return []
       const trips = await fetchMyTrips(user.id)
-      if (trips.length === 0) return [createDemoTrip(user.id)]
-      return trips
+      // Never inject demo trips into the list — users create their own
+      return trips.filter((t) => !t.id.startsWith('demo-'))
     },
     enabled: !!user,
     staleTime: 30_000,
@@ -119,16 +119,28 @@ export function useAddDay(tripId: string) {
 export function useAddStop(tripId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (args: {
-      tripDayId: string
-      custom_name?: string
-      place_id?: string
-      estimated_cost?: number
+    mutationFn: async (input: {
+      dayId: string
+      placeId?: string | null
+      customName?: string
+      sortOrder?: number
+      startTime?: string
+      endTime?: string
+      notes?: string
+      estimatedCost?: number
     }) => {
       if (tripId.startsWith('guide-') || tripId.startsWith('demo-')) {
         throw new Error('Guide plans are read-only')
       }
-      const res = await addTripStop(args.tripDayId, args)
+      const res = await addTripStop(input.dayId, {
+        place_id: input.placeId ?? null,
+        custom_name: input.customName,
+        sort_order: input.sortOrder,
+        start_time: input.startTime,
+        end_time: input.endTime,
+        notes: input.notes,
+        estimated_cost: input.estimatedCost,
+      })
       if (res.error) throw new Error(res.error)
       return res.stop!
     },
@@ -151,19 +163,19 @@ export function useDeleteStop(tripId: string) {
 export function useAddExpense(tripId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (expense: {
+    mutationFn: async (input: {
       category: string
       title: string
       amount: number
-      is_estimated?: boolean
-      expense_date?: string
-      notes?: string
       currency?: string
+      expenseDate?: string
+      notes?: string
+      isEstimated?: boolean
     }) => {
       if (tripId.startsWith('guide-') || tripId.startsWith('demo-')) {
         throw new Error('Guide plans are read-only')
       }
-      const res = await addExpense(tripId, expense)
+      const res = await addExpense(tripId, input)
       if (res.error) throw new Error(res.error)
       return res.expense!
     },
