@@ -5,9 +5,10 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const __dir = dirname(fileURLToPath(import.meta.url));
-const part1 = readFileSync(join(__dir, "lock-part1.b64"), "utf8").trim();
-const part2 = readFileSync(join(__dir, "lock-part2.b64"), "utf8").trim();
-const b64 = part1 + part2;
+const parts = ["lock-q1.b64", "lock-q2.b64", "lock-q3.b64", "lock-q4.b64"].map((f) =>
+  readFileSync(join(__dir, f), "utf8").trim()
+);
+const b64 = parts.join("");
 const out = "package-lock.json";
 
 function needsRestore() {
