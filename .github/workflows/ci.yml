@@ -55,15 +55,15 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: PWA icons
+        run: python3 scripts/generate-pwa-icons.py
+
       - name: Build
         run: npm run build
         env:
           VITE_SUPABASE_URL: https://example.supabase.co
           VITE_SUPABASE_ANON_KEY: public-anon-placeholder
           VITE_GOOGLE_MAPS_API_KEY: ""
-
-      - name: PWA icons
-        run: python3 scripts/generate-pwa-icons.py
 
       - name: Smoke
         run: npm run smoke

@@ -22,6 +22,7 @@ import type { OsmCategory } from '@/services/osmPlaces'
 import type { Place, SortOption } from '@/types/place'
 import { cn } from '@/lib/utils'
 import { useT } from '@/hooks/useT'
+import { StateMessage } from '@/components/feedback/StateMessage'
 
 interface PlaceListPageProps {
   title: string
@@ -280,35 +281,35 @@ export function PlaceListPage({
       </div>
 
       {loading && (
-        <div className="flex flex-col items-center py-20 text-slate-500">
-          <Loader2 className="mb-3 h-8 w-8 animate-spin text-sky-500" />
-          <p>{t.list.loadingPlaces}</p>
-        </div>
+        <StateMessage variant="loading" title={t.list.loadingPlaces} />
       )}
 
       {error && !sorted.length && (
-        <div className="flex flex-col items-center py-20 text-center">
-          <AlertCircle className="mb-3 h-8 w-8 text-red-500" />
-          <p className="mb-4 text-sm text-slate-500">{t.list.loadFail}</p>
-          <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="h-4 w-4" /> {t.common.retry}
-          </Button>
-        </div>
+        <StateMessage
+          variant="error"
+          title={t.list.loadFail}
+          onRetry={() => refetch()}
+          retryLabel={t.common.retry}
+        />
       )}
 
       {!loading && sorted.length === 0 && (
-        <div className="flex flex-col items-center py-20 text-center">
-          <MapPin className="mb-3 h-10 w-10 text-slate-300" />
-          <p className="font-medium text-slate-700 dark:text-slate-300">{empty}</p>
-          {activeFilter && (
-            <Button variant="outline" size="sm" className="mt-3" onClick={() => setActiveFilter(null)}>
-              Clear filter
-            </Button>
-          )}
-          <Link to="/discover" className="mt-4 text-sm font-medium text-sky-600 hover:underline">
-            {t.list.tryDiscover}
-          </Link>
-        </div>
+        <StateMessage
+          variant="empty"
+          title={empty}
+          action={
+            <div className="flex flex-col items-center gap-2">
+              {activeFilter && (
+                <Button variant="outline" size="sm" onClick={() => setActiveFilter(null)}>
+                  Clear filter
+                </Button>
+              )}
+              <Link to="/discover" className="text-sm font-medium text-sky-600 hover:underline">
+                {t.list.tryDiscover}
+              </Link>
+            </div>
+          }
+        />
       )}
 
       {!loading && sorted.length > 0 && (
