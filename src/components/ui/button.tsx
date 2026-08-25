@@ -3,15 +3,16 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#078930] disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        default: 'bg-sky-500 text-white hover:bg-sky-600',
-        secondary: 'bg-teal-700 text-white hover:bg-teal-800',
-        outline: 'border border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900',
-        ghost: 'hover:bg-slate-100 dark:hover:bg-slate-800',
-        destructive: 'bg-red-500 text-white hover:bg-red-600',
+        default: 'bg-[#078930] text-white hover:bg-[#056b24]',
+        secondary: 'bg-[#0b6e99] text-white hover:bg-[#0a5a7e]',
+        outline:
+          'border border-[#078930]/30 bg-white text-[#056b24] hover:bg-[#078930]/8 dark:border-[#078930]/40 dark:bg-slate-900 dark:text-[#7dcea0]',
+        ghost: 'hover:bg-[#078930]/10 dark:hover:bg-[#078930]/20',
+        destructive: 'bg-[#da121a] text-white hover:bg-[#b50f16]',
       },
       size: {
         default: 'h-10 px-4 py-2',
@@ -24,7 +25,9 @@ const buttonVariants = cva(
   }
 )
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {}
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {}
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, ...props }, ref) => (
