@@ -145,6 +145,46 @@ export async function searchPlacesForClaim(query: string): Promise<Place[]> {
   })) as Place[]
 }
 
+/** Aggregate reviews for owned place IDs */
+export async function fetchOwnedPlaceReviewStats(placeIds: string[]): Promise<{
+  totalReviews: number
+  avgRating: number | null
+}> {
+  if (placeIds.length === 0) return { totalReviews: 0, avgRating: null }
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('rating')
+    .in('place_id', placeIds)
+    .eq('status', 'published')
+  if (error || !data?.length) {
+    if (error) console.warn('fetchOwnedPlaceReviewStats:', error.message)
+    return { totalReviews: 0, avgRating: null }
+  }
+  const totalReviews = data.length
+  const avgRating = data.reduce((s, r) => s + (r.rating || 0), 0) / totalReviews
+  return { totalReviews, avgRating: Math.round(avgRating * 10) / 10 }
+}
+
+export async function computeBusinessAnalytics(
+  profile: BusinessProfile | null,
+  claims: PlaceClaim[],
+  owned: Place[]
+): Promise<BusinessAnalytics> {
+  const placeIds = owned.map((p) => p.id)
+  const { totalReviews, avgRating } = await fetchOwnedPlaceReviewStats(placeIds)
+  return {
+    ownedPlaces: owned.length,
+    pendingClaims: claims.filter((c) => c.status === 'pending').length,
+    approvedClaims: claims.filter((c) => c.status === 'approved').length,
+    profileStatus: profile?.status ?? null,
+    publishedPlaces: owned.filter((p) => p.status === 'published').length,
+    verifiedPlaces: owned.filter((p) => p.verified).length,
+    totalReviews,
+    avgRating,
+  }
+}
+
+/** @deprecated use computeBusinessAnalytics for full stats */
 export function computeAnalytics(
   profile: BusinessProfile | null,
   claims: PlaceClaim[],
