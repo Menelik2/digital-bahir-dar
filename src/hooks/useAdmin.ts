@@ -4,6 +4,12 @@ import {
   fetchAdminMetrics,
   fetchPlacesForModeration,
   fetchCategoriesForAdmin,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  fetchTransportForAdmin,
+  setTransportVerified,
+  updateTransportService,
   createPlace,
   setPlaceStatus,
   updatePlace,
@@ -29,6 +35,7 @@ import {
   setUserRole,
   type PlaceEditInput,
   type PlaceCreateInput,
+  type CategoryInput,
 } from '@/services/admin'
 import { useAuth } from './useAuth'
 import { useAdminRealtime } from './useRealtimeQueries'
@@ -63,7 +70,16 @@ export function useAdminCategories(enabled: boolean) {
     queryKey: ['admin-categories'],
     queryFn: () => fetchCategoriesForAdmin(),
     enabled,
-    staleTime: 120_000,
+    staleTime: 60_000,
+  })
+}
+
+export function useAdminTransport(enabled: boolean) {
+  return useQuery({
+    queryKey: ['admin-transport'],
+    queryFn: () => fetchTransportForAdmin(),
+    enabled,
+    staleTime: 30_000,
   })
 }
 
@@ -132,6 +148,8 @@ export function useAdminActions() {
     qc.invalidateQueries({ queryKey: ['admin-businesses'] })
     qc.invalidateQueries({ queryKey: ['admin-reports'] })
     qc.invalidateQueries({ queryKey: ['admin-users'] })
+    qc.invalidateQueries({ queryKey: ['admin-categories'] })
+    qc.invalidateQueries({ queryKey: ['admin-transport'] })
     qc.invalidateQueries({ queryKey: ['places'] })
   }
 
@@ -288,6 +306,58 @@ export function useAdminActions() {
     onSuccess: invalidate,
   })
 
+  const categoryCreate = useMutation({
+    mutationFn: async (data: CategoryInput) => {
+      const res = await createCategory(data)
+      if (res.error) throw new Error(res.error)
+      return res.id
+    },
+    onSuccess: invalidate,
+  })
+
+  const categoryUpdate = useMutation({
+    mutationFn: async (args: { id: string; data: Partial<CategoryInput> }) => {
+      const res = await updateCategory(args.id, args.data)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
+  const categoryDelete = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await deleteCategory(id)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
+  const transportVerified = useMutation({
+    mutationFn: async (args: { id: string; verified: boolean }) => {
+      const res = await setTransportVerified(args.id, args.verified)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
+  const transportUpdate = useMutation({
+    mutationFn: async (args: {
+      id: string
+      data: Partial<{
+        service_type: string
+        provider_name: string
+        phone: string | null
+        estimated_price_min: number | null
+        estimated_price_max: number | null
+        route_description: string | null
+        verified: boolean
+      }>
+    }) => {
+      const res = await updateTransportService(args.id, args.data)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
   return {
     placeCreate,
     placeStatus,
@@ -307,6 +377,11 @@ export function useAdminActions() {
     business,
     report,
     userRole,
+    categoryCreate,
+    categoryUpdate,
+    categoryDelete,
+    transportVerified,
+    transportUpdate,
     invalidate,
   }
 }
