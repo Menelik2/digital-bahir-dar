@@ -1,1 +1,39 @@
-{"app":{"name":"ዲጂታል ባሕር ዳር","tagline":"ባሕር ዳርን ያስሱ። የት እንደሚሄዱ ይወቁ። ምን እንደሚያስከፍል ይወቁ።"},"nav":{"home":"መነሻ","explore":"አስስ","map":"ካርታ","trips":"ጉዞዎች","profile":"መገለጫ","aiGuide":"AI መመሪያ"},"common":{"search":"ቦታዎችን ይፈልጉ...","loading":"በመጫን ላይ...","error":"ስህተት ተከስቷል","retry":"እንደገና ይሞክሩ","save":"አስቀምጥ","directions":"አቅጣጫ"}}
+{
+  "app": {
+    "name": "ዲጂታል ባሕር ዳር",
+    "tagline": "ባሕር ዳርን ያስሱ። የት እንደሚሄዱ ይወቁ። ምን እንደሚያስከፍል ይወቁ።"
+  },
+  "nav": {
+    "home": "መነሻ",
+    "explore": "አስስ",
+    "map": "ካርታ",
+    "trips": "ጉዞዎች",
+    "profile": "መገለጫ",
+    "aiGuide": "AI መመሪያ",
+    "hotels": "ሆቴሎች",
+    "restaurants": "ምግብ ቤቶች",
+    "discover": "አግኝ",
+    "today": "ዛሬ",
+    "budget": "በጀት"
+  },
+  "common": {
+    "search": "ቦታዎችን ይፈልጉ...",
+    "loading": "በመጫን ላይ...",
+    "error": "ስህተት ተከስቷል",
+    "retry": "እንደገና ይሞክሩ",
+    "save": "አስቀምጥ",
+    "directions": "አቅጣጫ",
+    "language": "ቋንቋ",
+    "close": "ዝጋ"
+  },
+  "food": {
+    "moodTitle": "ምን ይፈልጋሉ?",
+    "modeTraditional": "ባህላዊ",
+    "modeFish": "የሐይቅ አሳ",
+    "modeCoffee": "ቡና እና ቀላል"
+  },
+  "theme": {
+    "light": "ብርሃን",
+    "dark": "ጨለማ"
+  }
+}

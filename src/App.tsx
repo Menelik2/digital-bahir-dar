@@ -5,6 +5,7 @@ import { queryClient } from '@/lib/queryClient'
 import { Layout } from '@/components/layout/Layout'
 import { RealtimeProvider } from '@/components/realtime/RealtimeProvider'
 import { StateMessage } from '@/components/feedback/StateMessage'
+import { useT } from '@/hooks/useT'
 
 const HomePage = lazy(() => import('@/pages/Home'))
 const MapPage = lazy(() => import('@/pages/Map'))
@@ -37,7 +38,8 @@ const PlaceDetailsPage = lazy(() => import('@/pages/PlaceDetails'))
 const NotFoundPage = lazy(() => import('@/pages/NotFound'))
 
 function PageFallback() {
-  return <StateMessage variant="loading" title="Loading…" />
+  const t = useT()
+  return <StateMessage variant="loading" title={t.common.loading} />
 }
 
 export default function App() {
