@@ -18,6 +18,7 @@ type FoodMode = 'all' | 'traditional' | 'fish' | 'coffee'
 const MODES: {
   id: FoodMode
   title: string
+  short: string
   body: string
   icon: typeof Fish
   match: (p: FoodPick) => boolean
@@ -25,6 +26,7 @@ const MODES: {
   {
     id: 'traditional',
     title: 'Traditional',
+    short: 'Injera',
     body: 'Injera, shiro, tibs — local houses',
     icon: Utensils,
     match: (p) =>
@@ -36,6 +38,7 @@ const MODES: {
   {
     id: 'fish',
     title: 'Lake fish',
+    short: 'Fish',
     body: 'Tilapia & Nile perch by the shore',
     icon: Fish,
     match: (p) => p.tags.includes('fish') || p.tags.includes('lakeside'),
@@ -43,6 +46,7 @@ const MODES: {
   {
     id: 'coffee',
     title: 'Coffee & light',
+    short: 'Coffee',
     body: 'Bunna, macchiato, snacks, juice',
     icon: Coffee,
     match: (p) =>
@@ -68,19 +72,32 @@ function RecommendationsBanner() {
   const rest = filtered.filter((p) => !p.featured)
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-2 pt-8">
-      <div className="mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-orange-600 via-amber-600 to-rose-600 px-5 py-8 text-white shadow-lg">
-        <p className="text-sm font-medium text-orange-100">Local food guide</p>
-        <h2 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">What to eat in Bahir Dar</h2>
-        <p className="mt-2 max-w-2xl text-orange-50">
-          Pick one path below — traditional, lake fish, or coffee. Short lists first; full map listings further
-          down.
+    <div className="mx-auto max-w-6xl px-4 pb-2 pt-6">
+      {/* Compact hero — less vertical space on mobile */}
+      <div className="mb-5 overflow-hidden rounded-2xl bg-gradient-to-br from-orange-600 via-amber-600 to-rose-600 px-4 py-5 text-white shadow-md sm:px-5 sm:py-6">
+        <p className="text-xs font-medium text-orange-100 sm:text-sm">Local food guide</p>
+        <h2 className="mt-0.5 text-xl font-bold tracking-tight sm:text-2xl">What to eat in Bahir Dar</h2>
+        <p className="mt-1.5 text-sm text-orange-50/95 sm:max-w-2xl">
+          Pick a mood — short lists first, full map listings below.
         </p>
       </div>
 
-      {/* 3-mode chooser */}
-      <h3 className="mb-3 text-lg font-semibold">What are you in the mood for?</h3>
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+      {/* Mood chooser — compact single row on mobile */}
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h3 className="text-base font-semibold sm:text-lg">What are you in the mood for?</h3>
+        {mode !== 'all' && (
+          <button
+            type="button"
+            onClick={() => setMode('all')}
+            className="text-xs font-medium text-orange-600 hover:underline sm:hidden"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* Mobile: equal 3-col compact tiles | Desktop: slightly richer cards */}
+      <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
         {MODES.map((m) => {
           const on = mode === m.id
           const Icon = m.icon
@@ -89,23 +106,35 @@ function RecommendationsBanner() {
               key={m.id}
               type="button"
               onClick={() => setMode(on ? 'all' : m.id)}
+              aria-pressed={on}
               className={cn(
-                'rounded-2xl border p-4 text-left transition',
+                'flex flex-col items-center rounded-2xl border px-2 py-3 text-center transition active:scale-[0.98] sm:items-start sm:px-4 sm:py-4 sm:text-left',
                 on
-                  ? 'border-orange-500 bg-orange-50 ring-2 ring-orange-300 dark:bg-orange-950/40'
-                  : 'border-slate-200 bg-white hover:border-orange-300 dark:border-slate-700 dark:bg-slate-900'
+                  ? 'border-orange-500 bg-orange-50 shadow-sm ring-2 ring-orange-300/80 dark:bg-orange-950/50 dark:ring-orange-600/50'
+                  : 'border-slate-200/80 bg-white shadow-sm hover:border-orange-300 hover:bg-orange-50/40 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-orange-700'
               )}
             >
-              <Icon className={cn('mb-2 h-7 w-7', on ? 'text-orange-600' : 'text-slate-400')} />
-              <p className="text-lg font-bold">{m.title}</p>
-              <p className="mt-0.5 text-sm text-slate-500">{m.body}</p>
+              <span
+                className={cn(
+                  'mb-1.5 flex h-9 w-9 items-center justify-center rounded-full sm:mb-2 sm:h-10 sm:w-10',
+                  on
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                )}
+              >
+                <Icon className="h-4.5 w-4.5 sm:h-5 sm:w-5" strokeWidth={2} />
+              </span>
+              <p className="text-[13px] font-semibold leading-tight sm:text-base">{m.title}</p>
+              <p className="mt-0.5 hidden text-xs leading-snug text-slate-500 sm:block">{m.body}</p>
+              {/* Mobile-only short hint under title */}
+              <p className="mt-0.5 text-[11px] leading-tight text-slate-400 sm:hidden">{m.short}</p>
             </button>
           )
         })}
       </div>
 
       {mode !== 'all' && (
-        <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="mb-4 hidden items-center justify-between gap-2 sm:flex">
           <p className="text-sm text-slate-500">
             Showing <strong className="text-slate-800 dark:text-slate-200">{filtered.length}</strong> picks for{" "}
             {MODES.find((m) => m.id === mode)?.title.toLowerCase()}
@@ -116,14 +145,14 @@ function RecommendationsBanner() {
         </div>
       )}
 
-      <h3 className="mb-3 flex items-center gap-2 text-lg font-semibold">
-        <Utensils className="h-5 w-5 text-orange-600" />{" "}
+      <h3 className="mb-3 flex items-center gap-2 text-base font-semibold sm:text-lg">
+        <Utensils className="h-5 w-5 text-orange-600" />{' '}
         {mode === 'all' ? 'Recommended experiences' : 'Your short list'}
       </h3>
-      <div className="mb-8 grid gap-4 sm:grid-cols-2">
+      <div className="mb-8 grid gap-3 sm:grid-cols-2 sm:gap-4">
         {(featured.length ? featured : filtered.slice(0, 4)).map((r) => (
           <Card key={r.id} className="overflow-hidden border-orange-100 dark:border-orange-950">
-            <CardContent className="p-5">
+            <CardContent className="p-4 sm:p-5">
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 {r.tags.includes('fish') && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-700 dark:bg-sky-950 dark:text-sky-300">
@@ -141,9 +170,9 @@ function RecommendationsBanner() {
                   </span>
                 )}
               </div>
-              <h4 className="text-lg font-semibold">{r.name}</h4>
+              <h4 className="text-base font-semibold sm:text-lg">{r.name}</h4>
               <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
-                <MapPin className="h-3.5 w-3.5" /> {r.area} · {r.cuisine}
+                <MapPin className="h-3.5 w-3.5 shrink-0" /> {r.area} · {r.cuisine}
               </p>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{r.why}</p>
               <p className="mt-2 text-xs font-medium text-orange-700 dark:text-orange-300">{r.priceLabel}</p>
@@ -185,8 +214,8 @@ function RecommendationsBanner() {
 
       {rest.length > 0 && mode === 'all' && (
         <>
-          <h3 className="mb-1 text-lg font-semibold">More ideas</h3>
-          <p className="mb-4 text-sm text-slate-500">Extra picks, then live listings below.</p>
+          <h3 className="mb-1 text-base font-semibold sm:text-lg">More ideas</h3>
+          <p className="mb-3 text-sm text-slate-500">Extra picks, then live listings below.</p>
           <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {rest.map((r) => (
               <Card key={r.id}>
@@ -211,7 +240,7 @@ function RecommendationsBanner() {
         </>
       )}
 
-      <h3 className="mb-3 text-lg font-semibold">Neighborhoods</h3>
+      <h3 className="mb-3 text-base font-semibold sm:text-lg">Neighborhoods</h3>
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
         {FOOD_NEIGHBORHOODS.map((n) => (
           <Card key={n.id}>
@@ -263,7 +292,7 @@ function RecommendationsBanner() {
         </div>
       )}
 
-      <h3 className="mb-1 text-lg font-semibold">Live listings</h3>
+      <h3 className="mb-1 text-base font-semibold sm:text-lg">Live listings</h3>
       <p className="mb-2 text-sm text-slate-500">
         App + OpenStreetMap restaurants and cafés in Bahir Dar.
       </p>
