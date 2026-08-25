@@ -1,23 +1,23 @@
 import { Link } from 'react-router-dom'
 import { Languages, Star, BadgeCheck, Phone, Sparkles } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { useT } from '@/hooks/useT'
 import { Button } from '@/components/ui/button'
 import { TOUR_GUIDES } from '@/data/cityLife'
 
 export default function GuidesPage() {
+  const t = useT()
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="mb-2 text-2xl font-bold sm:text-3xl">Tour guides</h1>
-          <p className="max-w-2xl text-slate-500">
-            Local guides for Lake Tana, Blue Nile Falls, and city culture. Rates are estimates in ETB — confirm before booking.
-          </p>
+          <h1 className="mb-2 text-2xl font-bold sm:text-3xl">{t.guidesPage.title}</h1>
+          <p className="max-w-2xl text-slate-500">{t.guidesPage.subtitle}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link to="/ai-guide">
             <Button variant="outline" size="sm">
-              <Sparkles className="h-4 w-4" /> Ask AI Guide
+              <Sparkles className="h-4 w-4" /> {t.guidesPage.askAi}
             </Button>
           </Link>
           <Link to="/business">

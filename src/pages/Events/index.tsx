@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Calendar, MapPin, Ticket, Sparkles, Loader2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
+import { useT } from '@/hooks/useT'
 import { Button } from '@/components/ui/button'
 import { EVENT_CATEGORY_LABEL, type CityEvent } from '@/data/cityLife'
 import { fetchCityEvents } from '@/services/events'
@@ -19,6 +20,7 @@ const filters: Array<CityEvent['category'] | 'all'> = [
 ]
 
 export default function EventsPage() {
+  const t = useT()
   const [filter, setFilter] = useState<(typeof filters)[number]>('all')
   const { data: allEvents = [], isLoading } = useQuery({
     queryKey: ['city-events'],
@@ -37,14 +39,12 @@ export default function EventsPage() {
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="mb-2 text-2xl font-bold sm:text-3xl">Events in Bahir Dar</h1>
-          <p className="max-w-2xl text-slate-500">
-            Culture, markets, and seasonal highlights. Listings load from the city database when available — always confirm time and venue locally.
-          </p>
+          <h1 className="mb-2 text-2xl font-bold sm:text-3xl">{t.events.title}</h1>
+          <p className="max-w-2xl text-slate-500">{t.events.subtitle}</p>
         </div>
         <Link to="/ai-guide">
           <Button variant="outline" size="sm">
-            <Sparkles className="h-4 w-4" /> Ask AI Guide
+            <Sparkles className="h-4 w-4" /> {t.events.askAi}
           </Button>
         </Link>
       </div>
@@ -99,7 +99,7 @@ export default function EventsPage() {
                 : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
             )}
           >
-            {f === 'all' ? 'All' : EVENT_CATEGORY_LABEL[f]}
+            {f === 'all' ? t.events.all : EVENT_CATEGORY_LABEL[f]}
           </button>
         ))}
       </div>
