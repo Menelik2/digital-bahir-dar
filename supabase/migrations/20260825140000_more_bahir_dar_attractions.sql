@@ -115,6 +115,7 @@ ON CONFLICT (slug) DO UPDATE SET
   status = 'published',
   updated_at = now();
 
+-- Enrich Martyrs Memorial if already seeded
 UPDATE places SET
   description = 'Amhara Martyrs Memorial near the Blue Nile / Gondar road area — tall monument, sculptures, and often a small museum about resistance history. Free or low-cost outdoor visit; combine with a short city orientation stop.',
   short_description = 'Memorial · museum & fountains',
@@ -124,3 +125,75 @@ UPDATE places SET
   featured = true,
   updated_at = now()
 WHERE slug = 'martyrs-memorial-bahir-dar';
+
+-- Attraction detail rows
+INSERT INTO attractions (place_id, attraction_type, entrance_fee, recommended_duration, best_time_to_visit, historical_information, safety_information, accessibility)
+SELECT p.id, 'religious', 200, 'Half day with boat', 'Morning',
+  'Believed 14th-century foundation; museum with manuscripts and religious art. Traditionally men only.',
+  'Confirm gender access rules; modest dress; boat safety; respect services.',
+  'Boat + paths; men-only tradition'
+FROM places p WHERE p.slug = 'kebran-gabriel-monastery'
+ON CONFLICT (place_id) DO UPDATE SET entrance_fee = EXCLUDED.entrance_fee, historical_information = EXCLUDED.historical_information;
+
+INSERT INTO attractions (place_id, attraction_type, entrance_fee, recommended_duration, best_time_to_visit, historical_information, safety_information, accessibility)
+SELECT p.id, 'religious', 200, 'Full day with boat', 'Morning – dry season preferred',
+  'Built in the 18th century under Empress Mentewab on Dek Island; noted mural program.',
+  'Longer boat ride; weather and lake conditions; agree itinerary before departure.',
+  'Boat + island paths; open to all genders'
+FROM places p WHERE p.slug = 'narga-selassie-monastery'
+ON CONFLICT (place_id) DO UPDATE SET entrance_fee = EXCLUDED.entrance_fee, historical_information = EXCLUDED.historical_information;
+
+INSERT INTO attractions (place_id, attraction_type, entrance_fee, recommended_duration, best_time_to_visit, historical_information, safety_information, accessibility)
+SELECT p.id, 'religious', 200, 'Full day with boat', 'Morning',
+  'Hilltop island monastery associated with imperial burials and historic manuscripts.',
+  'Uphill walk after landing; confirm who may enter; boat safety.',
+  'Boat + steep walk'
+FROM places p WHERE p.slug = 'daga-estifanos-monastery'
+ON CONFLICT (place_id) DO UPDATE SET entrance_fee = EXCLUDED.entrance_fee, historical_information = EXCLUDED.historical_information;
+
+INSERT INTO attractions (place_id, attraction_type, entrance_fee, recommended_duration, best_time_to_visit, historical_information, safety_information, accessibility)
+SELECT p.id, 'religious', 200, 'Full day', 'Dry season mornings',
+  'Linked in tradition to early sacred history on Lake Tana’s eastern side; remote setting.',
+  'Remote boat trip; limited facilities; travel with experienced operator.',
+  'Boat + island terrain'
+FROM places p WHERE p.slug = 'tana-cherqos-kirkos'
+ON CONFLICT (place_id) DO UPDATE SET entrance_fee = EXCLUDED.entrance_fee, historical_information = EXCLUDED.historical_information;
+
+INSERT INTO attractions (place_id, attraction_type, entrance_fee, recommended_duration, best_time_to_visit, historical_information, safety_information, accessibility)
+SELECT p.id, 'nature', 100, '1–3 hours on foot', 'Morning',
+  'Coffee forest trails on Zege Peninsula connecting landings to monasteries.',
+  'Uneven paths; insects; stay on marked routes; respect local farms.',
+  'Walking paths; boat to peninsula'
+FROM places p WHERE p.slug = 'zege-peninsula-coffee-forest'
+ON CONFLICT (place_id) DO UPDATE SET entrance_fee = EXCLUDED.entrance_fee, recommended_duration = EXCLUDED.recommended_duration;
+
+INSERT INTO attractions (place_id, attraction_type, entrance_fee, recommended_duration, best_time_to_visit, historical_information, safety_information, accessibility)
+SELECT p.id, 'historical', 50, '30–60 minutes (with Falls visit)', 'Morning with Falls day trip',
+  'Stone bridge on the classic approach to Tis Issat / Blue Nile Falls.',
+  'Slippery after rain; stay with the Falls trail group/guide when required.',
+  'Uneven historic path'
+FROM places p WHERE p.slug = 'portuguese-bridge-tis-abay'
+ON CONFLICT (place_id) DO UPDATE SET attraction_type = EXCLUDED.attraction_type, recommended_duration = EXCLUDED.recommended_duration;
+
+INSERT INTO attractions (place_id, attraction_type, entrance_fee, recommended_duration, best_time_to_visit, safety_information, accessibility)
+SELECT p.id, 'viewpoint', 0, '30–90 minutes', 'Late afternoon / sunset',
+  'Urban lakeshore; keep valuables secure after dark.',
+  'Paved / lakeside walk'
+FROM places p WHERE p.slug = 'bahir-dar-lakeside-promenade'
+ON CONFLICT (place_id) DO UPDATE SET attraction_type = EXCLUDED.attraction_type;
+
+INSERT INTO attractions (place_id, attraction_type, entrance_fee, recommended_duration, best_time_to_visit, historical_information, safety_information, accessibility)
+SELECT p.id, 'religious', 0, '20–45 minutes', 'Outside service times unless invited',
+  'City Orthodox church near the lake; shore area has early European-era associations.',
+  'Modest dress; ask before photos of worship.',
+  'Urban church compound'
+FROM places p WHERE p.slug = 'st-george-church-bahir-dar'
+ON CONFLICT (place_id) DO UPDATE SET attraction_type = EXCLUDED.attraction_type;
+
+INSERT INTO attractions (place_id, attraction_type, entrance_fee, recommended_duration, best_time_to_visit, historical_information, safety_information, accessibility)
+SELECT p.id, 'nature', 0, '30–90 minutes by boat or shore', 'Morning or late afternoon',
+  'Outlet of Lake Tana into the Blue Nile — symbolic “head” of the Abay.',
+  'Boat operators only; do not approach wildlife; life jackets when offered.',
+  'Boat recommended; limited shore access'
+FROM places p WHERE p.slug = 'abay-ras-head-of-nile'
+ON CONFLICT (place_id) DO UPDATE SET attraction_type = EXCLUDED.attraction_type, historical_information = EXCLUDED.historical_information;
