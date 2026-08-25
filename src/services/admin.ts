@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { AdminMetrics, AdminUserRow } from '@/types/admin'
-import type { Place, Category } from '@/types/place'
+import type { Place, Category, TransportService } from '@/types/place'
 import type { Review } from '@/types/social'
 import type { PlaceClaim, BusinessProfile } from '@/types/business'
 
@@ -44,6 +44,14 @@ export type PlaceCreateInput = {
   staff_notes?: string | null
 }
 
+export type CategoryInput = {
+  name: string
+  slug: string
+  icon?: string | null
+  description?: string | null
+  sort_order?: number
+}
+
 export async function fetchMyRole(userId: string): Promise<string | null> {
   const { data, error } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle()
   if (error) {
@@ -60,6 +68,8 @@ export async function fetchAdminMetrics(): Promise<AdminMetrics & {
   reviewsPending: number
   businessesApproved: number
   businessesSuspended: number
+  categoriesTotal: number
+  transportTotal: number
 }> {
   const empty = {
     placesTotal: 0,
@@ -77,15 +87,19 @@ export async function fetchAdminMetrics(): Promise<AdminMetrics & {
     businessesSuspended: 0,
     reportsOpen: 0,
     usersApprox: 0,
+    categoriesTotal: 0,
+    transportTotal: 0,
   }
   try {
-    const [places, reviews, claims, businesses, reports, profiles] = await Promise.all([
+    const [places, reviews, claims, businesses, reports, profiles, cats, transport] = await Promise.all([
       supabase.from('places').select('id, status, verified, featured, deleted_at', { count: 'exact' }),
       supabase.from('reviews').select('id, status', { count: 'exact' }),
       supabase.from('place_claims').select('id', { count: 'exact' }).eq('status', 'pending'),
       supabase.from('business_profiles').select('id, status', { count: 'exact' }),
       supabase.from('review_reports').select('id', { count: 'exact' }).eq('status', 'open'),
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
+      supabase.from('categories').select('id', { count: 'exact', head: true }),
+      supabase.from('transport_services').select('id', { count: 'exact', head: true }),
     ])
 
     const placeRows = (places.data ?? []).filter((p) => !p.deleted_at)
@@ -108,6 +122,8 @@ export async function fetchAdminMetrics(): Promise<AdminMetrics & {
       businessesSuspended: bizRows.filter((b) => b.status === 'suspended').length,
       reportsOpen: reports.count ?? 0,
       usersApprox: profiles.count ?? 0,
+      categoriesTotal: cats.count ?? 0,
+      transportTotal: transport.count ?? 0,
     }
   } catch (e) {
     console.warn('fetchAdminMetrics:', e)
@@ -122,6 +138,81 @@ export async function fetchCategoriesForAdmin(): Promise<Category[]> {
     return []
   }
   return (data ?? []) as Category[]
+}
+
+export async function createCategory(input: CategoryInput): Promise<{ error: string | null; id?: string }> {
+  const { data, error } = await supabase
+    .from('categories')
+    .insert({
+      name: input.name.trim(),
+      slug: input.slug.trim().toLowerCase().replace(/\s+/g, '-'),
+      icon: input.icon ?? null,
+      description: input.description ?? null,
+      sort_order: input.sort_order ?? 99,
+    })
+    .select('id')
+    .single()
+  if (error) return { error: error.message }
+  return { error: null, id: data?.id }
+}
+
+export async function updateCategory(
+  id: string,
+  input: Partial<CategoryInput>
+): Promise<{ error: string | null }> {
+  const patch: Record<string, unknown> = {}
+  if (input.name != null) patch.name = input.name.trim()
+  if (input.slug != null) patch.slug = input.slug.trim().toLowerCase().replace(/\s+/g, '-')
+  if (input.icon !== undefined) patch.icon = input.icon
+  if (input.description !== undefined) patch.description = input.description
+  if (input.sort_order !== undefined) patch.sort_order = input.sort_order
+  const { error } = await supabase.from('categories').update(patch).eq('id', id)
+  return { error: error?.message ?? null }
+}
+
+export async function deleteCategory(id: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.from('categories').delete().eq('id', id)
+  return { error: error?.message ?? null }
+}
+
+export async function fetchTransportForAdmin(limit = 100): Promise<TransportService[]> {
+  const { data, error } = await supabase
+    .from('transport_services')
+    .select('*')
+    .order('updated_at', { ascending: false })
+    .limit(limit)
+  if (error) {
+    console.warn('fetchTransportForAdmin:', error.message)
+    return []
+  }
+  return (data ?? []) as TransportService[]
+}
+
+export async function setTransportVerified(
+  id: string,
+  verified: boolean
+): Promise<{ error: string | null }> {
+  const { error } = await supabase
+    .from('transport_services')
+    .update({ verified, last_price_updated_at: new Date().toISOString() })
+    .eq('id', id)
+  return { error: error?.message ?? null }
+}
+
+export async function updateTransportService(
+  id: string,
+  patch: Partial<{
+    service_type: string
+    provider_name: string
+    phone: string | null
+    estimated_price_min: number | null
+    estimated_price_max: number | null
+    route_description: string | null
+    verified: boolean
+  }>
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.from('transport_services').update(patch).eq('id', id)
+  return { error: error?.message ?? null }
 }
 
 export async function fetchPlacesForModeration(limit = 200): Promise<
@@ -215,7 +306,6 @@ export async function updatePlace(
   return { error: error?.message ?? null }
 }
 
-/** Soft delete — sets deleted_at, hides from public */
 export async function softDeletePlace(placeId: string): Promise<{ error: string | null }> {
   const { error } = await supabase
     .from('places')
@@ -232,7 +322,6 @@ export async function restorePlace(placeId: string): Promise<{ error: string | n
   return { error: error?.message ?? null }
 }
 
-/** Permanent delete — requires staff DELETE policy */
 export async function hardDeletePlace(placeId: string): Promise<{ error: string | null }> {
   const { error } = await supabase.from('places').delete().eq('id', placeId)
   return { error: error?.message ?? null }
@@ -404,7 +493,6 @@ export async function fetchOpenReports(limit = 80) {
     .limit(limit)
   if (error) {
     console.warn('fetchOpenReports:', error.message)
-    // Fallback without complex joins
     const { data: simple, error: e2 } = await supabase
       .from('review_reports')
       .select('*, review:reviews(id, comment, rating, place_id, status)')
@@ -440,7 +528,6 @@ export async function fetchAdminUsers(limit = 150): Promise<AdminUserRow[]> {
   return (data ?? []) as AdminUserRow[]
 }
 
-/** Roles must match DB enum user_role */
 export const PROFILE_ROLES = [
   'visitor',
   'business_owner',
