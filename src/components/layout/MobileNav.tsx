@@ -19,13 +19,14 @@ export function MobileNav() {
     <>
       <Link
         to="/ai-guide"
-        className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#078930] via-[#0b6e99] to-[#d4a017] text-white shadow-lg ring-2 ring-[#f5c518]/40 lg:hidden"
+        className="bottom-fab-safe fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#078930] via-[#0b6e99] to-[#d4a017] text-white shadow-lg ring-2 ring-[#f5c518]/40 lg:hidden"
+        style={{ marginRight: 'env(safe-area-inset-right, 0px)' }}
         aria-label={t.nav.aiGuide}
       >
         <Sparkles className="h-6 w-6" />
       </Link>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#078930]/15 bg-[#faf8f5]/95 backdrop-blur dark:border-[#078930]/25 dark:bg-slate-950/95 lg:hidden">
-        <div className="flex items-center justify-around px-2 py-1">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#078930]/15 bg-[#faf8f5]/95 pb-safe backdrop-blur dark:border-[#078930]/25 dark:bg-slate-950/95 lg:hidden">
+        <div className="flex items-center justify-around px-2 py-1.5">
           {items.map(({ path, icon: Icon, label }) => {
             const active = location.pathname === path
             return (
@@ -33,7 +34,7 @@ export function MobileNav() {
                 key={path}
                 to={path}
                 className={cn(
-                  'flex flex-1 flex-col items-center gap-0.5 rounded-lg py-2 text-xs font-medium',
+                  'flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg py-1.5 text-xs font-medium',
                   active ? 'text-[#078930] dark:text-[#7dcea0]' : 'text-slate-500 dark:text-slate-400'
                 )}
               >
