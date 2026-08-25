@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import type { Place } from '@/types/place'
+import type { Place, Category } from '@/types/place'
 import type { PlaceEditInput } from '@/services/admin'
 
 type PlaceRow = Place & { staff_notes?: string | null; deleted_at?: string | null }
 
 interface Props {
   place: PlaceRow
+  categories?: Category[]
   onSave: (data: PlaceEditInput) => Promise<void>
   onCancel: () => void
   saving?: boolean
 }
 
-export function PlaceEditor({ place, onSave, onCancel, saving }: Props) {
+export function PlaceEditor({ place, categories = [], onSave, onCancel, saving }: Props) {
   const [name, setName] = useState(place.name)
   const [slug, setSlug] = useState(place.slug)
+  const [categoryId, setCategoryId] = useState(place.category_id ?? '')
   const [shortDescription, setShortDescription] = useState(place.short_description ?? '')
   const [description, setDescription] = useState(place.description ?? '')
   const [address, setAddress] = useState(place.address ?? '')
@@ -35,6 +37,7 @@ export function PlaceEditor({ place, onSave, onCancel, saving }: Props) {
   useEffect(() => {
     setName(place.name)
     setSlug(place.slug)
+    setCategoryId(place.category_id ?? '')
     setShortDescription(place.short_description ?? '')
     setDescription(place.description ?? '')
     setAddress(place.address ?? '')
@@ -69,6 +72,7 @@ export function PlaceEditor({ place, onSave, onCancel, saving }: Props) {
         await onSave({
           name,
           slug,
+          category_id: categoryId || undefined,
           short_description: shortDescription || null,
           description: description || null,
           address: address || null,
@@ -90,6 +94,15 @@ export function PlaceEditor({ place, onSave, onCancel, saving }: Props) {
       <div className="grid gap-3 sm:grid-cols-2">
         {field('Name', <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required />)}
         {field('Slug', <input className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} />)}
+        {field(
+          'Category',
+          <select className={inputClass} value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+            <option value="">—</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        )}
         {field(
           'Status',
           <select className={inputClass} value={status} onChange={(e) => setStatus(e.target.value as Place['status'])}>
