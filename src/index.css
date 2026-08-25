@@ -2,9 +2,27 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+  Digital Bahir Dar — Ethiopian design tokens
+  Flag-inspired green / gold / red · Lake Tana blue · coffee earth
+*/
 @theme {
-  --font-sans: "Inter", "Noto Sans Ethiopic", ui-sans-serif, system-ui, sans-serif;
-  --color-sky-500: #0ea5e9;
+  --font-sans: "Noto Sans Ethiopic", "Inter", "Noto Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --color-ethio-green: #078930;
+  --color-ethio-green-dark: #056b24;
+  --color-ethio-gold: #f5c518;
+  --color-ethio-gold-deep: #d4a017;
+  --color-ethio-red: #da121a;
+  --color-tana-blue: #0b6e99;
+  --color-tana-deep: #0a4d6e;
+  --color-coffee: #6f4e37;
+  --color-coffee-light: #c4a574;
+  --color-injera: #f3e6c8;
+
+  --color-sky-500: #0b6e99;
+  --color-sky-600: #0a5a7e;
+  --color-sky-700: #084866;
 }
 
 html,
@@ -24,17 +42,46 @@ html.dark {
 body {
   min-width: 320px;
   font-family: var(--font-sans);
-  @apply bg-white text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+  @apply bg-[#faf8f5] text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
 }
 
-/* Smooth theme transition for chrome surfaces */
 body,
 header,
 nav {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
 }
 
-/* a11y */
+.ethio-flag-bar {
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    #078930 0% 33.33%,
+    #f5c518 33.33% 66.66%,
+    #da121a 66.66% 100%
+  );
+}
+
+.ethio-mesh {
+  background-image:
+    linear-gradient(135deg, rgba(7, 137, 48, 0.08) 25%, transparent 25%),
+    linear-gradient(225deg, rgba(245, 197, 24, 0.07) 25%, transparent 25%),
+    linear-gradient(45deg, rgba(11, 110, 153, 0.06) 25%, transparent 25%);
+  background-size: 24px 24px;
+}
+
+.ethio-title {
+  @apply relative inline-block font-semibold tracking-tight;
+}
+.ethio-title::after {
+  content: "";
+  display: block;
+  margin-top: 0.35rem;
+  height: 3px;
+  width: 2.5rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f5c518, #078930);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -58,7 +105,6 @@ nav {
   white-space: normal;
 }
 
-/* Dark scrollbars (webkit) */
 .dark ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -68,7 +114,6 @@ nav {
   border-radius: 4px;
 }
 
-/* Leaflet — fill map containers and sit under app chrome */
 .leaflet-container {
   height: 100%;
   width: 100%;
