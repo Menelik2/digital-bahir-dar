@@ -28,13 +28,16 @@ export function Header() {
   ]
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/90">
+    <header className="sticky top-0 z-50 border-b border-[#078930]/15 bg-[#faf8f5]/90 backdrop-blur-md dark:border-[#078930]/25 dark:bg-slate-950/90">
+      <div className="ethio-flag-bar" aria-hidden />
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link
           to="/"
-          className="flex shrink-0 items-center gap-2 font-bold text-sky-600 dark:text-sky-400"
+          className="flex shrink-0 items-center gap-2 font-bold text-[#078930] dark:text-[#7dcea0]"
         >
-          <MapPin className="h-6 w-6" />
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#078930] to-[#0b6e99] text-white shadow-sm">
+            <MapPin className="h-4 w-4" />
+          </span>
           <span className="hidden sm:inline">{t.appName}</span>
           <span className="sm:hidden">DBD</span>
         </Link>
@@ -47,8 +50,8 @@ export function Header() {
               className={cn(
                 'rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
                 location.pathname === item.path
-                  ? 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300'
-                  : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
+                  ? 'bg-[#078930]/12 text-[#056b24] dark:bg-[#078930]/25 dark:text-[#7dcea0]'
+                  : 'text-slate-600 hover:bg-[#078930]/8 dark:text-slate-300 dark:hover:bg-slate-800'
               )}
             >
               {item.label}
@@ -91,7 +94,7 @@ export function Header() {
                 className={cn(
                   'rounded-lg px-3 py-2.5 text-sm font-medium',
                   location.pathname === item.path
-                    ? 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300'
+                    ? 'bg-[#078930]/12 text-[#056b24] dark:bg-[#078930]/25 dark:text-[#7dcea0]'
                     : 'text-slate-600 dark:text-slate-300'
                 )}
               >
@@ -115,7 +118,7 @@ export function Header() {
             <Link
               to="/auth"
               onClick={() => setMobileOpen(false)}
-              className="rounded-lg px-3 py-2.5 text-sm font-medium text-sky-600 dark:text-sky-400"
+              className="rounded-lg px-3 py-2.5 text-sm font-medium text-[#078930] dark:text-[#7dcea0]"
             >
               {t.nav.login}
             </Link>
