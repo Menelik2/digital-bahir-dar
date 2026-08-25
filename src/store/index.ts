@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 
 interface LocationState {
   latitude: number | null
@@ -28,14 +28,25 @@ interface AppState {
 
 const BAHIR_DAR = { lat: 11.5936, lng: 37.3908 }
 
+function normalizeTheme(value: unknown): 'light' | 'dark' {
+  return value === 'dark' ? 'dark' : 'light'
+}
+
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
       location: { latitude: null, longitude: null, accuracy: null, permission: 'prompt', lastUpdated: null },
       setLocation: (loc) => set((s) => ({ location: { ...s.location, ...loc } })),
-      // Always start in light mode; user can switch to dark
       theme: 'light',
-      setTheme: (theme) => set({ theme }),
+      setTheme: (theme) => {
+        const next = normalizeTheme(theme)
+        try {
+          localStorage.setItem('dbd-theme', next)
+        } catch {
+          /* ignore */
+        }
+        set({ theme: next })
+      },
       language: 'en',
       setLanguage: (language) => set({ language }),
       currency: 'ETB',
@@ -49,16 +60,32 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'digital-bahir-dar',
-      partialize: (s) => ({ theme: s.theme, language: s.language, currency: s.currency }),
-      // Migrate old 'system' preference → light
+      storage: createJSONStorage(() => localStorage),
+      partialize: (s) => ({
+        theme: s.theme,
+        language: s.language,
+        currency: s.currency,
+      }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<AppState>
-        const theme =
-          p.theme === 'dark' ? 'dark' : 'light'
         return {
           ...current,
           ...p,
-          theme,
+          theme: normalizeTheme(p.theme),
+        }
+      },
+      onRehydrateStorage: () => (state) => {
+        if (!state) return
+        const theme = normalizeTheme(state.theme)
+        try {
+          localStorage.setItem('dbd-theme', theme)
+        } catch {
+          /* ignore */
+        }
+        if (typeof document !== 'undefined') {
+          const root = document.documentElement
+          root.classList.toggle('dark', theme === 'dark')
+          root.style.colorScheme = theme === 'dark' ? 'dark' : 'light'
         }
       },
     }

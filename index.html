@@ -23,6 +23,32 @@
       rel="stylesheet"
     />
     <title>Digital Bahir Dar 🇪🇹</title>
+    <!-- Apply saved theme before first paint (avoids flash) -->
+    <script>
+      (function () {
+        try {
+          var theme = 'light'
+          var raw = localStorage.getItem('dbd-theme')
+          if (raw === 'dark' || raw === 'light') {
+            theme = raw
+          } else {
+            var store = localStorage.getItem('digital-bahir-dar')
+            if (store) {
+              var parsed = JSON.parse(store)
+              var t = parsed && parsed.state && parsed.state.theme
+              if (t === 'dark') theme = 'dark'
+            }
+          }
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark')
+            document.documentElement.style.colorScheme = 'dark'
+          } else {
+            document.documentElement.classList.remove('dark')
+            document.documentElement.style.colorScheme = 'light'
+          }
+        } catch (e) {}
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
