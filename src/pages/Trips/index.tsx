@@ -20,12 +20,16 @@ import { BAHIR_DAR_ITINERARIES, type GuideItinerary } from '@/data/itineraries'
 import type { Trip } from '@/types/trip'
 import { cn } from '@/lib/utils'
 import { parseTripCreate, type FieldErrors } from '@/lib/tripValidation'
+import { useT } from '@/hooks/useT'
+import { useAppStore } from '@/store'
+import { usePlaceholders } from '@/i18n/formPlaceholders'
 
 function isDemoTrip(id: string) {
   return id.startsWith('demo-') || id.startsWith('guide-')
 }
 
 function TripCard({ trip, onDelete }: { trip: Trip; onDelete: (id: string) => void }) {
+  const t = useT()
   return (
     <Card className="overflow-hidden border-[#078930]/10 transition hover:shadow-md">
       <Link to={`/trips/${trip.id}`}>
@@ -68,10 +72,10 @@ function TripCard({ trip, onDelete }: { trip: Trip; onDelete: (id: string) => vo
             className="text-red-600"
             onClick={(e) => {
               e.preventDefault()
-              if (confirm('Delete this trip?')) onDelete(trip.id)
+              if (confirm(t.common.delete + '?')) onDelete(trip.id)
             }}
           >
-            <Trash2 className="h-3.5 w-3.5" /> Delete
+            <Trash2 className="h-3.5 w-3.5" /> {t.common.delete}
           </Button>
         </div>
       )}
@@ -93,12 +97,12 @@ function GuideCard({ guide }: { guide: GuideItinerary }) {
           </div>
           <p className="mb-3 line-clamp-2 text-sm text-slate-500">{guide.subtitle}</p>
           <div className="mb-3 flex flex-wrap gap-1.5">
-            {guide.tags.slice(0, 3).map((t) => (
+            {guide.tags.slice(0, 3).map((tag) => (
               <span
-                key={t}
+                key={tag}
                 className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] capitalize text-slate-600 dark:bg-slate-800 dark:text-slate-300"
               >
-                {t.replace('-', ' ')}
+                {tag.replace('-', ' ')}
               </span>
             ))}
           </div>
@@ -126,6 +130,9 @@ function GuideCard({ guide }: { guide: GuideItinerary }) {
 }
 
 export default function TripsPage() {
+  const t = useT()
+  const language = useAppStore((s) => s.language)
+  const placeholders = usePlaceholders(language)
   const { isAuthenticated, loading: authLoading } = useAuth()
   const { data: trips = [], isLoading } = useMyTrips()
   const createMut = useCreateTrip()
@@ -138,21 +145,21 @@ export default function TripsPage() {
   const [formErrors, setFormErrors] = useState<FieldErrors>({})
   const [formMessage, setFormMessage] = useState<string | null>(null)
 
-  const personalTrips = trips.filter((t) => !isDemoTrip(t.id))
+  const personalTrips = trips.filter((tr) => !isDemoTrip(tr.id))
 
   const guides = tagFilter
     ? BAHIR_DAR_ITINERARIES.filter((g) => g.tags.includes(tagFilter as GuideItinerary['tags'][number]))
     : BAHIR_DAR_ITINERARIES
 
   const tagOptions = [
-    { id: null, label: 'All plans' },
-    { id: 'first-visit', label: 'First visit' },
-    { id: 'weekend', label: 'Weekend' },
-    { id: 'budget', label: 'Budget' },
-    { id: 'nature', label: 'Nature' },
-    { id: 'culture', label: 'Culture' },
-    { id: 'slow', label: 'Slow' },
-  ] as const
+    { id: null as string | null, label: t.common.all },
+    { id: 'first-visit', label: language === 'am' ? 'መጀመሪያ ጉብኝት' : 'First visit' },
+    { id: 'weekend', label: language === 'am' ? 'ሳምንት መጨረሻ' : 'Weekend' },
+    { id: 'budget', label: t.list.budget },
+    { id: 'nature', label: t.planner.nature },
+    { id: 'culture', label: t.planner.culture },
+    { id: 'slow', label: language === 'am' ? 'ዝግ' : 'Slow' },
+  ]
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -173,7 +180,7 @@ export default function TripsPage() {
       setFormMessage(null)
       window.location.href = `/trips/${trip.id}`
     } catch (err) {
-      setFormMessage(err instanceof Error ? err.message : 'Could not create trip')
+      setFormMessage(err instanceof Error ? err.message : t.common.error)
     }
   }
 
@@ -188,16 +195,16 @@ export default function TripsPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-6 sm:py-8">
       <div className="mb-5">
-        <h1 className="text-2xl font-bold sm:text-3xl">My Trips</h1>
-        <p className="text-sm text-slate-500 sm:text-base">Plan and save your Bahir Dar itinerary</p>
+        <h1 className="text-2xl font-bold sm:text-3xl">{t.trips.title}</h1>
+        <p className="text-sm text-slate-500 sm:text-base">{t.trips.subtitle}</p>
       </div>
 
       <section className="mb-8">
         <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="ethio-title text-lg font-semibold">New trip</h2>
+          <h2 className="ethio-title text-lg font-semibold">{t.trips.newTrip}</h2>
           {isAuthenticated && !showForm && (
             <Button size="sm" onClick={() => setShowForm(true)}>
-              <Plus className="h-4 w-4" /> Create
+              <Plus className="h-4 w-4" /> {t.common.create}
             </Button>
           )}
         </div>
@@ -206,12 +213,10 @@ export default function TripsPage() {
           <Card className="border-dashed border-[#078930]/30">
             <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
               <MapPin className="h-10 w-10 text-[#078930]/40" />
-              <p className="max-w-md text-sm text-slate-500">
-                Sign in to create and save private trips, track expenses, and manage budgets.
-              </p>
+              <p className="max-w-md text-sm text-slate-500">{t.trips.loginBody}</p>
               <Link to="/auth">
                 <Button>
-                  <Plus className="h-4 w-4" /> Log in to create a trip
+                  <Plus className="h-4 w-4" /> {t.trips.loginToSave}
                 </Button>
               </Link>
             </CardContent>
@@ -224,9 +229,7 @@ export default function TripsPage() {
             className="space-y-3 rounded-2xl border border-[#078930]/20 bg-white p-4 shadow-sm dark:border-[#078930]/30 dark:bg-slate-900"
             noValidate
           >
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-              Start a personal itinerary
-            </p>
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{t.trips.newTrip}</p>
             {formMessage && (
               <p
                 className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300"
@@ -242,7 +245,7 @@ export default function TripsPage() {
                   setTitle(e.target.value)
                   if (formErrors.title) setFormErrors((prev) => ({ ...prev, title: undefined }))
                 }}
-                placeholder="Trip title (e.g. Weekend in Bahir Dar)"
+                placeholder={placeholders.tripTitle}
                 className={cn(
                   'w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-[#078930] dark:bg-slate-950',
                   formErrors.title
@@ -269,7 +272,7 @@ export default function TripsPage() {
                     if (formErrors.budget_total)
                       setFormErrors((prev) => ({ ...prev, budget_total: undefined }))
                   }}
-                  placeholder="Budget (ETB)"
+                  placeholder={placeholders.tripBudget}
                   className={cn(
                     'w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-[#078930] dark:bg-slate-950',
                     formErrors.budget_total
@@ -294,7 +297,7 @@ export default function TripsPage() {
                     if (formErrors.traveler_count)
                       setFormErrors((prev) => ({ ...prev, traveler_count: undefined }))
                   }}
-                  placeholder="Travelers"
+                  placeholder={placeholders.tripTravelers}
                   className={cn(
                     'w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-[#078930] dark:bg-slate-950',
                     formErrors.traveler_count
@@ -312,11 +315,11 @@ export default function TripsPage() {
               <Button type="submit" disabled={createMut.isPending} className="w-full sm:w-auto" size="lg">
                 {createMut.isPending ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Creating…
+                    <Loader2 className="h-4 w-4 animate-spin" /> {t.common.loading}
                   </>
                 ) : (
                   <>
-                    <Plus className="h-4 w-4" /> Create trip
+                    <Plus className="h-4 w-4" /> {t.trips.newTrip}
                   </>
                 )}
               </Button>
@@ -327,7 +330,7 @@ export default function TripsPage() {
                   className="w-full sm:w-auto"
                   onClick={() => setShowForm(false)}
                 >
-                  Cancel
+                  {t.common.cancel}
                 </Button>
               )}
             </div>
@@ -336,13 +339,13 @@ export default function TripsPage() {
 
         {isAuthenticated && !showForm && personalTrips.length === 0 && (
           <Button className="w-full sm:w-auto" size="lg" onClick={() => setShowForm(true)}>
-            <Plus className="h-4 w-4" /> Create your first trip
+            <Plus className="h-4 w-4" /> {t.trips.newTrip}
           </Button>
         )}
       </section>
 
       <section className="mb-10">
-        <h2 className="ethio-title mb-3 text-lg font-semibold">Your saved trips</h2>
+        <h2 className="ethio-title mb-3 text-lg font-semibold">{t.trips.yourTrips}</h2>
 
         {isAuthenticated && isLoading && (
           <div className="flex justify-center py-12">
@@ -353,21 +356,21 @@ export default function TripsPage() {
         {isAuthenticated && !isLoading && personalTrips.length === 0 && (
           <Card className="border-dashed">
             <CardContent className="py-8 text-center">
-              <p className="text-sm text-slate-500">No saved trips yet. Create one above to get started.</p>
+              <p className="text-sm text-slate-500">{t.trips.noTrips}</p>
             </CardContent>
           </Card>
         )}
 
         {isAuthenticated && !isLoading && personalTrips.length > 0 && (
           <div className="grid gap-3 sm:grid-cols-2">
-            {personalTrips.map((t) => (
-              <TripCard key={t.id} trip={t} onDelete={(id) => deleteMut.mutate(id)} />
+            {personalTrips.map((tr) => (
+              <TripCard key={tr.id} trip={tr} onDelete={(id) => deleteMut.mutate(id)} />
             ))}
           </div>
         )}
 
         {!isAuthenticated && (
-          <p className="text-sm text-slate-500">Log in to see trips you have saved.</p>
+          <p className="text-sm text-slate-500">{t.trips.loginToSave}</p>
         )}
       </section>
 
@@ -378,10 +381,10 @@ export default function TripsPage() {
               <Sparkles className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-slate-900 dark:text-white">AI Trip Planner</p>
-              <p className="text-sm text-slate-500">Build a day-by-day plan in about 30 seconds</p>
+              <p className="font-semibold text-slate-900 dark:text-white">{t.trips.plannerCta}</p>
+              <p className="text-sm text-slate-500">{t.trips.plannerCtaBody}</p>
             </div>
-            <span className="text-sm font-medium text-[#0b6e99]">Open →</span>
+            <span className="text-sm font-medium text-[#0b6e99]">{t.trips.openPlanner}</span>
           </CardContent>
         </Card>
       </Link>
@@ -389,25 +392,23 @@ export default function TripsPage() {
       <section>
         <div className="mb-3 flex items-center gap-2">
           <Compass className="h-5 w-5 text-[#078930]" />
-          <h2 className="text-lg font-semibold">Ready-made Bahir Dar plans</h2>
+          <h2 className="text-lg font-semibold">{t.trips.readyMade}</h2>
         </div>
-        <p className="mb-3 text-sm text-slate-500">
-          Browse example day plans anytime. Create your own trip above to save and edit.
-        </p>
+        <p className="mb-3 text-sm text-slate-500">{t.trips.readyMadeBody}</p>
         <div className="mb-4 flex flex-wrap gap-2">
-          {tagOptions.map((t) => (
+          {tagOptions.map((opt) => (
             <button
-              key={String(t.id)}
+              key={String(opt.id)}
               type="button"
-              onClick={() => setTagFilter(t.id)}
+              onClick={() => setTagFilter(opt.id)}
               className={cn(
                 'rounded-full border px-3 py-1.5 text-xs font-medium transition',
-                tagFilter === t.id
+                tagFilter === opt.id
                   ? 'border-[#078930] bg-[#078930] text-white'
                   : 'border-slate-200 bg-white text-slate-600 hover:border-[#078930]/40 dark:border-slate-700 dark:bg-slate-900'
               )}
             >
-              {t.label}
+              {opt.label}
             </button>
           ))}
         </div>
