@@ -48,64 +48,66 @@ export default function HomePage() {
       title: t.home.stay,
       body: t.home.stayBody,
       icon: Hotel,
-      gradient: 'from-blue-500 to-sky-600',
-      ring: 'hover:ring-blue-300',
+      gradient: 'from-[#0b6e99] to-[#0a4d6e]',
+      ring: 'hover:ring-[#0b6e99]/40',
     },
     {
       to: '/restaurants',
       title: t.home.eat,
       body: t.home.eatBody,
       icon: UtensilsCrossed,
-      gradient: 'from-orange-500 to-amber-600',
-      ring: 'hover:ring-orange-300',
+      gradient: 'from-[#c4a574] to-[#6f4e37]',
+      ring: 'hover:ring-[#c4a574]/50',
     },
     {
       to: '/transport',
       title: t.home.go,
       body: t.home.goBody,
       icon: Car,
-      gradient: 'from-violet-500 to-purple-600',
-      ring: 'hover:ring-violet-300',
+      gradient: 'from-[#078930] to-[#056b24]',
+      ring: 'hover:ring-[#078930]/40',
     },
     {
       to: '/today',
       title: t.home.see,
       body: t.home.seeBody,
       icon: Sun,
-      gradient: 'from-teal-500 to-emerald-600',
-      ring: 'hover:ring-teal-300',
+      gradient: 'from-[#d4a017] to-[#b8860b]',
+      ring: 'hover:ring-[#f5c518]/50',
     },
   ] as const
 
   const moreTools = [
-    { label: t.nav.today, icon: Sun, path: '/today', color: 'bg-amber-50 text-amber-700' },
-    { label: t.nav.planner, icon: Sparkles, path: '/trip-planner', color: 'bg-sky-50 text-sky-700' },
-    { label: t.home.thingsToDo, icon: ListTodo, path: '/todo', color: 'bg-sky-50 text-sky-700' },
-    { label: t.nav.discover, icon: Compass, path: '/discover', color: 'bg-teal-50 text-teal-700' },
-    { label: t.nav.explore, icon: Search, path: '/explore', color: 'bg-sky-50 text-sky-700' },
-    { label: t.nav.map, icon: Navigation, path: '/map', color: 'bg-emerald-50 text-emerald-700' },
-    { label: t.nav.attractions, icon: Landmark, path: '/attractions', color: 'bg-emerald-50 text-emerald-600' },
-    { label: t.nav.banks, icon: Building2, path: '/banks', color: 'bg-indigo-50 text-indigo-600' },
-    { label: 'ATM', icon: CreditCard, path: '/banks', color: 'bg-cyan-50 text-cyan-600' },
-    { label: t.nav.city, icon: Building, path: '/city', color: 'bg-slate-100 text-slate-700' },
-    { label: t.nav.events, icon: Calendar, path: '/events', color: 'bg-purple-50 text-purple-600' },
-    { label: t.nav.guides, icon: Users, path: '/guides', color: 'bg-teal-50 text-teal-600' },
-    { label: t.home.emergency, icon: AlertTriangle, path: '/directory#emergency', color: 'bg-rose-50 text-rose-600' },
+    { label: t.nav.today, icon: Sun, path: '/today', color: 'bg-[#f5c518]/20 text-[#8a6d0b]' },
+    { label: t.nav.planner, icon: Sparkles, path: '/trip-planner', color: 'bg-[#0b6e99]/12 text-[#0b6e99]' },
+    { label: t.home.thingsToDo, icon: ListTodo, path: '/todo', color: 'bg-[#078930]/12 text-[#078930]' },
+    { label: t.nav.discover, icon: Compass, path: '/discover', color: 'bg-[#078930]/10 text-[#056b24]' },
+    { label: t.nav.explore, icon: Search, path: '/explore', color: 'bg-[#0b6e99]/10 text-[#0a5a7e]' },
+    { label: t.nav.map, icon: Navigation, path: '/map', color: 'bg-[#078930]/12 text-[#078930]' },
+    { label: t.nav.attractions, icon: Landmark, path: '/attractions', color: 'bg-[#d4a017]/15 text-[#8a6d0b]' },
+    { label: t.nav.banks, icon: Building2, path: '/banks', color: 'bg-slate-100 text-slate-700' },
+    { label: 'ATM', icon: CreditCard, path: '/banks', color: 'bg-[#0b6e99]/10 text-[#0b6e99]' },
+    { label: t.nav.city, icon: Building, path: '/city', color: 'bg-[#f3e6c8]/60 text-[#6f4e37]' },
+    { label: t.nav.events, icon: Calendar, path: '/events', color: 'bg-[#da121a]/10 text-[#da121a]' },
+    { label: t.nav.guides, icon: Users, path: '/guides', color: 'bg-[#078930]/10 text-[#056b24]' },
+    { label: t.home.emergency, icon: AlertTriangle, path: '/directory#emergency', color: 'bg-[#da121a]/12 text-[#da121a]' },
   ]
 
   return (
     <div>
-      <section className="relative overflow-hidden bg-gradient-to-br from-sky-600 via-sky-500 to-teal-600 px-4 py-14 text-white sm:py-20">
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#056b24] via-[#0b6e99] to-[#0a4d6e] px-4 py-14 text-white sm:py-20">
+        <div className="ethio-flag-bar absolute inset-x-0 top-0" aria-hidden />
+        <div className="ethio-mesh pointer-events-none absolute inset-0 opacity-60" aria-hidden />
         <div className="relative mx-auto max-w-4xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium">
-            <MapPin className="h-4 w-4" /> {t.home.badge}
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
+            <MapPin className="h-4 w-4 text-[#f5c518]" /> {t.home.badge}
           </div>
           <h1 className="mb-3 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">{t.home.title}</h1>
-          <p className="mx-auto mb-6 max-w-2xl text-lg text-sky-100 sm:text-xl">{t.tagline}</p>
-          <p className="mx-auto mb-8 max-w-lg text-sm text-sky-100/90">{t.home.heroHint}</p>
+          <p className="mx-auto mb-2 max-w-2xl text-lg text-[#f5c518]/95 sm:text-xl">{t.tagline}</p>
+          <p className="mx-auto mb-8 max-w-lg text-sm text-white/85">{t.home.heroHint}</p>
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link to="/today">
-              <Button size="lg" className="w-full bg-white text-sky-700 hover:bg-sky-50 sm:w-auto">
+              <Button size="lg" className="w-full bg-[#f5c518] text-[#3d3200] hover:bg-[#e6b800] sm:w-auto">
                 <Sun className="h-5 w-5" /> {t.home.todayTitle}
               </Button>
             </Link>
@@ -129,14 +131,14 @@ export default function HomePage() {
 
       <section className="mx-auto max-w-6xl px-4 py-10">
         <div className="mb-5">
-          <h2 className="text-xl font-semibold sm:text-2xl">{t.home.whatNeed}</h2>
-          <p className="text-sm text-slate-500">{t.home.whatNeedSub}</p>
+          <h2 className="ethio-title text-xl sm:text-2xl">{t.home.whatNeed}</h2>
+          <p className="mt-2 text-sm text-slate-500">{t.home.whatNeedSub}</p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {desk.map((item) => (
             <Link key={item.to} to={item.to} className="group block h-full">
               <Card
-                className={`h-full overflow-hidden transition hover:shadow-lg hover:ring-2 ${item.ring}`}
+                className={`h-full overflow-hidden border-[#078930]/10 transition hover:shadow-lg hover:ring-2 ${item.ring}`}
               >
                 <div className={`bg-gradient-to-br ${item.gradient} px-4 py-5 text-white`}>
                   <item.icon className="mb-2 h-8 w-8 opacity-95" />
@@ -144,7 +146,7 @@ export default function HomePage() {
                 </div>
                 <CardContent className="flex items-center justify-between gap-2 p-4">
                   <p className="text-sm text-slate-600 dark:text-slate-300">{item.body}</p>
-                  <ChevronRight className="h-5 w-5 shrink-0 text-slate-300 transition group-hover:text-sky-500" />
+                  <ChevronRight className="h-5 w-5 shrink-0 text-slate-300 transition group-hover:text-[#078930]" />
                 </CardContent>
               </Card>
             </Link>
@@ -152,24 +154,24 @@ export default function HomePage() {
         </div>
 
         <Link to="/today" className="mt-4 block">
-          <Card className="overflow-hidden border-amber-200 bg-gradient-to-r from-amber-50 to-sky-50 transition hover:border-amber-400 dark:border-amber-900 dark:from-amber-950/30 dark:to-sky-950/30">
+          <Card className="overflow-hidden border-[#f5c518]/50 bg-gradient-to-r from-[#f5c518]/15 via-[#faf8f5] to-[#078930]/10 transition hover:border-[#f5c518] dark:border-[#f5c518]/30 dark:from-[#f5c518]/10 dark:to-[#078930]/15">
             <CardContent className="flex flex-wrap items-center gap-4 p-4 sm:p-5">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-400/90 text-amber-950">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#f5c518] text-[#3d3200">
                 <Sun className="h-6 w-6" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-semibold text-slate-900 dark:text-white">{t.home.todayTitle}</p>
                 <p className="text-sm text-slate-500">{t.home.todayBody}</p>
               </div>
-              <span className="text-sm font-medium text-amber-800 dark:text-amber-200">{t.home.openPlan}</span>
+              <span className="text-sm font-medium text-[#056b24] dark:text-[#7dcea0]">{t.home.openPlan}</span>
             </CardContent>
           </Card>
         </Link>
       </section>
 
-      <section className="border-t border-slate-100 bg-slate-50 px-4 py-8 dark:border-slate-800 dark:bg-slate-900/40">
+      <section className="border-t border-[#078930]/10 bg-[#f3e6c8]/35 px-4 py-8 dark:border-[#078930]/20 dark:bg-slate-900/40">
         <div className="mx-auto max-w-6xl">
-          <h2 className="mb-4 text-lg font-semibold text-slate-700 dark:text-slate-200">{t.home.moreTools}</h2>
+          <h2 className="ethio-title mb-4 text-lg text-slate-700 dark:text-slate-200">{t.home.moreTools}</h2>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7">
             {moreTools.map((a) => (
               <Link key={a.path + a.label} to={a.path}>
@@ -192,17 +194,17 @@ export default function HomePage() {
       <section className="px-4 py-10">
         <div className="mx-auto max-w-6xl">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-semibold">{t.home.happening}</h2>
-            <Link to="/events" className="text-sm font-medium text-sky-600 hover:underline">
+            <h2 className="ethio-title text-xl">{t.home.happening}</h2>
+            <Link to="/events" className="text-sm font-medium text-[#078930] hover:underline">
               {t.home.allEvents}
             </Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             {upcoming.map((e) => (
               <Link key={e.id} to="/events">
-                <Card className="h-full transition hover:shadow-md">
+                <Card className="h-full border-[#078930]/10 transition hover:shadow-md">
                   <CardContent className="p-4">
-                    <p className="text-xs font-medium uppercase tracking-wide text-sky-600">{e.dateLabel}</p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-[#0b6e99]">{e.dateLabel}</p>
                     <h3 className="mt-1 font-semibold">{e.title}</h3>
                     <p className="mt-1 line-clamp-2 text-sm text-slate-500">{e.description}</p>
                   </CardContent>
@@ -213,13 +215,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-slate-50 px-4 py-10 dark:bg-slate-900/50">
+      <section className="bg-[#f3e6c8]/25 px-4 py-10 dark:bg-slate-900/50">
         <div className="mx-auto max-w-6xl">
-          <h2 className="mb-6 text-xl font-semibold">{t.home.featured}</h2>
+          <h2 className="ethio-title mb-6 text-xl">{t.home.featured}</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Link to="/places/lake-tana">
               <Card className="overflow-hidden transition hover:shadow-lg">
-                <div className="relative h-40 bg-sky-200">
+                <div className="relative h-40 bg-[#0b6e99]/30">
                   <img src={LAKE_TANA_IMG} alt="" className="h-full w-full object-cover" loading="lazy" />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                 </div>
@@ -231,7 +233,7 @@ export default function HomePage() {
             </Link>
             <Link to="/places/blue-nile-falls-tis-issat">
               <Card className="overflow-hidden transition hover:shadow-lg">
-                <div className="relative h-40 bg-emerald-200">
+                <div className="relative h-40 bg-[#078930]/20">
                   <img src={FALLS_IMG} alt="" className="h-full w-full object-cover" loading="lazy" />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                 </div>
@@ -243,7 +245,7 @@ export default function HomePage() {
             </Link>
             <Link to="/todo">
               <Card className="overflow-hidden transition hover:shadow-lg">
-                <div className="relative h-40 bg-violet-200">
+                <div className="relative h-40 bg-[#d4a017]/20">
                   <img src={CITY_IMG} alt="" className="h-full w-full object-cover" loading="lazy" />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 </div>
@@ -259,17 +261,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-t border-slate-200 bg-white px-4 py-10 dark:border-slate-800 dark:bg-slate-950">
+      <section className="border-t border-[#078930]/10 bg-white px-4 py-10 dark:border-slate-800 dark:bg-slate-950">
         <div className="mx-auto max-w-6xl">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-semibold">{t.home.travelSmart}</h2>
-            <Link to="/directory" className="text-sm font-medium text-sky-600 hover:underline">
+            <h2 className="ethio-title text-xl">{t.home.travelSmart}</h2>
+            <Link to="/directory" className="text-sm font-medium text-[#078930] hover:underline">
               {t.home.fullDirectory}
             </Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             {tips.map((tip) => (
-              <Card key={tip.id}>
+              <Card key={tip.id} className="border-[#078930]/10">
                 <CardContent className="p-4">
                   <h3 className="font-semibold">{tip.title}</h3>
                   <p className="mt-1 text-sm text-slate-500">{tip.body}</p>
