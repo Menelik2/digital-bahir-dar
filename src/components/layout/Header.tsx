@@ -28,7 +28,7 @@ export function Header() {
   ]
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#078930]/15 bg-[#faf8f5]/90 backdrop-blur-md dark:border-[#078930]/25 dark:bg-slate-950/90">
+    <header className="sticky top-0 z-50 border-b border-[#078930]/15 bg-[#faf8f5]/90 pt-safe backdrop-blur-md dark:border-[#078930]/25 dark:bg-slate-950/90">
       <div className="ethio-flag-bar" aria-hidden />
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link
