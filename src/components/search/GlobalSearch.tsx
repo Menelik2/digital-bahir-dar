@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Search, MapPin, X, Loader2 } from 'lucide-react'
-import { usePlaces } from '@/hooks/usePlaces'
-import { searchPlaces } from '@/services/places'
+import { useQuery } from '@tanstack/react-query'
+import { serverSearchPlaces } from '@/services/search'
 import { cacheOsmPlaceForDetail, isOsmPlaceId } from '@/services/osmPlaces'
 import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
@@ -19,54 +19,25 @@ const QUICK = [
   { to: '/ai-guide', labelKey: 'aiGuide' as const },
 ]
 
-const LS_PREFIX = 'dbd-osm-v3:'
-
-/** Read OSM places previously cached by Discover / list pages (localStorage) */
-function readCachedOsmPlaces(): Place[] {
-  const out: Place[] = []
-  const seen = new Set<string>()
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i)
-      if (!k?.startsWith(LS_PREFIX)) continue
-      const parsed = JSON.parse(localStorage.getItem(k) || '{}') as { data?: Place[] }
-      for (const p of parsed.data || []) {
-        if (seen.has(p.id)) continue
-        seen.add(p.id)
-        out.push(p)
-      }
-    }
-  } catch {
-    /* */
-  }
-  return out
-}
-
 export function GlobalSearch({ className }: { className?: string }) {
   const t = useT()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
+  const [debouncedQ, setDebouncedQ] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
-  const { data: places = [], isLoading } = usePlaces()
-  const [osmCache, setOsmCache] = useState<Place[]>([])
 
-  // Refresh OSM cache when the dialog opens (after user visited Discover/Explore)
   useEffect(() => {
-    if (open) setOsmCache(readCachedOsmPlaces())
-  }, [open])
+    const tmr = window.setTimeout(() => setDebouncedQ(q.trim()), 220)
+    return () => window.clearTimeout(tmr)
+  }, [q])
 
-  const results = useMemo(() => {
-    if (!q.trim()) return []
-    const merged = [...places]
-    const seen = new Set(places.map((p) => p.id))
-    for (const p of osmCache) {
-      if (seen.has(p.id)) continue
-      seen.add(p.id)
-      merged.push(p)
-    }
-    return searchPlaces(merged, q).slice(0, 10)
-  }, [places, osmCache, q])
+  const { data: results = [], isFetching } = useQuery({
+    queryKey: ['server-search', debouncedQ],
+    queryFn: () => serverSearchPlaces(debouncedQ, 10),
+    enabled: open && debouncedQ.length >= 1,
+    staleTime: 15_000,
+  })
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -132,7 +103,7 @@ export function GlobalSearch({ className }: { className?: string }) {
                 placeholder={t.search.globalPlaceholder}
                 className="flex-1 bg-transparent py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-100"
               />
-              {isLoading && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
+              {isFetching && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
               <button
                 type="button"
                 className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -166,7 +137,7 @@ export function GlobalSearch({ className }: { className?: string }) {
                 </div>
               )}
 
-              {q.trim() && results.length === 0 && !isLoading && (
+              {q.trim() && results.length === 0 && !isFetching && (
                 <p className="px-3 py-6 text-center text-sm text-slate-500">{t.search.noResults}</p>
               )}
 
@@ -186,6 +157,8 @@ export function GlobalSearch({ className }: { className?: string }) {
                     </p>
                     <p className="truncate text-xs text-slate-500">
                       {p.category?.name}
+                      {p.verified ? ' · verified' : ''}
+                      {p.featured ? ' · featured' : ''}
                       {isOsmPlaceId(p.id) ? ' · OSM' : ''}
                     </p>
                   </div>
