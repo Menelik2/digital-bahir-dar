@@ -1,48 +1,48 @@
-# Admin access — Digital Bahir Dar
+# Admin / CMS — Digital Bahir Dar
 
-There is **no default password** in the app. Admin is a Supabase Auth user whose `profiles.role` is `admin` or `moderator`.
+The **Admin** area is the app’s **CMS** (content management system): a visual screen to organize **text, images, places, and events** without writing code.
 
-## Primary admin email
+## Who can access
 
-| Field | Value |
-|-------|--------|
-| Email | `bahirdar333@gmail.com` |
-| Password | Whatever you set in Supabase Auth (or when registering in the app). **Not stored in git.** |
-| Role | `admin` (set by migration `20260824120000_admin_bootstrap.sql` once the profile exists) |
-
-## First-time setup
-
-1. **Create the Auth user** (pick one):
-   - App: open `/auth` → Register with `bahirdar333@gmail.com` and a strong password, **or**
-   - Supabase Dashboard → **Authentication → Users → Add user** (same email + password).
-
-2. **Apply migrations** (includes admin bootstrap):
-   - Supabase SQL Editor: run files under `supabase/migrations/` in order, **or**
-   - `supabase db push` if you use the CLI.
-
-3. **If the profile already existed before the migration**, run this once:
+- Roles: `admin` or `moderator` on `profiles.role`
+- URL: `/admin`
 
 ```sql
-UPDATE public.profiles
-SET role = 'admin'
-WHERE lower(email) = lower('bahirdar333@gmail.com');
+UPDATE profiles SET role = 'admin' WHERE email = 'your@email.com';
 ```
 
-4. Sign in at `/auth` with that email/password → open `/admin`.
+## CMS content types
 
-## Promote another user
+| Tab | What you manage |
+|-----|------------------|
+| **Overview** | Queue of pending places, claims, businesses, reports |
+| **Places** | Create/edit listings, status, featured, cover image URL, bulk publish |
+| **Events** | City events (title, venue, description, publish/draft) |
+| **Categories** | Place categories |
+| **Transport** | Verify transport services |
+| **Reviews / Claims / Business / Reports / Users** | Moderation |
 
-```sql
-UPDATE public.profiles
-SET role = 'admin'   -- or 'moderator'
-WHERE lower(email) = lower('someone@example.com');
-```
+## How it works (no code)
 
-## Reset password
+1. Sign in with a staff account → open **Admin**.
+2. **Places → New place** or **Edit** → fill the form (name, text, map coords, **Cover image URL**).
+3. Set **Status = published** so visitors see it on Map / Explore.
+4. **Events → New event** → fill title, date, venue, description → **Publish**.
+5. Changes go to Supabase Postgres; the public site reads published rows.
 
-Supabase Dashboard → Authentication → Users → select user → **Send password recovery** or set a new password.
+## Images
 
-## Security
+- Use a public **image URL** (e.g. Supabase Storage, CDN, or hosted photo).
+- Admin sets it as the place **primary cover** in `place_images`.
+- Optional later: upload UI into Supabase Storage bucket.
 
-- Never commit real passwords or `service_role` keys.
-- RLS still enforces staff-only writes; the UI only checks `profiles.role`.
+## Migrations required
+
+Run all migrations under `supabase/migrations/`, especially:
+
+- `*_admin*.sql`
+- `20260825130000_backend_events_search.sql` (`city_events` + search RPCs)
+
+## Not a page builder
+
+This CMS manages **city data** (places, events, moderation). It does not rebuild the React page layout; routes stay in the app code.
