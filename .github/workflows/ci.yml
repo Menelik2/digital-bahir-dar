@@ -22,8 +22,6 @@ jobs:
         with:
           node-version: '22'
 
-      # Cache npm's global download cache (~/.npm). Works with or without package-lock.json.
-      # Key prefers lockfile hash when present; falls back to package.json.
       - name: Cache npm
         uses: actions/cache@v4
         with:
@@ -34,13 +32,13 @@ jobs:
 
       - name: Install
         run: |
-          if [ -f package-lock.json ]; then
+          # Prefer lockfile when it has resolved packages; otherwise npm install
+          if [ -f package-lock.json ] && grep -q '"node_modules/' package-lock.json 2>/dev/null; then
             npm ci --prefer-offline --no-audit --no-fund
           else
             npm install --prefer-offline --no-audit --no-fund
           fi
 
-      # Incremental TS project references / tsc -b info
       - name: Cache TS build info
         uses: actions/cache@v4
         with:
