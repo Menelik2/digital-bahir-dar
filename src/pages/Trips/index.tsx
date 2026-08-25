@@ -19,6 +19,7 @@ import { useMyTrips, useCreateTrip, useDeleteTrip } from '@/hooks/useTrips'
 import { BAHIR_DAR_ITINERARIES, type GuideItinerary } from '@/data/itineraries'
 import type { Trip } from '@/types/trip'
 import { cn } from '@/lib/utils'
+import { parseTripCreate } from '@/lib/tripValidation'
 
 function isDemoTrip(id: string) {
   return id.startsWith('demo-') || id.startsWith('guide-')
@@ -134,6 +135,8 @@ export default function TripsPage() {
   const [budget, setBudget] = useState('')
   const [travelers, setTravelers] = useState('1')
   const [tagFilter, setTagFilter] = useState<string | null>(null)
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const [formMessage, setFormMessage] = useState<string | null>(null)
 
   const personalTrips = trips.filter((t) => !isDemoTrip(t.id))
 
@@ -153,19 +156,24 @@ export default function TripsPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title.trim()) return
+    setFormMessage(null)
+    const parsed = parseTripCreate({ title, budget, travelers })
+    if (!parsed.ok) {
+      setFormErrors(parsed.errors)
+      setFormMessage(parsed.message)
+      return
+    }
+    setFormErrors({})
     try {
-      const trip = await createMut.mutateAsync({
-        title: title.trim(),
-        budget_total: budget ? Number(budget) : undefined,
-        traveler_count: Math.max(1, parseInt(travelers, 10) || 1),
-      })
+      const trip = await createMut.mutateAsync(parsed.data)
       setShowForm(false)
       setTitle('')
       setBudget('')
+      setTravelers('1')
+      setFormMessage(null)
       window.location.href = `/trips/${trip.id}`
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Could not create trip')
+      setFormMessage(err instanceof Error ? err.message : 'Could not create trip')
     }
   }
 
@@ -214,34 +222,90 @@ export default function TripsPage() {
           <form
             onSubmit={handleCreate}
             className="space-y-3 rounded-2xl border border-[#078930]/20 bg-white p-4 shadow-sm dark:border-[#078930]/30 dark:bg-slate-900"
+            noValidate
           >
             <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
               Start a personal itinerary
             </p>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Trip title (e.g. Weekend in Bahir Dar)"
-              className="w-full rounded-xl border border-slate-200 px-3 py-3 text-base outline-none focus:border-[#078930] dark:border-slate-700 dark:bg-slate-950"
-              required
-              autoFocus
-            />
+            {formMessage && (
+              <p
+                className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300"
+                role="alert"
+              >
+                {formMessage}
+              </p>
+            )}
+            <div>
+              <input
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value)
+                  if (formErrors.title) setFormErrors((prev) => ({ ...prev, title: '' }))
+                }}
+                placeholder="Trip title (e.g. Weekend in Bahir Dar)"
+                className={cn(
+                  'w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-[#078930] dark:bg-slate-950',
+                  formErrors.title
+                    ? 'border-red-400 dark:border-red-500'
+                    : 'border-slate-200 dark:border-slate-700'
+                )}
+                aria-invalid={!!formErrors.title}
+                autoFocus
+              />
+              {formErrors.title && (
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">{formErrors.title}</p>
+              )}
+            </div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <input
-                type="number"
-                value={budget}
-                onChange={(e) => setBudget(e.target.value)}
-                placeholder="Budget (ETB)"
-                className="flex-1 rounded-xl border border-slate-200 px-3 py-3 text-base outline-none focus:border-[#078930] dark:border-slate-700 dark:bg-slate-950"
-              />
-              <input
-                type="number"
-                min={1}
-                value={travelers}
-                onChange={(e) => setTravelers(e.target.value)}
-                placeholder="Travelers"
-                className="w-full rounded-xl border border-slate-200 px-3 py-3 text-base outline-none focus:border-[#078930] dark:border-slate-700 dark:bg-slate-950 sm:w-32"
-              />
+              <div className="flex-1">
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="1"
+                  value={budget}
+                  onChange={(e) => {
+                    setBudget(e.target.value)
+                    if (formErrors.budget_total) setFormErrors((prev) => ({ ...prev, budget_total: '' }))
+                  }}
+                  placeholder="Budget (ETB)"
+                  className={cn(
+                    'w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-[#078930] dark:bg-slate-950',
+                    formErrors.budget_total
+                      ? 'border-red-400 dark:border-red-500'
+                      : 'border-slate-200 dark:border-slate-700'
+                  )}
+                  aria-invalid={!!formErrors.budget_total}
+                />
+                {formErrors.budget_total && (
+                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">{formErrors.budget_total}</p>
+                )}
+              </div>
+              <div className="w-full sm:w-32">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={50}
+                  value={travelers}
+                  onChange={(e) => {
+                    setTravelers(e.target.value)
+                    if (formErrors.traveler_count)
+                      setFormErrors((prev) => ({ ...prev, traveler_count: '' }))
+                  }}
+                  placeholder="Travelers"
+                  className={cn(
+                    'w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-[#078930] dark:bg-slate-950',
+                    formErrors.traveler_count
+                      ? 'border-red-400 dark:border-red-500'
+                      : 'border-slate-200 dark:border-slate-700'
+                  )}
+                  aria-invalid={!!formErrors.traveler_count}
+                />
+                {formErrors.traveler_count && (
+                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">{formErrors.traveler_count}</p>
+                )}
+              </div>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button type="submit" disabled={createMut.isPending} className="w-full sm:w-auto" size="lg">
