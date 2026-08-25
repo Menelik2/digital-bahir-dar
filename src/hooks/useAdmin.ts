@@ -37,6 +37,14 @@ import {
   type PlaceCreateInput,
   type CategoryInput,
 } from '@/services/admin'
+import {
+  fetchAdminEvents,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  setPlaceCoverImage,
+  type CmsEventInput,
+} from '@/services/cms'
 import { useAuth } from './useAuth'
 import { useAdminRealtime } from './useRealtimeQueries'
 
@@ -80,6 +88,15 @@ export function useAdminTransport(enabled: boolean) {
     queryFn: () => fetchTransportForAdmin(),
     enabled,
     staleTime: 30_000,
+  })
+}
+
+export function useAdminEvents(enabled: boolean) {
+  return useQuery({
+    queryKey: ['admin-events'],
+    queryFn: () => fetchAdminEvents(),
+    enabled,
+    staleTime: 20_000,
   })
 }
 
@@ -150,6 +167,8 @@ export function useAdminActions() {
     qc.invalidateQueries({ queryKey: ['admin-users'] })
     qc.invalidateQueries({ queryKey: ['admin-categories'] })
     qc.invalidateQueries({ queryKey: ['admin-transport'] })
+    qc.invalidateQueries({ queryKey: ['admin-events'] })
+    qc.invalidateQueries({ queryKey: ['city-events'] })
     qc.invalidateQueries({ queryKey: ['places'] })
   }
 
@@ -171,9 +190,17 @@ export function useAdminActions() {
   })
 
   const placeUpdate = useMutation({
-    mutationFn: async (args: { placeId: string; data: PlaceEditInput }) => {
-      const res = await updatePlace(args.placeId, args.data)
+    mutationFn: async (args: {
+      placeId: string
+      data: PlaceEditInput & { cover_image_url?: string | null }
+    }) => {
+      const { cover_image_url, ...rest } = args.data
+      const res = await updatePlace(args.placeId, rest)
       if (res.error) throw new Error(res.error)
+      if (cover_image_url !== undefined) {
+        const img = await setPlaceCoverImage(args.placeId, cover_image_url)
+        if (img.error) throw new Error(img.error)
+      }
     },
     onSuccess: invalidate,
   })
@@ -358,6 +385,31 @@ export function useAdminActions() {
     onSuccess: invalidate,
   })
 
+  const eventCreate = useMutation({
+    mutationFn: async (data: CmsEventInput) => {
+      const res = await createEvent(data)
+      if (res.error) throw new Error(res.error)
+      return res.id
+    },
+    onSuccess: invalidate,
+  })
+
+  const eventUpdate = useMutation({
+    mutationFn: async (args: { id: string; data: Partial<CmsEventInput> }) => {
+      const res = await updateEvent(args.id, args.data)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
+  const eventDelete = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await deleteEvent(id)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
   return {
     placeCreate,
     placeStatus,
@@ -382,6 +434,9 @@ export function useAdminActions() {
     categoryDelete,
     transportVerified,
     transportUpdate,
+    eventCreate,
+    eventUpdate,
+    eventDelete,
     invalidate,
   }
 }
