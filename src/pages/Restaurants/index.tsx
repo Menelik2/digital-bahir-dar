@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapPin, Utensils, Coffee, Fish, Leaf, AlertCircle, ChevronRight } from 'lucide-react'
+import { MapPin, Utensils, Coffee, Fish, Leaf, AlertCircle, ChevronRight, X } from 'lucide-react'
 import { PlaceListPage } from '@/components/places/PlaceListPage'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -22,6 +22,8 @@ const MODES: {
   body: string
   icon: typeof Fish
   match: (p: FoodPick) => boolean
+  activeClass: string
+  idleClass: string
 }[] = [
   {
     id: 'traditional',
@@ -34,6 +36,9 @@ const MODES: {
       p.tags.includes('local') ||
       p.tags.includes('budget') ||
       p.cuisine.toLowerCase().includes('ethiopian'),
+    activeClass: 'bg-orange-500 text-white border-orange-500 shadow-sm shadow-orange-200',
+    idleClass:
+      'bg-white text-slate-700 border-slate-200 hover:border-orange-300 hover:bg-orange-50 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200',
   },
   {
     id: 'fish',
@@ -42,6 +47,9 @@ const MODES: {
     body: 'Tilapia & Nile perch by the shore',
     icon: Fish,
     match: (p) => p.tags.includes('fish') || p.tags.includes('lakeside'),
+    activeClass: 'bg-sky-500 text-white border-sky-500 shadow-sm shadow-sky-200',
+    idleClass:
+      'bg-white text-slate-700 border-slate-200 hover:border-sky-300 hover:bg-sky-50 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200',
   },
   {
     id: 'coffee',
@@ -54,6 +62,9 @@ const MODES: {
       p.tags.includes('snack') ||
       p.tags.includes('juice') ||
       p.tags.includes('breakfast'),
+    activeClass: 'bg-amber-600 text-white border-amber-600 shadow-sm shadow-amber-200',
+    idleClass:
+      'bg-white text-slate-700 border-slate-200 hover:border-amber-300 hover:bg-amber-50 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200',
   },
 ]
 
@@ -72,65 +83,57 @@ function RecommendationsBanner() {
   const rest = filtered.filter((p) => !p.featured)
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-2 pt-6">
-      {/* Compact hero — less vertical space on mobile */}
-      <div className="mb-5 overflow-hidden rounded-2xl bg-gradient-to-br from-orange-600 via-amber-600 to-rose-600 px-4 py-5 text-white shadow-md sm:px-5 sm:py-6">
-        <p className="text-xs font-medium text-orange-100 sm:text-sm">Local food guide</p>
-        <h2 className="mt-0.5 text-xl font-bold tracking-tight sm:text-2xl">What to eat in Bahir Dar</h2>
-        <p className="mt-1.5 text-sm text-orange-50/95 sm:max-w-2xl">
+    <div className="mx-auto max-w-6xl px-4 pb-2 pt-5">
+      {/* Compact hero */}
+      <div className="mb-4 overflow-hidden rounded-2xl bg-gradient-to-br from-orange-600 via-amber-600 to-rose-600 px-4 py-4 text-white shadow-md sm:px-5 sm:py-5">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-orange-100/90 sm:text-xs">
+          Local food guide
+        </p>
+        <h2 className="mt-0.5 text-lg font-bold tracking-tight sm:text-2xl">What to eat in Bahir Dar</h2>
+        <p className="mt-1 text-xs text-orange-50/95 sm:text-sm sm:max-w-2xl">
           Pick a mood — short lists first, full map listings below.
         </p>
       </div>
 
-      {/* Mood chooser — compact single row on mobile */}
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <h3 className="text-base font-semibold sm:text-lg">What are you in the mood for?</h3>
+      {/* Mood label */}
+      <div className="mb-2.5 flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 sm:text-base">
+          What are you in the mood for?
+        </h3>
         {mode !== 'all' && (
           <button
             type="button"
             onClick={() => setMode('all')}
-            className="text-xs font-medium text-orange-600 hover:underline sm:hidden"
+            className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
           >
-            Clear
+            <X className="h-3 w-3" /> Clear
           </button>
         )}
       </div>
 
-      {/* Mobile: equal 3-col compact tiles | Desktop: slightly richer cards */}
-      <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
-        {MODES.map((m) => {
-          const on = mode === m.id
-          const Icon = m.icon
-          return (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => setMode(on ? 'all' : m.id)}
-              aria-pressed={on}
-              className={cn(
-                'flex flex-col items-center rounded-2xl border px-2 py-3 text-center transition active:scale-[0.98] sm:items-start sm:px-4 sm:py-4 sm:text-left',
-                on
-                  ? 'border-orange-500 bg-orange-50 shadow-sm ring-2 ring-orange-300/80 dark:bg-orange-950/50 dark:ring-orange-600/50'
-                  : 'border-slate-200/80 bg-white shadow-sm hover:border-orange-300 hover:bg-orange-50/40 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-orange-700'
-              )}
-            >
-              <span
+      {/* Horizontal pill chips — minimal height, app-like */}
+      <div className="-mx-4 mb-5 overflow-x-auto px-4 pb-1 scrollbar-none">
+        <div className="flex w-max items-center gap-2 sm:w-full sm:flex-wrap">
+          {MODES.map((m) => {
+            const on = mode === m.id
+            const Icon = m.icon
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setMode(on ? 'all' : m.id)}
+                aria-pressed={on}
                 className={cn(
-                  'mb-1.5 flex h-9 w-9 items-center justify-center rounded-full sm:mb-2 sm:h-10 sm:w-10',
-                  on
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                  'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition active:scale-[0.97]',
+                  on ? m.activeClass : m.idleClass
                 )}
               >
-                <Icon className="h-4.5 w-4.5 sm:h-5 sm:w-5" strokeWidth={2} />
-              </span>
-              <p className="text-[13px] font-semibold leading-tight sm:text-base">{m.title}</p>
-              <p className="mt-0.5 hidden text-xs leading-snug text-slate-500 sm:block">{m.body}</p>
-              {/* Mobile-only short hint under title */}
-              <p className="mt-0.5 text-[11px] leading-tight text-slate-400 sm:hidden">{m.short}</p>
-            </button>
-          )
-        })}
+                <Icon className="h-4 w-4 shrink-0" strokeWidth={2.25} />
+                <span className="whitespace-nowrap">{m.title}</span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {mode !== 'all' && (
