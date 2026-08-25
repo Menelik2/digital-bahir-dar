@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
-import { Calendar, MapPin, Ticket, Sparkles } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Calendar, MapPin, Ticket, Sparkles, Loader2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { CITY_EVENTS, EVENT_CATEGORY_LABEL, type CityEvent } from '@/data/cityLife'
+import { EVENT_CATEGORY_LABEL, type CityEvent } from '@/data/cityLife'
+import { fetchCityEvents } from '@/services/events'
 import { cn } from '@/lib/utils'
 
 const filters: Array<CityEvent['category'] | 'all'> = [
@@ -18,13 +20,18 @@ const filters: Array<CityEvent['category'] | 'all'> = [
 
 export default function EventsPage() {
   const [filter, setFilter] = useState<(typeof filters)[number]>('all')
+  const { data: allEvents = [], isLoading } = useQuery({
+    queryKey: ['city-events'],
+    queryFn: fetchCityEvents,
+    staleTime: 60_000,
+  })
 
   const events = useMemo(() => {
-    if (filter === 'all') return CITY_EVENTS
-    return CITY_EVENTS.filter((e) => e.category === filter)
-  }, [filter])
+    if (filter === 'all') return allEvents
+    return allEvents.filter((e) => e.category === filter)
+  }, [filter, allEvents])
 
-  const featured = CITY_EVENTS.filter((e) => e.featured)
+  const featured = allEvents.filter((e) => e.featured)
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -32,7 +39,7 @@ export default function EventsPage() {
         <div>
           <h1 className="mb-2 text-2xl font-bold sm:text-3xl">Events in Bahir Dar</h1>
           <p className="max-w-2xl text-slate-500">
-            Culture, markets, and seasonal highlights. Listings are curated estimates — always confirm time and venue locally.
+            Culture, markets, and seasonal highlights. Listings load from the city database when available — always confirm time and venue locally.
           </p>
         </div>
         <Link to="/ai-guide">
@@ -42,7 +49,13 @@ export default function EventsPage() {
         </Link>
       </div>
 
-      {featured.length > 0 && (
+      {isLoading && (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+        </div>
+      )}
+
+      {!isLoading && featured.length > 0 && (
         <section className="mb-10">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">Featured</h2>
           <div className="grid gap-4 md:grid-cols-2">
@@ -114,6 +127,10 @@ export default function EventsPage() {
           </Card>
         ))}
       </div>
+
+      {!isLoading && events.length === 0 && (
+        <p className="py-12 text-center text-sm text-slate-500">No events match this filter.</p>
+      )}
 
       <p className="mt-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
         Schedules change. Prefer hotel or official tourism desks for same-day confirmation. Business owners can claim listings in the{' '}
