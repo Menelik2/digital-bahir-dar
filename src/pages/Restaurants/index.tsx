@@ -7,16 +7,35 @@ import {
   LOCAL_RESTAURANT_PICKS,
   FOOD_NEIGHBORHOODS,
   FOOD_ETIQUETTE,
+  FOOD_ETIQUETTE_AM,
   FOOD_SAFETY,
+  FOOD_SAFETY_AM,
   type FoodPick,
 } from '@/data/restaurants'
-import { useT } from '@/hooks/useT'
+import { useLang, useT } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
 
 type FoodMode = 'all' | 'traditional' | 'fish' | 'coffee'
 
+function pickName(r: FoodPick, am: boolean) {
+  return am && r.nameAm ? r.nameAm : r.name
+}
+function pickArea(r: FoodPick, am: boolean) {
+  return am && r.areaAm ? r.areaAm : r.area
+}
+function pickCuisine(r: FoodPick, am: boolean) {
+  return am && r.cuisineAm ? r.cuisineAm : r.cuisine
+}
+function pickWhy(r: FoodPick, am: boolean) {
+  return am && r.whyAm ? r.whyAm : r.why
+}
+function pickMustTry(r: FoodPick, am: boolean) {
+  return am && r.mustTryAm ? r.mustTryAm : r.mustTry
+}
+
 function RecommendationsBanner() {
   const t = useT()
+  const { isAm } = useLang()
   const [mode, setMode] = useState<FoodMode>('all')
   const [showTips, setShowTips] = useState(false)
 
@@ -83,6 +102,8 @@ function RecommendationsBanner() {
   const featured = filtered.filter((p) => p.featured)
   const rest = filtered.filter((p) => !p.featured)
   const activeMode = MODES.find((m) => m.id === mode)
+  const etiquette = isAm ? FOOD_ETIQUETTE_AM : FOOD_ETIQUETTE
+  const safety = isAm ? FOOD_SAFETY_AM : FOOD_SAFETY
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-2 pt-4">
@@ -177,14 +198,16 @@ function RecommendationsBanner() {
                   </span>
                 )}
               </div>
-              <h4 className="text-[15px] font-semibold leading-snug">{r.name}</h4>
+              <h4 className="text-[15px] font-semibold leading-snug">{pickName(r, isAm)}</h4>
               <p className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500">
-                <MapPin className="h-3 w-3 shrink-0" /> {r.area} · {r.cuisine}
+                <MapPin className="h-3 w-3 shrink-0" /> {pickArea(r, isAm)} · {pickCuisine(r, isAm)}
               </p>
-              <p className="mt-1.5 line-clamp-2 text-sm text-slate-600 dark:text-slate-300">{r.why}</p>
+              <p className="mt-1.5 line-clamp-2 text-sm text-slate-600 dark:text-slate-300">
+                {pickWhy(r, isAm)}
+              </p>
               <p className="mt-1.5 text-xs font-medium text-orange-700 dark:text-orange-300">{r.priceLabel}</p>
               <div className="mt-2 flex flex-wrap gap-1">
-                {r.mustTry.slice(0, 3).map((item) => (
+                {pickMustTry(r, isAm).slice(0, 3).map((item) => (
                   <span
                     key={item}
                     className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] dark:bg-slate-800"
@@ -215,11 +238,13 @@ function RecommendationsBanner() {
             {rest.map((r) => (
               <Card key={r.id}>
                 <CardContent className="p-3.5">
-                  <p className="text-sm font-semibold">{r.name}</p>
+                  <p className="text-sm font-semibold">{pickName(r, isAm)}</p>
                   <p className="text-[11px] text-slate-500">
-                    {r.area} · {r.priceLabel}
+                    {pickArea(r, isAm)} · {r.priceLabel}
                   </p>
-                  <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-400">{r.why}</p>
+                  <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-400">
+                    {pickWhy(r, isAm)}
+                  </p>
                   {r.slug && (
                     <Link
                       to={`/places/${r.slug}`}
@@ -242,8 +267,10 @@ function RecommendationsBanner() {
             key={n.id}
             className="min-w-[10.5rem] shrink-0 rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900"
           >
-            <p className="text-sm font-semibold">{n.title}</p>
-            <p className="mt-0.5 text-[11px] leading-snug text-slate-500">{n.blurb}</p>
+            <p className="text-sm font-semibold">{isAm ? n.titleAm : n.title}</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-slate-500">
+              {isAm ? n.blurbAm : n.blurb}
+            </p>
           </div>
         ))}
       </div>
@@ -262,7 +289,7 @@ function RecommendationsBanner() {
             <CardContent className="p-4">
               <h4 className="text-sm font-semibold">{t.food.etiquette}</h4>
               <ul className="mt-2 space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                {FOOD_ETIQUETTE.map((e) => (
+                {etiquette.map((e) => (
                   <li key={e} className="flex gap-2">
                     <span className="text-orange-500">·</span> {e}
                   </li>
@@ -276,7 +303,7 @@ function RecommendationsBanner() {
                 <AlertCircle className="h-4 w-4 text-amber-600" /> {t.food.foodSafety}
               </h4>
               <ul className="mt-2 space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                {FOOD_SAFETY.map((e) => (
+                {safety.map((e) => (
                   <li key={e} className="flex gap-2">
                     <span className="text-amber-500">·</span> {e}
                   </li>
