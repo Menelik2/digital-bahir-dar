@@ -2,13 +2,16 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import type { Place, Category } from '@/types/place'
 import type { PlaceEditInput } from '@/services/admin'
+import { fetchPlaceCoverUrl } from '@/services/cms'
 
 type PlaceRow = Place & { staff_notes?: string | null; deleted_at?: string | null }
+
+export type PlaceEditorSave = PlaceEditInput & { cover_image_url?: string | null }
 
 interface Props {
   place: PlaceRow
   categories?: Category[]
-  onSave: (data: PlaceEditInput) => Promise<void>
+  onSave: (data: PlaceEditorSave) => Promise<void>
   onCancel: () => void
   saving?: boolean
 }
@@ -23,6 +26,7 @@ export function PlaceEditor({ place, categories = [], onSave, onCancel, saving }
   const [phone, setPhone] = useState(place.phone ?? '')
   const [email, setEmail] = useState(place.email ?? '')
   const [website, setWebsite] = useState(place.website ?? '')
+  const [coverUrl, setCoverUrl] = useState('')
   const [lat, setLat] = useState(String(place.latitude))
   const [lng, setLng] = useState(String(place.longitude))
   const [priceLevel, setPriceLevel] = useState(place.price_level != null ? String(place.price_level) : '')
@@ -52,6 +56,13 @@ export function PlaceEditor({ place, categories = [], onSave, onCancel, saving }
     setVerified(!!place.verified)
     setFeatured(!!place.featured)
     setStaffNotes(place.staff_notes ?? '')
+    let cancelled = false
+    fetchPlaceCoverUrl(place.id).then((url) => {
+      if (!cancelled) setCoverUrl(url ?? '')
+    })
+    return () => {
+      cancelled = true
+    }
   }, [place.id])
 
   const field = (label: string, children: React.ReactNode) => (
@@ -87,10 +98,11 @@ export function PlaceEditor({ place, categories = [], onSave, onCancel, saving }
           verified,
           featured,
           staff_notes: staffNotes || null,
+          cover_image_url: coverUrl.trim() || null,
         })
       }}
     >
-      <p className="text-sm font-semibold text-sky-800 dark:text-sky-200">Edit place</p>
+      <p className="text-sm font-semibold text-sky-800 dark:text-sky-200">Edit place (CMS)</p>
       <div className="grid gap-3 sm:grid-cols-2">
         {field('Name', <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} required />)}
         {field('Slug', <input className={inputClass} value={slug} onChange={(e) => setSlug(e.target.value)} />)}
@@ -127,6 +139,27 @@ export function PlaceEditor({ place, categories = [], onSave, onCancel, saving }
           <input className={inputClass} type="number" min={0} value={entranceFee} onChange={(e) => setEntranceFee(e.target.value)} />
         )}
       </div>
+      {field(
+        'Cover image URL',
+        <>
+          <input
+            className={inputClass}
+            value={coverUrl}
+            onChange={(e) => setCoverUrl(e.target.value)}
+            placeholder="https://… (public image URL)"
+          />
+          {coverUrl.trim() && (
+            <img
+              src={coverUrl.trim()}
+              alt="Cover preview"
+              className="mt-2 h-28 w-full rounded-lg object-cover border border-slate-200 dark:border-slate-700"
+              onError={(e) => {
+                ;(e.target as HTMLImageElement).style.display = 'none'
+              }}
+            />
+          )}
+        </>
+      )}
       {field(
         'Short description',
         <input className={inputClass} value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} />
