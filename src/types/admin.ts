@@ -2,17 +2,23 @@ export interface AdminMetrics {
   placesTotal: number
   placesPublished: number
   placesPending: number
+  placesFeatured?: number
+  placesDraft?: number
+  placesArchived?: number
   reviewsTotal: number
   reviewsHidden: number
+  reviewsPending?: number
   claimsPending: number
   businessesPending: number
+  businessesApproved?: number
+  businessesSuspended?: number
   reportsOpen: number
   usersApprox: number
 }
 
-export type PlaceModerationStatus = 'published' | 'pending' | 'hidden' | 'draft'
+export type PlaceModerationStatus = 'published' | 'pending' | 'hidden' | 'draft' | 'archived'
 
-export type ProfileRole = 'visitor' | 'user' | 'business' | 'moderator' | 'admin'
+export type ProfileRole = 'visitor' | 'business_owner' | 'tour_guide' | 'moderator' | 'admin'
 
 export interface AdminUserRow {
   id: string
