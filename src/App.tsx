@@ -1,76 +1,85 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/queryClient'
 import { Layout } from '@/components/layout/Layout'
 import { RealtimeProvider } from '@/components/realtime/RealtimeProvider'
-import HomePage from '@/pages/Home'
-import MapPage from '@/pages/Map'
-import AuthPage from '@/pages/Auth'
-import ExplorePage from '@/pages/Explore'
-import DiscoverPage from '@/pages/Discover'
-import CityHubPage from '@/pages/City'
-import TodoPage from '@/pages/Todo'
-import TodayPage from '@/pages/Today'
-import HotelsPage from '@/pages/Hotels'
-import RestaurantsPage from '@/pages/Restaurants'
-import AttractionsPage from '@/pages/Attractions'
-import BanksPage from '@/pages/Banks'
-import TransportPage from '@/pages/Transport'
-import EventsPage from '@/pages/Events'
-import DirectoryPage from '@/pages/Directory'
-import TripsPage from '@/pages/Trips'
-import TripDetailPage from '@/pages/Trips/TripDetail'
-import TripPlannerPage from '@/pages/TripPlanner'
-import BudgetPage from '@/pages/Budget'
-import SpendGuidePage from '@/pages/SpendGuide'
-import ExpensesPage from '@/pages/Expenses'
-import AIGuidePage from '@/pages/AIGuide'
-import GuidesPage from '@/pages/Guides'
-import ProfilePage from '@/pages/Profile'
-import BusinessPage from '@/pages/Business'
-import AdminPage from '@/pages/Admin'
-import AdminEventsPage from '@/pages/Admin/Events'
-import PlaceDetailsPage from '@/pages/PlaceDetails'
-import NotFoundPage from '@/pages/NotFound'
+import { StateMessage } from '@/components/feedback/StateMessage'
+
+const HomePage = lazy(() => import('@/pages/Home'))
+const MapPage = lazy(() => import('@/pages/Map'))
+const AuthPage = lazy(() => import('@/pages/Auth'))
+const ExplorePage = lazy(() => import('@/pages/Explore'))
+const DiscoverPage = lazy(() => import('@/pages/Discover'))
+const CityHubPage = lazy(() => import('@/pages/City'))
+const TodoPage = lazy(() => import('@/pages/Todo'))
+const TodayPage = lazy(() => import('@/pages/Today'))
+const HotelsPage = lazy(() => import('@/pages/Hotels'))
+const RestaurantsPage = lazy(() => import('@/pages/Restaurants'))
+const AttractionsPage = lazy(() => import('@/pages/Attractions'))
+const BanksPage = lazy(() => import('@/pages/Banks'))
+const TransportPage = lazy(() => import('@/pages/Transport'))
+const EventsPage = lazy(() => import('@/pages/Events'))
+const DirectoryPage = lazy(() => import('@/pages/Directory'))
+const TripsPage = lazy(() => import('@/pages/Trips'))
+const TripDetailPage = lazy(() => import('@/pages/Trips/TripDetail'))
+const TripPlannerPage = lazy(() => import('@/pages/TripPlanner'))
+const BudgetPage = lazy(() => import('@/pages/Budget'))
+const SpendGuidePage = lazy(() => import('@/pages/SpendGuide'))
+const ExpensesPage = lazy(() => import('@/pages/Expenses'))
+const AIGuidePage = lazy(() => import('@/pages/AIGuide'))
+const GuidesPage = lazy(() => import('@/pages/Guides'))
+const ProfilePage = lazy(() => import('@/pages/Profile'))
+const BusinessPage = lazy(() => import('@/pages/Business'))
+const AdminPage = lazy(() => import('@/pages/Admin'))
+const AdminEventsPage = lazy(() => import('@/pages/Admin/Events'))
+const PlaceDetailsPage = lazy(() => import('@/pages/PlaceDetails'))
+const NotFoundPage = lazy(() => import('@/pages/NotFound'))
+
+function PageFallback() {
+  return <StateMessage variant="loading" title="Loading…" />
+}
 
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <RealtimeProvider>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/city" element={<CityHubPage />} />
-              <Route path="/todo" element={<TodoPage />} />
-              <Route path="/today" element={<TodayPage />} />
-              <Route path="/explore" element={<ExplorePage />} />
-              <Route path="/discover" element={<DiscoverPage />} />
-              <Route path="/map" element={<MapPage />} />
-              <Route path="/hotels" element={<HotelsPage />} />
-              <Route path="/restaurants" element={<RestaurantsPage />} />
-              <Route path="/attractions" element={<AttractionsPage />} />
-              <Route path="/banks" element={<BanksPage />} />
-              <Route path="/transport" element={<TransportPage />} />
-              <Route path="/events" element={<EventsPage />} />
-              <Route path="/directory" element={<DirectoryPage />} />
-              <Route path="/trips" element={<TripsPage />} />
-              <Route path="/trips/:tripId" element={<TripDetailPage />} />
-              <Route path="/trip-planner" element={<TripPlannerPage />} />
-              <Route path="/budget" element={<BudgetPage />} />
-              <Route path="/spend-guide" element={<SpendGuidePage />} />
-              <Route path="/expenses" element={<ExpensesPage />} />
-              <Route path="/ai-guide" element={<AIGuidePage />} />
-              <Route path="/guides" element={<GuidesPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/business" element={<BusinessPage />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/admin/events" element={<AdminEventsPage />} />
-              <Route path="/places/:slug" element={<PlaceDetailsPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Route>
-          </Routes>
+          <Suspense fallback={<PageFallback />}>
+            <Routes>
+              <Route element={<Layout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/city" element={<CityHubPage />} />
+                <Route path="/todo" element={<TodoPage />} />
+                <Route path="/today" element={<TodayPage />} />
+                <Route path="/explore" element={<ExplorePage />} />
+                <Route path="/discover" element={<DiscoverPage />} />
+                <Route path="/map" element={<MapPage />} />
+                <Route path="/hotels" element={<HotelsPage />} />
+                <Route path="/restaurants" element={<RestaurantsPage />} />
+                <Route path="/attractions" element={<AttractionsPage />} />
+                <Route path="/banks" element={<BanksPage />} />
+                <Route path="/transport" element={<TransportPage />} />
+                <Route path="/events" element={<EventsPage />} />
+                <Route path="/directory" element={<DirectoryPage />} />
+                <Route path="/trips" element={<TripsPage />} />
+                <Route path="/trips/:tripId" element={<TripDetailPage />} />
+                <Route path="/trip-planner" element={<TripPlannerPage />} />
+                <Route path="/budget" element={<BudgetPage />} />
+                <Route path="/spend-guide" element={<SpendGuidePage />} />
+                <Route path="/expenses" element={<ExpensesPage />} />
+                <Route path="/ai-guide" element={<AIGuidePage />} />
+                <Route path="/guides" element={<GuidesPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/business" element={<BusinessPage />} />
+                <Route path="/admin" element={<AdminPage />} />
+                <Route path="/admin/events" element={<AdminEventsPage />} />
+                <Route path="/places/:slug" element={<PlaceDetailsPage />} />
+                <Route path="/auth" element={<AuthPage />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Route>
+            </Routes>
+          </Suspense>
         </RealtimeProvider>
       </BrowserRouter>
     </QueryClientProvider>

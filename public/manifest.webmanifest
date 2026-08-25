@@ -6,11 +6,17 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0f172a",
-  "theme_color": "#0ea5e9",
+  "background_color": "#056b24",
+  "theme_color": "#078930",
   "lang": "en",
   "categories": ["travel", "navigation", "lifestyle"],
   "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "/pwa-192.png",
       "sizes": "192x192",

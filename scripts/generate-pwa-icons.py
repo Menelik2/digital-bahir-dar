@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+"""Generate minimal PWA PNG icons (Ethiopian green disc). Runs on prebuild / CI."""
 import struct, zlib, os
-def write_png(path, size, rgb=(14, 165, 233)):
+
+def write_png(path, size, rgb=(7, 137, 48)):
     w = h = size
     r, g, b = rgb
     raw = b""
@@ -20,6 +22,7 @@ def write_png(path, size, rgb=(14, 165, 233)):
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     open(path, "wb").write(png)
     print("wrote", path)
+
 if __name__ == "__main__":
     root = os.path.join(os.path.dirname(__file__), "..", "public")
     write_png(os.path.join(root, "pwa-192.png"), 192)
