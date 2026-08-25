@@ -19,7 +19,7 @@ import { useMyTrips, useCreateTrip, useDeleteTrip } from '@/hooks/useTrips'
 import { BAHIR_DAR_ITINERARIES, type GuideItinerary } from '@/data/itineraries'
 import type { Trip } from '@/types/trip'
 import { cn } from '@/lib/utils'
-import { parseTripCreate } from '@/lib/tripValidation'
+import { parseTripCreate, type FieldErrors } from '@/lib/tripValidation'
 
 function isDemoTrip(id: string) {
   return id.startsWith('demo-') || id.startsWith('guide-')
@@ -135,7 +135,7 @@ export default function TripsPage() {
   const [budget, setBudget] = useState('')
   const [travelers, setTravelers] = useState('1')
   const [tagFilter, setTagFilter] = useState<string | null>(null)
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const [formErrors, setFormErrors] = useState<FieldErrors>({})
   const [formMessage, setFormMessage] = useState<string | null>(null)
 
   const personalTrips = trips.filter((t) => !isDemoTrip(t.id))
@@ -240,7 +240,7 @@ export default function TripsPage() {
                 value={title}
                 onChange={(e) => {
                   setTitle(e.target.value)
-                  if (formErrors.title) setFormErrors((prev) => ({ ...prev, title: '' }))
+                  if (formErrors.title) setFormErrors((prev) => ({ ...prev, title: undefined }))
                 }}
                 placeholder="Trip title (e.g. Weekend in Bahir Dar)"
                 className={cn(
@@ -266,7 +266,8 @@ export default function TripsPage() {
                   value={budget}
                   onChange={(e) => {
                     setBudget(e.target.value)
-                    if (formErrors.budget_total) setFormErrors((prev) => ({ ...prev, budget_total: '' }))
+                    if (formErrors.budget_total)
+                      setFormErrors((prev) => ({ ...prev, budget_total: undefined }))
                   }}
                   placeholder="Budget (ETB)"
                   className={cn(
@@ -291,7 +292,7 @@ export default function TripsPage() {
                   onChange={(e) => {
                     setTravelers(e.target.value)
                     if (formErrors.traveler_count)
-                      setFormErrors((prev) => ({ ...prev, traveler_count: '' }))
+                      setFormErrors((prev) => ({ ...prev, traveler_count: undefined }))
                   }}
                   placeholder="Travelers"
                   className={cn(

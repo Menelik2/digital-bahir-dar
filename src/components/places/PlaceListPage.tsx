@@ -3,9 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   Search,
   SlidersHorizontal,
-  MapPin,
   Loader2,
-  AlertCircle,
   RefreshCw,
   ExternalLink,
   X,
@@ -104,7 +102,6 @@ export function PlaceListPage({
 
   const combined = useMemo(() => {
     if (!mergeOsm) return places
-    // Prefer OSM live POIs first for hotels/food/transport; curated fills gaps
     return mergePlaces(osmPlaces, places)
   }, [places, osmPlaces, mergeOsm])
 
@@ -145,7 +142,6 @@ export function PlaceListPage({
     )
   }, [combined, search, sort, location.latitude, location.longitude, activeFilter])
 
-  // Show curated immediately; don't block on OSM
   const loading = isLoading && sorted.length === 0 && (osmLoading || !mergeOsm)
   const empty = emptyMessage ?? t.list.loadFail
 
@@ -280,9 +276,7 @@ export function PlaceListPage({
         ))}
       </div>
 
-      {loading && (
-        <StateMessage variant="loading" title={t.list.loadingPlaces} />
-      )}
+      {loading && <StateMessage variant="loading" title={t.list.loadingPlaces} />}
 
       {error && !sorted.length && (
         <StateMessage
