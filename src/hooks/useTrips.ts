@@ -119,28 +119,16 @@ export function useAddDay(tripId: string) {
 export function useAddStop(tripId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (input: {
-      dayId: string
-      placeId?: string | null
-      customName?: string
-      sortOrder?: number
-      startTime?: string
-      endTime?: string
-      notes?: string
-      estimatedCost?: number
+    mutationFn: async (args: {
+      tripDayId: string
+      custom_name?: string
+      place_id?: string
+      estimated_cost?: number
     }) => {
       if (tripId.startsWith('guide-') || tripId.startsWith('demo-')) {
         throw new Error('Guide plans are read-only')
       }
-      const res = await addTripStop(input.dayId, {
-        place_id: input.placeId ?? null,
-        custom_name: input.customName,
-        sort_order: input.sortOrder,
-        start_time: input.startTime,
-        end_time: input.endTime,
-        notes: input.notes,
-        estimated_cost: input.estimatedCost,
-      })
+      const res = await addTripStop(args.tripDayId, args)
       if (res.error) throw new Error(res.error)
       return res.stop!
     },
@@ -163,19 +151,19 @@ export function useDeleteStop(tripId: string) {
 export function useAddExpense(tripId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (input: {
+    mutationFn: async (expense: {
       category: string
       title: string
       amount: number
-      currency?: string
-      expenseDate?: string
+      is_estimated?: boolean
+      expense_date?: string
       notes?: string
-      isEstimated?: boolean
+      currency?: string
     }) => {
       if (tripId.startsWith('guide-') || tripId.startsWith('demo-')) {
         throw new Error('Guide plans are read-only')
       }
-      const res = await addExpense(tripId, input)
+      const res = await addExpense(tripId, expense)
       if (res.error) throw new Error(res.error)
       return res.expense!
     },
