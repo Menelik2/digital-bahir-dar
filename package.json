@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Digital Bahir Dar — Smart City Tourism, Navigation & AI Travel Platform for Bahir Dar, Ethiopia",
   "scripts": {
+    "preinstall": "node scripts/restore-lock.mjs || true",
     "dev": "vite",
     "prebuild": "python3 scripts/generate-pwa-icons.py",
     "build": "tsc -b && vite build",
