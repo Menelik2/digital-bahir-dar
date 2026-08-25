@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { WifiOff } from 'lucide-react'
+import { useT } from '@/hooks/useT'
 
 export function OfflineBanner() {
+  const t = useT()
   const [offline, setOffline] = useState(!navigator.onLine)
 
   useEffect(() => {
@@ -24,7 +26,7 @@ export function OfflineBanner() {
       className="flex items-center justify-center gap-2 bg-amber-500 px-3 py-1.5 text-center text-xs font-medium text-amber-950"
     >
       <WifiOff className="h-3.5 w-3.5" />
-      You’re offline — maps and live data may be unavailable
+      {t.pwa.offline}
     </div>
   )
 }
