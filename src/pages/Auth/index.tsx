@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/hooks/useT'
+import { useAppStore } from '@/store'
+import { usePlaceholders } from '@/i18n/formPlaceholders'
 
 const loginSchema = z.object({ email: z.string().email(), password: z.string().min(6) })
 const registerSchema = loginSchema.extend({ fullName: z.string().min(2) })
@@ -16,6 +18,8 @@ type RegisterForm = z.infer<typeof registerSchema>
 
 export default function AuthPage() {
   const t = useT()
+  const language = useAppStore((s) => s.language)
+  const placeholders = usePlaceholders(language)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const redirectTo = searchParams.get('redirect') || '/'
@@ -87,7 +91,9 @@ export default function AuthPage() {
     <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">{mode === 'login' ? t.auth.welcomeBack : t.auth.createAccount}</CardTitle>
+          <CardTitle className="text-2xl">
+            {mode === 'login' ? t.auth.welcomeBack : t.auth.createAccount}
+          </CardTitle>
           <CardDescription>
             {mode === 'login' ? t.auth.signInDesc : t.auth.joinDesc}
           </CardDescription>
@@ -100,6 +106,7 @@ export default function AuthPage() {
                 <input
                   type="email"
                   autoComplete="email"
+                  placeholder={placeholders.email}
                   {...loginForm.register('email')}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-500 dark:border-slate-700 dark:bg-slate-900"
                 />
@@ -112,6 +119,7 @@ export default function AuthPage() {
                 <input
                   type="password"
                   autoComplete="current-password"
+                  placeholder={placeholders.password}
                   {...loginForm.register('password')}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-500 dark:border-slate-700 dark:bg-slate-900"
                 />
@@ -132,6 +140,7 @@ export default function AuthPage() {
                 <input
                   type="text"
                   autoComplete="name"
+                  placeholder={placeholders.fullName}
                   {...registerForm.register('fullName')}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-500 dark:border-slate-700 dark:bg-slate-900"
                 />
@@ -144,6 +153,7 @@ export default function AuthPage() {
                 <input
                   type="email"
                   autoComplete="email"
+                  placeholder={placeholders.email}
                   {...registerForm.register('email')}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-500 dark:border-slate-700 dark:bg-slate-900"
                 />
@@ -156,6 +166,7 @@ export default function AuthPage() {
                 <input
                   type="password"
                   autoComplete="new-password"
+                  placeholder={placeholders.password}
                   {...registerForm.register('password')}
                   className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-500 dark:border-slate-700 dark:bg-slate-900"
                 />

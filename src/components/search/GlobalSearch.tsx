@@ -5,27 +5,31 @@ import { useQuery } from '@tanstack/react-query'
 import { serverSearchPlaces } from '@/services/search'
 import { cacheOsmPlaceForDetail, isOsmPlaceId } from '@/services/osmPlaces'
 import { useT } from '@/hooks/useT'
+import { useAppStore } from '@/store'
+import { usePlaceholders } from '@/i18n/formPlaceholders'
 import { cn } from '@/lib/utils'
 import type { Place } from '@/types/place'
 
-const QUICK = [
-  { to: '/explore', labelKey: 'explore' as const },
-  { to: '/discover', label: 'Discover (live map)' },
-  { to: '/hotels', labelKey: 'hotels' as const },
-  { to: '/restaurants', labelKey: 'restaurants' as const },
-  { to: '/attractions', labelKey: 'attractions' as const },
-  { to: '/transport', labelKey: 'transport' as const },
-  { to: '/map', labelKey: 'map' as const },
-  { to: '/ai-guide', labelKey: 'aiGuide' as const },
-]
-
 export function GlobalSearch({ className }: { className?: string }) {
   const t = useT()
+  const language = useAppStore((s) => s.language)
+  const placeholders = usePlaceholders(language)
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
   const [debouncedQ, setDebouncedQ] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const QUICK = [
+    { to: '/explore', label: t.nav.explore },
+    { to: '/discover', label: placeholders.discoverLive },
+    { to: '/hotels', label: t.nav.hotels },
+    { to: '/restaurants', label: t.nav.restaurants },
+    { to: '/attractions', label: t.nav.attractions },
+    { to: '/transport', label: t.nav.transport },
+    { to: '/map', label: t.nav.map },
+    { to: '/ai-guide', label: t.nav.aiGuide },
+  ]
 
   useEffect(() => {
     const tmr = window.setTimeout(() => setDebouncedQ(q.trim()), 220)
@@ -128,9 +132,7 @@ export function GlobalSearch({ className }: { className?: string }) {
                         onClick={() => setOpen(false)}
                         className="rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-sky-50 dark:text-slate-200 dark:hover:bg-slate-800"
                       >
-                        {'label' in item && item.label
-                          ? item.label
-                          : t.nav[item.labelKey!]}
+                        {item.label}
                       </Link>
                     ))}
                   </div>
@@ -157,8 +159,8 @@ export function GlobalSearch({ className }: { className?: string }) {
                     </p>
                     <p className="truncate text-xs text-slate-500">
                       {p.category?.name}
-                      {p.verified ? ' · verified' : ''}
-                      {p.featured ? ' · featured' : ''}
+                      {p.verified ? ` · ${t.common.verified}` : ''}
+                      {p.featured ? ` · ${t.common.featured}` : ''}
                       {isOsmPlaceId(p.id) ? ' · OSM' : ''}
                     </p>
                   </div>

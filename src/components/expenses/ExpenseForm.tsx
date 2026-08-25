@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { EXPENSE_CATEGORIES, type ExpenseCategory } from '@/types/trip'
+import { useT } from '@/hooks/useT'
+import { useAppStore } from '@/store'
+import { usePlaceholders } from '@/i18n/formPlaceholders'
 
 export type ExpenseFormValues = {
   title: string
@@ -25,9 +28,14 @@ export function ExpenseForm({
   defaultCategory = 'food',
   onSubmit,
   onCancel,
-  submitLabel = 'Add expense',
+  submitLabel,
   pending,
 }: Props) {
+  const t = useT()
+  const language = useAppStore((s) => s.language)
+  const placeholders = usePlaceholders(language)
+  const label = submitLabel ?? t.expensesPage.add
+
   const [title, setTitle] = useState('')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState(defaultCategory)
@@ -61,7 +69,7 @@ export function ExpenseForm({
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="What did you spend on?"
+        placeholder={placeholders.expenseWhat}
         className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-500 dark:border-slate-700 dark:bg-slate-950"
         required
       />
@@ -83,7 +91,7 @@ export function ExpenseForm({
           step="1"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder={`Amount (${currency})`}
+          placeholder={placeholders.expenseAmount(currency)}
           className="rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-950"
           required
         />
@@ -97,7 +105,7 @@ export function ExpenseForm({
       <textarea
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
-        placeholder="Notes (optional)"
+        placeholder={placeholders.expenseNotes}
         rows={2}
         className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-500 dark:border-slate-700 dark:bg-slate-950"
       />
@@ -108,15 +116,15 @@ export function ExpenseForm({
           onChange={(e) => setIsEstimated(e.target.checked)}
           className="rounded border-slate-300"
         />
-        Estimated (not final receipt)
+        {language === 'am' ? 'ግምት (የመጨረሻ ደረሰኝ አይደለም)' : 'Estimated (not final receipt)'}
       </label>
       <div className="flex gap-2">
         <Button type="submit" size="sm" disabled={pending}>
-          {pending ? 'Saving…' : submitLabel}
+          {pending ? t.common.loading : label}
         </Button>
         {onCancel && (
           <Button type="button" size="sm" variant="ghost" onClick={onCancel}>
-            Cancel
+            {t.common.cancel}
           </Button>
         )}
       </div>
