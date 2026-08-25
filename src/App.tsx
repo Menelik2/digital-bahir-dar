@@ -29,6 +29,7 @@ import GuidesPage from '@/pages/Guides'
 import ProfilePage from '@/pages/Profile'
 import BusinessPage from '@/pages/Business'
 import AdminPage from '@/pages/Admin'
+import AdminEventsPage from '@/pages/Admin/Events'
 import PlaceDetailsPage from '@/pages/PlaceDetails'
 import NotFoundPage from '@/pages/NotFound'
 
@@ -64,6 +65,7 @@ export default function App() {
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/business" element={<BusinessPage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/admin/events" element={<AdminEventsPage />} />
               <Route path="/places/:slug" element={<PlaceDetailsPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="*" element={<NotFoundPage />} />
