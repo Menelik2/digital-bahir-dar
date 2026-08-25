@@ -29,11 +29,11 @@ import { useTodoStore } from '@/store/todoStore'
 import { useT } from '@/hooks/useT'
 
 const LAKE_TANA_IMG =
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Lake_Tana_from_the_air_%28Ethiopia%29.jpg/640px-Lake_Tana_from_the_air_%28Ethiopia%29.jpg'
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/ET_Amhara_asv2018-02_img112_Lake_Tana_at_Bahir_Dar.jpg/800px-ET_Amhara_asv2018-02_img112_Lake_Tana_at_Bahir_Dar.jpg'
 const FALLS_IMG =
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Blue_Nile_Falls.jpg/640px-Blue_Nile_Falls.jpg'
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Blue_Nile_Falls-03%2C_by_CT_Snow.jpg/800px-Blue_Nile_Falls-03%2C_by_CT_Snow.jpg'
 const CITY_IMG =
-  'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Bahir_Dar_Ethiopia.jpg/640px-Bahir_Dar_Ethiopia.jpg'
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/The_city_of_Bahir_Dar%2C_Ethiopia.jpg/800px-The_city_of_Bahir_Dar%2C_Ethiopia.jpg'
 
 export default function HomePage() {
   const t = useT()
@@ -220,7 +220,14 @@ export default function HomePage() {
             <Link to="/places/lake-tana">
               <Card className="overflow-hidden transition hover:shadow-lg">
                 <div className="relative h-40 bg-[#0b6e99]/30">
-                  <img src={LAKE_TANA_IMG} alt="" className="h-full w-full object-cover" loading="lazy" />
+                  <img
+                    src={LAKE_TANA_IMG}
+                    alt="Lake Tana"
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                  />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                 </div>
                 <CardContent className="p-4">
@@ -232,7 +239,14 @@ export default function HomePage() {
             <Link to="/places/blue-nile-falls-tis-issat">
               <Card className="overflow-hidden transition hover:shadow-lg">
                 <div className="relative h-40 bg-[#078930]/20">
-                  <img src={FALLS_IMG} alt="" className="h-full w-full object-cover" loading="lazy" />
+                  <img
+                    src={FALLS_IMG}
+                    alt="Blue Nile Falls"
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                  />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                 </div>
                 <CardContent className="p-4">
@@ -244,7 +258,14 @@ export default function HomePage() {
             <Link to="/todo">
               <Card className="overflow-hidden transition hover:shadow-lg">
                 <div className="relative h-40 bg-[#d4a017]/20">
-                  <img src={CITY_IMG} alt="" className="h-full w-full object-cover" loading="lazy" />
+                  <img
+                    src={CITY_IMG}
+                    alt="Bahir Dar"
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                  />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 </div>
                 <CardContent className="p-4">
