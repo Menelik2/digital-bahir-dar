@@ -50,16 +50,33 @@ export async function fetchTrip(tripId: string): Promise<Trip | null> {
   return trip
 }
 
-export async function createTrip(userId: string, input: TripInput): Promise<{ trip: Trip | null; error: string | null }> {
+export async function createTrip(
+  userId: string,
+  input: TripInput
+): Promise<{ trip: Trip | null; error: string | null }> {
+  const title = (input.title ?? '').trim()
+  if (title.length < 2) return { trip: null, error: 'Title must be at least 2 characters' }
+  if (title.length > 80) return { trip: null, error: 'Title must be at most 80 characters' }
+  const travelers = input.traveler_count ?? 1
+  if (!Number.isFinite(travelers) || travelers < 1 || travelers > 50) {
+    return { trip: null, error: 'Travelers must be between 1 and 50' }
+  }
+  if (input.budget_total != null && (input.budget_total < 0 || input.budget_total > 50_000_000)) {
+    return { trip: null, error: 'Budget is out of range' }
+  }
+  if (input.start_date && input.end_date && input.end_date < input.start_date) {
+    return { trip: null, error: 'End date must be on or after start date' }
+  }
+
   const { data, error } = await supabase
     .from('trips')
     .insert({
       user_id: userId,
-      title: input.title,
+      title,
       description: input.description || null,
       start_date: input.start_date || null,
       end_date: input.end_date || null,
-      traveler_count: input.traveler_count ?? 1,
+      traveler_count: travelers,
       budget_total: input.budget_total ?? null,
       currency: input.currency ?? 'ETB',
       status: input.status ?? 'planning',
