@@ -5,7 +5,7 @@
 Production-oriented smart city platform for **Bahir Dar, Ethiopia**: tourism, navigation, AI guide, trips, budgets, business listings, and admin moderation.
 
 **Repo:** https://github.com/Menelik2/digital-bahir-dar  
-**Version:** 1.0.2 (Phases 1–10)
+**Version:** 1.0.3 (Phases 1–10 + production polish)
 
 ---
 
@@ -57,6 +57,8 @@ npm run dev
 
 Open http://localhost:5173
 
+> **Lockfile:** After `npm install`, commit the generated `package-lock.json` so CI can use `npm ci`.
+
 ### Supabase
 
 1. Create a project  
@@ -68,7 +70,7 @@ Open http://localhost:5173
 
 ```bash
 npm run typecheck
-npm run build
+npm run build   # runs prebuild → generates PWA icons
 npm run preview
 ```
 
@@ -107,10 +109,10 @@ Service worker registers in production builds. In dev, append `?sw=1` to test.
 | Command | Purpose |
 |---------|---------|
 | `npm run dev` | Local Vite server |
-| `npm run build` | Production bundle |
+| `npm run build` | Production bundle (prebuild generates PWA icons) |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | oxlint |
-| `npm run smoke` | Post-setup file checks |
+| `npm run smoke` | Structural + route module checks |
 | `npm run icons` | Generate PWA PNG icons |
 
 ---
