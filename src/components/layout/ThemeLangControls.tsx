@@ -1,4 +1,4 @@
-import { Globe, Moon, Sun, Monitor } from 'lucide-react'
+import { Globe, Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useThemeControls } from '@/hooks/useTheme'
 import { useLang, useT } from '@/hooks/useT'
@@ -8,7 +8,8 @@ export function ThemeLangControls() {
   const { theme, cycle } = useThemeControls()
   const { language, setLanguage } = useLang()
 
-  const ThemeIcon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor
+  const ThemeIcon = theme === 'dark' ? Moon : Sun
+  const themeLabel = theme === 'dark' ? t.theme.dark : t.theme.light
 
   return (
     <div className="flex items-center gap-0.5">
@@ -16,8 +17,8 @@ export function ThemeLangControls() {
         variant="ghost"
         size="icon"
         onClick={cycle}
-        title={`${t.theme[theme]}`}
-        aria-label={`Theme: ${theme}`}
+        title={themeLabel}
+        aria-label={`Theme: ${theme}. Tap for ${theme === 'light' ? 'dark' : 'light'}`}
       >
         <ThemeIcon className="h-5 w-5" />
       </Button>

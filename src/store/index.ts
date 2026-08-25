@@ -12,8 +12,8 @@ interface LocationState {
 interface AppState {
   location: LocationState
   setLocation: (loc: Partial<LocationState>) => void
-  theme: 'light' | 'dark' | 'system'
-  setTheme: (theme: 'light' | 'dark' | 'system') => void
+  theme: 'light' | 'dark'
+  setTheme: (theme: 'light' | 'dark') => void
   language: 'en' | 'am'
   setLanguage: (lang: 'en' | 'am') => void
   currency: 'ETB' | 'USD' | 'EUR' | 'GBP'
@@ -33,7 +33,8 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       location: { latitude: null, longitude: null, accuracy: null, permission: 'prompt', lastUpdated: null },
       setLocation: (loc) => set((s) => ({ location: { ...s.location, ...loc } })),
-      theme: 'system',
+      // Always start in light mode; user can switch to dark
+      theme: 'light',
       setTheme: (theme) => set({ theme }),
       language: 'en',
       setLanguage: (language) => set({ language }),
@@ -49,6 +50,17 @@ export const useAppStore = create<AppState>()(
     {
       name: 'digital-bahir-dar',
       partialize: (s) => ({ theme: s.theme, language: s.language, currency: s.currency }),
+      // Migrate old 'system' preference → light
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<AppState>
+        const theme =
+          p.theme === 'dark' ? 'dark' : 'light'
+        return {
+          ...current,
+          ...p,
+          theme,
+        }
+      },
     }
   )
 )
