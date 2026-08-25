@@ -3,6 +3,8 @@ import {
   fetchMyRole,
   fetchAdminMetrics,
   fetchPlacesForModeration,
+  fetchCategoriesForAdmin,
+  createPlace,
   setPlaceStatus,
   updatePlace,
   softDeletePlace,
@@ -16,6 +18,7 @@ import {
   setReviewStatus,
   updateReview,
   deleteReview,
+  bulkSetReviewStatus,
   fetchPendingClaims,
   resolveClaim,
   fetchPendingBusinesses,
@@ -25,6 +28,7 @@ import {
   fetchAdminUsers,
   setUserRole,
   type PlaceEditInput,
+  type PlaceCreateInput,
 } from '@/services/admin'
 import { useAuth } from './useAuth'
 import { useAdminRealtime } from './useRealtimeQueries'
@@ -51,6 +55,15 @@ export function useAdminMetrics(enabled: boolean) {
     queryFn: () => fetchAdminMetrics(),
     enabled,
     staleTime: 30_000,
+  })
+}
+
+export function useAdminCategories(enabled: boolean) {
+  return useQuery({
+    queryKey: ['admin-categories'],
+    queryFn: () => fetchCategoriesForAdmin(),
+    enabled,
+    staleTime: 120_000,
   })
 }
 
@@ -121,6 +134,15 @@ export function useAdminActions() {
     qc.invalidateQueries({ queryKey: ['admin-users'] })
     qc.invalidateQueries({ queryKey: ['places'] })
   }
+
+  const placeCreate = useMutation({
+    mutationFn: async (data: PlaceCreateInput) => {
+      const res = await createPlace(data, user?.id)
+      if (res.error) throw new Error(res.error)
+      return res.id
+    },
+    onSuccess: invalidate,
+  })
 
   const placeStatus = useMutation({
     mutationFn: async (args: { placeId: string; status: string; verified?: boolean }) => {
@@ -222,6 +244,14 @@ export function useAdminActions() {
     onSuccess: invalidate,
   })
 
+  const bulkReviews = useMutation({
+    mutationFn: async (args: { reviewIds: string[]; status: string }) => {
+      const res = await bulkSetReviewStatus(args.reviewIds, args.status)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
   const claim = useMutation({
     mutationFn: async (args: { claimId: string; approve: boolean }) => {
       if (!user) throw new Error('Not signed in')
@@ -259,6 +289,7 @@ export function useAdminActions() {
   })
 
   return {
+    placeCreate,
     placeStatus,
     placeUpdate,
     placeSoftDelete,
@@ -271,6 +302,7 @@ export function useAdminActions() {
     reviewStatus,
     reviewUpdate,
     reviewDelete,
+    bulkReviews,
     claim,
     business,
     report,
