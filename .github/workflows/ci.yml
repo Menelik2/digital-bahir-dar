@@ -21,33 +21,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Cache npm
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json', 'package.json') }}
-          restore-keys: |
-            npm-${{ runner.os }}-
-
-      - name: Restore package-lock if incomplete
-        run: node scripts/restore-lock.mjs || true
+          cache: 'npm'
 
       - name: Install
-        run: |
-          if [ -f package-lock.json ] && grep -q 'node_modules/react' package-lock.json 2>/dev/null; then
-            npm ci --prefer-offline --no-audit --no-fund
-          else
-            npm install --prefer-offline --no-audit --no-fund
-          fi
-
-      - name: Cache TS build info
-        uses: actions/cache@v4
-        with:
-          path: node_modules/.tmp
-          key: tsc-${{ runner.os }}-${{ hashFiles('tsconfig*.json', 'src/**/*.ts', 'src/**/*.tsx') }}
-          restore-keys: |
-            tsc-${{ runner.os }}-
+        run: npm install --prefer-offline --no-audit --no-fund
 
       - name: Typecheck
         run: npm run typecheck
