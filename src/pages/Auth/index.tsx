@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
+import { useT } from '@/hooks/useT'
 
 const loginSchema = z.object({ email: z.string().email(), password: z.string().min(6) })
 const registerSchema = loginSchema.extend({ fullName: z.string().min(2) })
@@ -14,6 +15,7 @@ type LoginForm = z.infer<typeof loginSchema>
 type RegisterForm = z.infer<typeof registerSchema>
 
 export default function AuthPage() {
+  const t = useT()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const redirectTo = searchParams.get('redirect') || '/'
@@ -26,7 +28,6 @@ export default function AuthPage() {
   const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) })
   const registerForm = useForm<RegisterForm>({ resolver: zodResolver(registerSchema) })
 
-  // Already signed in — send them where they were going
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
       navigate(redirectTo, { replace: true })
@@ -66,11 +67,10 @@ export default function AuthPage() {
       setError(authError.message)
       return
     }
-    // Email confirmation may be required — only redirect when a session exists
     if (signUpData.session) {
       navigate(redirectTo, { replace: true })
     } else {
-      setInfo('Check your email to confirm your account, then sign in.')
+      setInfo(t.auth.checkEmail)
       setMode('login')
     }
   }
@@ -78,7 +78,7 @@ export default function AuthPage() {
   if (authLoading || isAuthenticated) {
     return (
       <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center text-sm text-slate-500">
-        Loading…
+        {t.common.loading}
       </div>
     )
   }
@@ -87,16 +87,16 @@ export default function AuthPage() {
     <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">{mode === 'login' ? 'Welcome back' : 'Create account'}</CardTitle>
+          <CardTitle className="text-2xl">{mode === 'login' ? t.auth.welcomeBack : t.auth.createAccount}</CardTitle>
           <CardDescription>
-            {mode === 'login' ? 'Sign in to Digital Bahir Dar' : 'Join to save places and plan trips'}
+            {mode === 'login' ? t.auth.signInDesc : t.auth.joinDesc}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {mode === 'login' ? (
             <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Email</label>
+                <label className="mb-1.5 block text-sm font-medium">{t.auth.email}</label>
                 <input
                   type="email"
                   autoComplete="email"
@@ -108,7 +108,7 @@ export default function AuthPage() {
                 )}
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Password</label>
+                <label className="mb-1.5 block text-sm font-medium">{t.auth.password}</label>
                 <input
                   type="password"
                   autoComplete="current-password"
@@ -122,13 +122,13 @@ export default function AuthPage() {
               {error && <p className="text-sm text-red-500">{error}</p>}
               {info && <p className="text-sm text-emerald-600">{info}</p>}
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Signing in...' : 'Log in'}
+                {loading ? t.common.loading : t.auth.signIn}
               </Button>
             </form>
           ) : (
             <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Full name</label>
+                <label className="mb-1.5 block text-sm font-medium">{t.auth.fullName}</label>
                 <input
                   type="text"
                   autoComplete="name"
@@ -140,7 +140,7 @@ export default function AuthPage() {
                 )}
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Email</label>
+                <label className="mb-1.5 block text-sm font-medium">{t.auth.email}</label>
                 <input
                   type="email"
                   autoComplete="email"
@@ -152,7 +152,7 @@ export default function AuthPage() {
                 )}
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Password</label>
+                <label className="mb-1.5 block text-sm font-medium">{t.auth.password}</label>
                 <input
                   type="password"
                   autoComplete="new-password"
@@ -165,31 +165,31 @@ export default function AuthPage() {
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Creating...' : 'Register'}
+                {loading ? t.common.loading : t.auth.register}
               </Button>
             </form>
           )}
           <p className="mt-6 text-center text-sm text-slate-500">
             {mode === 'login' ? (
               <>
-                No account?{' '}
+                {t.auth.noAccount}{' '}
                 <button
                   type="button"
                   onClick={() => switchMode('register')}
                   className="font-medium text-sky-600 hover:underline"
                 >
-                  Register
+                  {t.auth.register}
                 </button>
               </>
             ) : (
               <>
-                Have an account?{' '}
+                {t.auth.hasAccount}{' '}
                 <button
                   type="button"
                   onClick={() => switchMode('login')}
                   className="font-medium text-sky-600 hover:underline"
                 >
-                  Log in
+                  {t.auth.signIn}
                 </button>
               </>
             )}
