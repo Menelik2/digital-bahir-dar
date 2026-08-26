@@ -95,7 +95,6 @@ export default function HomePage() {
 
   return (
     <div className="bg-[#f2f2f7] dark:bg-black">
-      {/* Compact iOS-style hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#056b24] via-[#0b6e99] to-[#0a4d6e] px-4 pb-8 pt-8 text-white sm:pb-14 sm:pt-14">
         <div className="ethio-flag-bar absolute inset-x-0 top-0" aria-hidden />
         <div className="ethio-mesh pointer-events-none absolute inset-0 opacity-50" aria-hidden />
@@ -134,24 +133,29 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* What do you need — app grid */}
-      <section className="mx-auto max-w-6xl px-4 py-5 sm:py-8">
-        <div className="mb-3">
-          <h2 className="ios-section-title text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-xl">
+      {/* What do you need — compact 2×2 */}
+      <section className="mx-auto max-w-6xl px-4 py-4 sm:py-8">
+        <div className="mb-2.5">
+          <h2 className="text-[18px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-xl">
             {t.home.whatNeed}
           </h2>
-          <p className="mt-0.5 text-[13px] text-[#8e8e93]">{t.home.whatNeedSub}</p>
+          <p className="mt-0.5 text-[12px] text-[#8e8e93] sm:text-[13px]">{t.home.whatNeedSub}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
           {desk.map((item) => (
             <Link key={item.to} to={item.to} className="group block ios-press">
               <div
-                className={`relative overflow-hidden rounded-[1.25rem] bg-gradient-to-br ${item.gradient} p-3.5 text-white shadow-[0_4px_20px_rgba(0,0,0,0.12)] sm:p-4`}
+                className={`relative flex min-h-[72px] flex-col justify-center overflow-hidden rounded-2xl bg-gradient-to-br ${item.gradient} px-2.5 py-2.5 text-white shadow-sm sm:min-h-0 sm:px-3.5 sm:py-3.5`}
               >
-                <item.icon className="mb-2 h-6 w-6 opacity-95 sm:h-7 sm:w-7" strokeWidth={2} />
-                <p className="text-[16px] font-bold tracking-tight sm:text-lg">{item.title}</p>
-                <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white/85 sm:text-xs">
+                <item.icon
+                  className="mb-1 h-4 w-4 opacity-95 sm:mb-1.5 sm:h-6 sm:w-6"
+                  strokeWidth={2.25}
+                />
+                <p className="text-[13px] font-bold leading-tight tracking-tight sm:text-base">
+                  {item.title}
+                </p>
+                <p className="mt-0.5 line-clamp-1 text-[10px] leading-tight text-white/80 sm:line-clamp-2 sm:text-[11px]">
                   {item.body}
                 </p>
               </div>
@@ -159,24 +163,25 @@ export default function HomePage() {
           ))}
         </div>
 
-        <Link to="/today" className="mt-3 block ios-press">
-          <div className="flex items-center gap-3 rounded-[1.25rem] border border-black/[0.04] bg-white px-3.5 py-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:border-white/[0.08] dark:bg-[#1c1c1e]">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f5c518] text-[#3d3200]">
-              <Sun className="h-5 w-5" />
+        <Link to="/today" className="mt-2.5 block ios-press">
+          <div className="flex items-center gap-2.5 rounded-2xl border border-black/[0.04] bg-white px-3 py-2.5 shadow-sm dark:border-white/[0.08] dark:bg-[#1c1c1e] sm:gap-3 sm:px-3.5 sm:py-3.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f5c518] text-[#3d3200] sm:h-11 sm:w-11">
+              <Sun className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[15px] font-semibold text-[#1c1c1e] dark:text-white">{t.home.todayTitle}</p>
-              <p className="truncate text-[12px] text-[#8e8e93]">{t.home.todayBody}</p>
+              <p className="text-[14px] font-semibold text-[#1c1c1e] dark:text-white sm:text-[15px]">
+                {t.home.todayTitle}
+              </p>
+              <p className="truncate text-[11px] text-[#8e8e93] sm:text-[12px]">{t.home.todayBody}</p>
             </div>
-            <ChevronRight className="h-5 w-5 shrink-0 text-[#c7c7cc]" />
+            <ChevronRight className="h-4 w-4 shrink-0 text-[#c7c7cc] sm:h-5 sm:w-5" />
           </div>
         </Link>
       </section>
 
-      {/* Tools — iOS app icon grid */}
       <section className="px-4 pb-6 sm:pb-8">
         <div className="mx-auto max-w-6xl">
-          <h2 className="mb-3 text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white">
+          <h2 className="mb-3 text-[18px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-[20px]">
             {t.home.moreTools}
           </h2>
           <div className="grid grid-cols-4 gap-x-2 gap-y-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7">
