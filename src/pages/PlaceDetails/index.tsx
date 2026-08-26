@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import {
   MapPin, Phone, Globe, Navigation, BadgeCheck, Star, Clock,
   ArrowLeft, Loader2, AlertCircle, Share2,
@@ -9,7 +9,7 @@ import { usePlace } from '@/hooks/usePlaces'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useAppStore } from '@/store'
 import { distanceMeters, formatDistance, walkingMinutes, drivingMinutes } from '@/utils/geo'
-import { openGoogleMapsDirections } from '@/components/map/MapView'
+import { inAppDirectionsPath } from '@/services/routing'
 import { FavoriteButton } from '@/components/places/FavoriteButton'
 import { isOsmPlaceId } from '@/services/osmPlaces'
 import { isPersistedPlaceId } from '@/utils/placeId'
@@ -22,6 +22,7 @@ import { useMemo, useState } from 'react'
 
 export default function PlaceDetailsPage() {
   const { slug } = useParams<{ slug: string }>()
+  const navigate = useNavigate()
   const { data: place, isLoading, error, refetch } = usePlace(slug)
   const { location } = useAppStore()
   useGeolocation(true)
@@ -42,6 +43,11 @@ export default function PlaceDetailsPage() {
     return distanceMeters(userPos.lat, userPos.lng, place.latitude, place.longitude)
   }, [place, userPos])
 
+  const goDirections = (mode: 'walking' | 'driving' = 'walking') => {
+    if (!place) return
+    navigate(inAppDirectionsPath(place, mode))
+  }
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-32 text-slate-500">
@@ -58,7 +64,7 @@ export default function PlaceDetailsPage() {
         <h1 className="mb-2 text-xl font-semibold">Place not found</h1>
         <p className="mb-6 text-slate-500">
           {isOsmSlug
-            ? 'This OpenStreetMap listing is only available after loading Discover or a category list. Open Discover and try again, or search on Google Maps.'
+            ? 'This OpenStreetMap listing is only available after loading Discover or a category list. Open Discover and try again.'
             : 'This place may not exist or is not published yet.'}
         </p>
         <div className="flex flex-wrap justify-center gap-3">
@@ -134,7 +140,7 @@ export default function PlaceDetailsPage() {
             </span>
           )}
           <div className="ml-auto flex flex-wrap gap-2">
-            <Button size="sm" onClick={() => openGoogleMapsDirections(place, userPos, 'walking')}>
+            <Button size="sm" onClick={() => goDirections('walking')}>
               <Navigation className="h-4 w-4" /> Directions
             </Button>
             <Button size="sm" variant="outline" onClick={share}><Share2 className="h-4 w-4" /> Share</Button>
@@ -318,8 +324,8 @@ export default function PlaceDetailsPage() {
                   <Globe className="h-4 w-4" /> Website
                 </a>
               )}
-              <Button className="mt-2 w-full sm:w-auto" onClick={() => openGoogleMapsDirections(place, userPos, 'driving')}>
-                <Navigation className="h-4 w-4" /> Open in Google Maps
+              <Button className="mt-2 w-full sm:w-auto" onClick={() => goDirections('driving')}>
+                <Navigation className="h-4 w-4" /> Show route on map
               </Button>
             </CardContent>
           </Card>
