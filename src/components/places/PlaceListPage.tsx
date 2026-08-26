@@ -75,7 +75,6 @@ function matchesPriceTier(place: Place, tier: string): boolean {
 function hotelStarBucket(place: Place): number {
   const s = place.hotel?.star_rating
   if (s != null && s >= 1 && s <= 5) return Math.round(s)
-  // Fallback from price_level when stars missing (OSM etc.)
   const pl = place.price_level
   if (pl != null && pl >= 1 && pl <= 5) return Math.min(5, Math.max(1, Math.round(pl)))
   return 0
@@ -83,11 +82,10 @@ function hotelStarBucket(place: Place): number {
 
 const STAR_ORDER = [5, 4, 3, 2, 1, 0] as const
 
-function starSectionLabel(stars: number, langAm: boolean): string {
-  if (stars === 0) return langAm ? 'ዋጋ ያልተገለጸ / Unrated' : 'Unrated'
-  const starsStr = '★'.repeat(stars)
-  if (langAm) return `${stars} ኮከብ ${starsStr}`
-  return `${stars}-star ${starsStr}`
+function starSectionLabel(stars: number, isAm: boolean): string {
+  if (stars === 0) return isAm ? 'ዋጋ ያልተገለጸ / Unrated' : 'Unrated'
+  if (isAm) return `${stars} ኮከብ ${'★'.repeat(stars)}`
+  return `${stars}-star ${'★'.repeat(stars)}`
 }
 
 export function PlaceListPage({
@@ -101,8 +99,6 @@ export function PlaceListPage({
   groupByStars = false,
 }: PlaceListPageProps) {
   const t = useT()
-  const langAm = t.common.home === 'መነሻ' || (t as { lang?: string }).lang === 'am'
-  // detect Amharic via a stable string if available
   const isAm = typeof document !== 'undefined' && document.documentElement.lang === 'am'
 
   const [search, setSearch] = useState('')
