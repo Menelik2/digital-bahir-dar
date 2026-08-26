@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Search, X, AlertCircle, Layers } from 'lucide-react'
-import { MapView, openGoogleMapsDirections } from '@/components/map/MapView'
+import { MapView } from '@/components/map/MapView'
 import { MapFilter } from '@/components/map/MapFilter'
 import { LocationButton } from '@/components/map/LocationButton'
 import { LocationStatus } from '@/components/map/LocationStatus'
@@ -14,6 +15,7 @@ import { BAHIR_DAR_CENTER } from '@/constants'
 import { getMapboxToken } from '@/constants/map'
 import { distanceMeters } from '@/utils/geo'
 import { filterRealPlaces } from '@/utils/realPlaces'
+import { fetchRoute, type TravelMode } from '@/services/routing'
 import type { Place } from '@/types/place'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/hooks/useT'
@@ -30,8 +32,16 @@ function mergePlaces(primary: Place[], secondary: Place[]): Place[] {
   return out
 }
 
+function parseToParam(raw: string | null): { lat: number; lng: number } | null {
+  if (!raw) return null
+  const parts = raw.split(',').map((s) => Number(s.trim()))
+  if (parts.length !== 2 || !Number.isFinite(parts[0]) || !Number.isFinite(parts[1])) return null
+  return { lat: parts[0], lng: parts[1] }
+}
+
 export default function MapPage() {
   const t = useT()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { location, setMapCenter, mapCenter, selectedPlaceId, setSelectedPlaceId } = useAppStore()
   const { request: requestLocation, hasFix } = useGeolocation({ autoRequest: true, watch: true })
   const mapboxOn = !!getMapboxToken()
@@ -40,8 +50,13 @@ export default function MapPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<string | null>(null)
   const [directionsPlace, setDirectionsPlace] = useState<Place | null>(null)
-  const [travelMode, setTravelMode] = useState<'walking' | 'driving'>('walking')
+  const [travelMode, setTravelMode] = useState<TravelMode>('walking')
   const [includeOsm, setIncludeOsm] = useState(true)
+  const [routeCoords, setRouteCoords] = useState<[number, number][] | null>(null)
+  const [routeLoading, setRouteLoading] = useState(false)
+  const [routeError, setRouteError] = useState(false)
+  const [routeDurationSec, setRouteDurationSec] = useState<number | null>(null)
+  const [routeDistanceM, setRouteDistanceM] = useState<number | null>(null)
 
   const categorySlug =
     filter && !['near_me', 'verified'].includes(filter) ? filter : null
@@ -74,7 +89,6 @@ export default function MapPage() {
 
   const places = useMemo(() => {
     const base = filterRealPlaces(dbPlaces)
-    // Prefer OSM first when enabled (live POIs), then curated/DB fallbacks
     let list = includeOsm ? mergePlaces(osmPlaces, base) : base
     if (search.trim()) {
       const q = search.trim().toLowerCase()
@@ -107,6 +121,7 @@ export default function MapPage() {
 
   const directionsDistance = useMemo(() => {
     if (!directionsPlace) return 0
+    if (routeDistanceM != null) return routeDistanceM
     if (userPos)
       return distanceMeters(
         userPos.lat,
@@ -120,7 +135,88 @@ export default function MapPage() {
       directionsPlace.latitude,
       directionsPlace.longitude
     )
-  }, [directionsPlace, userPos])
+  }, [directionsPlace, userPos, routeDistanceM])
+
+  // Deep link: /map?to=lat,lng&mode=walking&name=...
+  useEffect(() => {
+    const to = parseToParam(searchParams.get('to'))
+    if (!to) return
+    const modeParam = searchParams.get('mode')
+    const mode: TravelMode = modeParam === 'driving' ? 'driving' : 'walking'
+    const name = searchParams.get('name') || 'Destination'
+    const placeId = searchParams.get('placeId') || `dir-${to.lat}-${to.lng}`
+
+    const fromList = places.find(
+      (p) =>
+        p.id === placeId ||
+        (Math.abs(p.latitude - to.lat) < 1e-5 && Math.abs(p.longitude - to.lng) < 1e-5)
+    )
+
+    const dest: Place =
+      fromList ??
+      ({
+        id: placeId,
+        slug: placeId,
+        name,
+        latitude: to.lat,
+        longitude: to.lng,
+        featured: false,
+        verified: false,
+        status: 'published',
+        currency: 'ETB',
+      } as Place)
+
+    setTravelMode(mode)
+    setDirectionsPlace(dest)
+    setSelectedPlaceId(dest.id)
+    setMapCenter({ lat: to.lat, lng: to.lng })
+  }, [searchParams, places, setMapCenter, setSelectedPlaceId])
+
+  // Fetch road route when directions are active
+  useEffect(() => {
+    if (!directionsPlace) {
+      setRouteCoords(null)
+      setRouteDistanceM(null)
+      setRouteDurationSec(null)
+      setRouteError(false)
+      return
+    }
+
+    const origin = userPos ?? {
+      lat: BAHIR_DAR_CENTER.lat,
+      lng: BAHIR_DAR_CENTER.lng,
+    }
+    const dest = {
+      lat: directionsPlace.latitude,
+      lng: directionsPlace.longitude,
+    }
+
+    const ac = new AbortController()
+    setRouteLoading(true)
+    setRouteError(false)
+
+    void fetchRoute(origin, dest, travelMode, ac.signal).then((route) => {
+      if (ac.signal.aborted) return
+      setRouteLoading(false)
+      if (!route) {
+        setRouteError(true)
+        setRouteCoords([
+          [origin.lat, origin.lng],
+          [dest.lat, dest.lng],
+        ])
+        setRouteDistanceM(
+          distanceMeters(origin.lat, origin.lng, dest.lat, dest.lng)
+        )
+        setRouteDurationSec(null)
+        return
+      }
+      setRouteCoords(route.coordinates)
+      setRouteDistanceM(route.distanceM)
+      setRouteDurationSec(route.durationSec)
+    })
+
+    return () => ac.abort()
+  }, [directionsPlace, userPos, travelMode])
 
   useEffect(() => {
     if (userPos && !didCenterOnFix.current) {
@@ -134,13 +230,36 @@ export default function MapPage() {
       setSelectedPlaceId(place.id)
       setMapCenter({ lat: place.latitude, lng: place.longitude })
       setDirectionsPlace(null)
+      setRouteCoords(null)
+      // clear deep-link params
+      if (searchParams.has('to')) {
+        const next = new URLSearchParams(searchParams)
+        next.delete('to')
+        next.delete('mode')
+        next.delete('name')
+        next.delete('placeId')
+        setSearchParams(next, { replace: true })
+      }
     },
-    [setSelectedPlaceId, setMapCenter]
+    [setSelectedPlaceId, setMapCenter, searchParams, setSearchParams]
   )
 
   const handleDirections = useCallback((place: Place) => {
     setDirectionsPlace(place)
   }, [])
+
+  const handleCloseDirections = useCallback(() => {
+    setDirectionsPlace(null)
+    setRouteCoords(null)
+    if (searchParams.has('to')) {
+      const next = new URLSearchParams(searchParams)
+      next.delete('to')
+      next.delete('mode')
+      next.delete('name')
+      next.delete('placeId')
+      setSearchParams(next, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
 
   const handleLocate = useCallback(
     (lat?: number, lng?: number) => {
@@ -219,6 +338,7 @@ export default function MapPage() {
         center={mapCenter}
         onPlaceSelect={handlePlaceSelect}
         onCenterChange={setMapCenter}
+        routeCoordinates={routeCoords}
       />
 
       {includeOsm && osmError && osmPlaces.length === 0 && (
@@ -267,8 +387,10 @@ export default function MapPage() {
           distanceM={directionsDistance}
           mode={travelMode}
           onModeChange={setTravelMode}
-          onClose={() => setDirectionsPlace(null)}
-          onStartNavigation={() => openGoogleMapsDirections(directionsPlace, userPos, travelMode)}
+          onClose={handleCloseDirections}
+          routeLoading={routeLoading}
+          routeError={routeError}
+          routeDurationSec={routeDurationSec}
         />
       )}
 

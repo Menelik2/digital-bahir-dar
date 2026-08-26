@@ -10,6 +10,7 @@ import {
   ScaleControl,
   ZoomControl,
   useMapEvents,
+  Polyline,
 } from 'react-leaflet'
 import L from 'leaflet'
 import type { Place } from '@/types/place'
@@ -26,6 +27,7 @@ import {
 } from '@/constants/map'
 import { placeGuideLinks } from '@/constants/guideSites'
 import { displayPlaceName } from '@/utils/realPlaces'
+import { inAppDirectionsPath } from '@/services/routing'
 import 'leaflet/dist/leaflet.css'
 
 function categoryColor(slug?: string | null): string {
@@ -91,6 +93,8 @@ interface MapViewProps {
   center: { lat: number; lng: number }
   onPlaceSelect: (place: Place) => void
   onCenterChange?: (center: { lat: number; lng: number }) => void
+  /** In-app route polyline [lat, lng][] */
+  routeCoordinates?: [number, number][] | null
 }
 
 function MapCamera({ center }: { center: { lat: number; lng: number } }) {
@@ -102,6 +106,16 @@ function MapCamera({ center }: { center: { lat: number; lng: number } }) {
       map.panTo(target, { animate: true })
     }
   }, [map, center.lat, center.lng])
+  return null
+}
+
+function FitRoute({ coords }: { coords: [number, number][] }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!coords.length) return
+    const bounds = L.latLngBounds(coords.map(([lat, lng]) => [lat, lng]))
+    map.fitBounds(bounds, { padding: [48, 48], maxZoom: 16, animate: true })
+  }, [map, coords])
   return null
 }
 
@@ -123,7 +137,6 @@ function InvalidateSize() {
     const t = window.setTimeout(() => map.invalidateSize(), 100)
     const onResize = () => map.invalidateSize()
     window.addEventListener('resize', onResize)
-    // Fix blank tiles after orientation / tab switch
     const onVis = () => {
       if (document.visibilityState === 'visible') map.invalidateSize()
     }
@@ -155,6 +168,7 @@ export function MapView({
   center,
   onPlaceSelect,
   onCenterChange,
+  routeCoordinates,
 }: MapViewProps) {
   const token = getMapboxToken()
   const useMapbox = !!token
@@ -179,6 +193,21 @@ export function MapView({
       <BahirDarLock />
       <MapCamera center={center} />
       <MapEvents onCenterChange={onCenterChange} />
+      {routeCoordinates && routeCoordinates.length > 1 && (
+        <>
+          <FitRoute coords={routeCoordinates} />
+          <Polyline
+            positions={routeCoordinates}
+            pathOptions={{
+              color: '#0b6e99',
+              weight: 5,
+              opacity: 0.9,
+              lineJoin: 'round',
+              lineCap: 'round',
+            }}
+          />
+        </>
+      )}
 
       <LayersControl position="topright">
         {useMapbox && token ? (
@@ -244,6 +273,7 @@ export function MapView({
         const selected = place.id === selectedPlaceId
         const links = placeGuideLinks(place)
         const cat = place.category?.slug
+        const inAppDir = inAppDirectionsPath(place, 'walking')
         return (
           <Marker
             key={place.id}
@@ -264,7 +294,7 @@ export function MapView({
                   <div style={{ fontSize: 12, marginTop: 4 }}>{place.short_description}</div>
                 )}
                 <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  <a href={links.googleDirections} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12 }}>
+                  <a href={inAppDir} style={{ fontSize: 12, fontWeight: 600 }}>
                     Directions
                   </a>
                   <a href={links.openStreetMap} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12 }}>
@@ -277,7 +307,6 @@ export function MapView({
         )
       })}
 
-      {/* Always show GPS blue dot when we have a fix (even slightly outside soft bounds) */}
       {userLocation && (
         <>
           <CircleMarker
@@ -308,13 +337,12 @@ export function MapView({
   )
 }
 
+/** @deprecated Prefer inAppDirectionsPath + navigate — stays inside the app */
 export function openGoogleMapsDirections(
   dest: Place,
-  origin?: { lat: number; lng: number } | null,
+  _origin?: { lat: number; lng: number } | null,
   mode: 'walking' | 'driving' = 'walking'
 ) {
-  const travelmode = mode === 'walking' ? 'walking' : 'driving'
-  let url = `https://www.google.com/maps/dir/?api=1&destination=${dest.latitude},${dest.longitude}&travelmode=${travelmode}`
-  if (origin) url += `&origin=${origin.lat},${origin.lng}`
-  window.open(url, '_blank', 'noopener,noreferrer')
+  // Stay in app: open our Map page with directions query
+  window.location.assign(inAppDirectionsPath(dest, mode))
 }
