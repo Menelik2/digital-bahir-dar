@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom'
 import { Wallet, Calculator, Users, ArrowRight, Moon, BedDouble, Receipt, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { EXPENSE_CATEGORIES } from '@/types/trip'
 import { useAppStore } from '@/store'
 import { estimateTripBudget, formatMoney } from '@/utils/budget'
 import { cn } from '@/lib/utils'
+import { useBudgetUi } from '@/i18n/budgetUi'
 
 export default function BudgetPage() {
-  const { currency } = useAppStore()
+  const { currency, language } = useAppStore()
+  const b = useBudgetUi(language)
   const [travelers, setTravelers] = useState(2)
   const [nights, setNights] = useState(2)
   const [lodgingPerNight, setLodgingPerNight] = useState(2500)
@@ -54,6 +55,18 @@ export default function BudgetPage() {
     </div>
   )
 
+  const catLabel = (id: string) => {
+    const map: Record<string, string> = {
+      lodging: b.lodging,
+      food: b.food,
+      transport: b.transport,
+      attraction: b.attraction,
+      shopping: b.shopping,
+      other: b.other,
+    }
+    return map[id] ?? id
+  }
+
   const rows: { id: string; amount: number }[] = [
     { id: 'lodging', amount: breakdown.lodging },
     { id: 'food', amount: breakdown.food },
@@ -63,26 +76,30 @@ export default function BudgetPage() {
     { id: 'other', amount: breakdown.other },
   ]
 
+  const formula = b.formula
+    .replace('{rooms}', String(breakdown.rooms))
+    .replace('{nights}', String(nights))
+    .replace('{foodDays}', String(breakdown.foodDays))
+    .replace('{travelers}', String(travelers))
+
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
+    <div className="mx-auto max-w-2xl px-4 py-8 font-sans">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl">
-            <Calculator className="h-7 w-7 text-sky-600" /> Budget planner
+          <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight sm:text-3xl">
+            <Calculator className="h-7 w-7 shrink-0 text-sky-600" /> {b.title}
           </h1>
-          <p className="mt-1 text-slate-500">
-            Estimate costs for a Bahir Dar trip. Figures are planning tools only — verify local prices.
-          </p>
+          <p className="mt-1 text-[15px] leading-relaxed text-slate-500">{b.subtitle}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link to="/spend-guide">
             <Button size="sm" className="bg-gradient-to-r from-sky-500 to-teal-600">
-              <Sparkles className="h-4 w-4" /> Spend Guide
+              <Sparkles className="h-4 w-4" /> {b.spendGuide}
             </Button>
           </Link>
           <Link to="/expenses">
             <Button variant="outline" size="sm">
-              <Receipt className="h-4 w-4" /> Track expenses
+              <Receipt className="h-4 w-4" /> {b.trackExpenses}
             </Button>
           </Link>
         </div>
@@ -91,14 +108,12 @@ export default function BudgetPage() {
       <Card className="mb-6 border-dashed border-sky-300 bg-sky-50/50 dark:border-sky-800 dark:bg-sky-950/20">
         <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
           <div>
-            <p className="font-medium">Have cash and need ideas?</p>
-            <p className="text-sm text-slate-500">
-              Spend Guide picks hotel / food / sights levels from the money you have.
-            </p>
+            <p className="font-medium">{b.cashIdeasTitle}</p>
+            <p className="text-sm leading-relaxed text-slate-500">{b.cashIdeasBody}</p>
           </div>
           <Link to="/spend-guide">
             <Button size="sm">
-              Open Spend Guide <ArrowRight className="h-4 w-4" />
+              {b.openSpendGuide} <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         </CardContent>
@@ -106,15 +121,15 @@ export default function BudgetPage() {
 
       <Card className="mb-6">
         <CardContent className="grid gap-4 p-4 sm:grid-cols-2">
-          {field('Travelers', travelers, setTravelers, { min: 1 })}
-          {field('Nights', nights, setNights, { min: 0 })}
-          {field(`Lodging per night (${currency})`, lodgingPerNight, setLodgingPerNight)}
-          {field(`Food per person / day (${currency})`, foodPerDay, setFoodPerDay)}
-          {field(`Transport total (${currency})`, transport, setTransport)}
-          {field(`Attractions per person (${currency})`, attractions, setAttractions)}
-          {field(`Shopping (${currency})`, shopping, setShopping)}
-          {field(`Other (${currency})`, other, setOther)}
-          {field(`Your budget cap (${currency})`, budgetCap, setBudgetCap)}
+          {field(b.travelers, travelers, setTravelers, { min: 1 })}
+          {field(b.nights, nights, setNights, { min: 0 })}
+          {field(`${b.lodgingPerNight} (${currency})`, lodgingPerNight, setLodgingPerNight)}
+          {field(`${b.foodPerDay} (${currency})`, foodPerDay, setFoodPerDay)}
+          {field(`${b.transportTotal} (${currency})`, transport, setTransport)}
+          {field(`${b.attractionsPerPerson} (${currency})`, attractions, setAttractions)}
+          {field(`${b.shopping} (${currency})`, shopping, setShopping)}
+          {field(`${b.other} (${currency})`, other, setOther)}
+          {field(`${b.budgetCap} (${currency})`, budgetCap, setBudgetCap)}
         </CardContent>
       </Card>
 
@@ -122,28 +137,28 @@ export default function BudgetPage() {
         <Card>
           <CardContent className="p-3 text-center">
             <BedDouble className="mx-auto mb-1 h-4 w-4 text-sky-600" />
-            <p className="text-xs text-slate-500">Rooms</p>
+            <p className="text-xs text-slate-500">{b.rooms}</p>
             <p className="font-semibold">{breakdown.rooms}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
             <Moon className="mx-auto mb-1 h-4 w-4 text-sky-600" />
-            <p className="text-xs text-slate-500">Food days</p>
+            <p className="text-xs text-slate-500">{b.foodDays}</p>
             <p className="font-semibold">{breakdown.foodDays}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
             <Users className="mx-auto mb-1 h-4 w-4 text-sky-600" />
-            <p className="text-xs text-slate-500">Per person</p>
+            <p className="text-xs text-slate-500">{b.perPerson}</p>
             <p className="font-semibold">{Math.round(breakdown.perPerson).toLocaleString()}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
             <Wallet className="mx-auto mb-1 h-4 w-4 text-sky-600" />
-            <p className="text-xs text-slate-500">Per day</p>
+            <p className="text-xs text-slate-500">{b.perDay}</p>
             <p className="font-semibold">{Math.round(breakdown.perDay).toLocaleString()}</p>
           </CardContent>
         </Card>
@@ -152,13 +167,13 @@ export default function BudgetPage() {
       <Card className="mb-6 border-sky-200 dark:border-sky-900">
         <CardContent className="p-4">
           <h2 className="mb-4 flex items-center gap-2 font-semibold">
-            <Wallet className="h-5 w-5 text-sky-600" /> Estimate summary
+            <Wallet className="h-5 w-5 text-sky-600" /> {b.summary}
           </h2>
 
           {breakdown.usedPercent != null && (
             <div className="mb-4">
               <div className="mb-1 flex justify-between text-xs text-slate-500">
-                <span>Budget used</span>
+                <span>{b.budgetUsed}</span>
                 <span>{breakdown.usedPercent}%</span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
@@ -179,30 +194,28 @@ export default function BudgetPage() {
 
           <div className="space-y-2 text-sm">
             {rows.map(({ id, amount }) => (
-              <div key={id} className="flex justify-between">
-                <span className="capitalize text-slate-500">
-                  {EXPENSE_CATEGORIES.find((c) => c.id === id)?.label ?? id}
-                </span>
-                <span className="font-medium">
+              <div key={id} className="flex justify-between gap-2">
+                <span className="text-slate-500">{catLabel(id)}</span>
+                <span className="shrink-0 font-medium">
                   {amount.toLocaleString()} {currency}
                 </span>
               </div>
             ))}
             <div className="my-2 border-t border-slate-200 dark:border-slate-700" />
             <div className="flex justify-between text-base font-semibold">
-              <span>Total estimated</span>
+              <span>{b.totalEstimated}</span>
               <span>{formatMoney(breakdown.total, currency)}</span>
             </div>
             <div className="flex justify-between">
               <span className="flex items-center gap-1 text-slate-500">
-                <Users className="h-3.5 w-3.5" /> Per person
+                <Users className="h-3.5 w-3.5" /> {b.perPerson}
               </span>
               <span>
                 {Math.round(breakdown.perPerson).toLocaleString()} {currency}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">vs budget cap</span>
+              <span className="text-slate-500">{b.vsCap}</span>
               <span
                 className={cn(
                   'font-semibold',
@@ -216,41 +229,33 @@ export default function BudgetPage() {
           </div>
 
           {(breakdown.remaining ?? 0) < 0 && (
-            <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 dark:bg-red-950/40 dark:text-red-300">
-              Estimate exceeds your budget by{' '}
-              {Math.abs(breakdown.remaining ?? 0).toLocaleString()} {currency}. Reduce nights,
-              lodging, or other categories.
+            <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs leading-relaxed text-red-700 dark:bg-red-950/40 dark:text-red-300">
+              {b.exceeds} {Math.abs(breakdown.remaining ?? 0).toLocaleString()} {currency}.{' '}
+              {b.exceedsHint}
             </p>
           )}
 
-          <p className="mt-3 text-xs text-slate-400">
-            Lodging uses {breakdown.rooms} room(s) × {nights} night(s). Food uses {breakdown.foodDays}{' '}
-            day(s) × {travelers} traveler(s).
-          </p>
+          <p className="mt-3 text-xs leading-relaxed text-slate-400">{formula}</p>
         </CardContent>
       </Card>
 
       <div className="rounded-xl border border-dashed border-slate-300 p-4 text-center dark:border-slate-700">
-        <p className="mb-3 text-sm text-slate-500">
-          Log real spending as you go, or save a full trip itinerary.
-        </p>
+        <p className="mb-3 text-sm leading-relaxed text-slate-500">{b.logHint}</p>
         <div className="flex flex-wrap justify-center gap-2">
           <Link to="/expenses">
             <Button variant="outline">
-              <Receipt className="h-4 w-4" /> Expense tracker
+              <Receipt className="h-4 w-4" /> {b.expenseTracker}
             </Button>
           </Link>
           <Link to="/trips">
             <Button>
-              Open My Trips <ArrowRight className="h-4 w-4" />
+              {b.openTrips} <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
       </div>
 
-      <p className="mt-6 text-center text-xs text-slate-400">
-        Prices are illustrative defaults for planning. Always confirm current rates locally.
-      </p>
+      <p className="mt-6 text-center text-xs leading-relaxed text-slate-400">{b.footer}</p>
     </div>
   )
 }
