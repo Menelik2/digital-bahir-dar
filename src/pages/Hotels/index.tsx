@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Hotel, Waves, Building2, Plane } from 'lucide-react'
+import { Hotel, Waves, Building2, Plane, Star } from 'lucide-react'
 import { PlaceListPage } from '@/components/places/PlaceListPage'
 import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
@@ -50,6 +50,10 @@ export default function HotelsPage() {
             <Hotel className="h-6 w-6" /> {t.hotelsPage.title}
           </h2>
           <p className="mt-1.5 max-w-2xl text-xs text-blue-50 sm:text-sm">{t.hotelsPage.intro}</p>
+          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-medium backdrop-blur">
+            <Star className="h-3.5 w-3.5 fill-amber-300 text-amber-300" />
+            Grouped by star rating · 5★ → Unrated
+          </p>
         </div>
 
         <h3 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">
@@ -133,6 +137,7 @@ export default function HotelsPage() {
         subtitle={t.pages.hotelsSubtitle}
         categorySlug="hotel"
         osmCategories={['hotel']}
+        groupByStars
         filters={[
           { id: 'budget', label: t.list.budget },
           { id: 'mid', label: t.list.midRange },

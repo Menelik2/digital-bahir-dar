@@ -7,6 +7,7 @@ import {
   RefreshCw,
   ExternalLink,
   X,
+  Star,
 } from 'lucide-react'
 import { PlaceCard } from './PlaceCard'
 import { Button } from '@/components/ui/button'
@@ -30,6 +31,8 @@ interface PlaceListPageProps {
   emptyMessage?: string
   osmCategories?: OsmCategory[]
   mergeOsm?: boolean
+  /** Group hotels into sections by star rating */
+  groupByStars?: boolean
 }
 
 function mergePlaces(primary: Place[], secondary: Place[]): Place[] {
@@ -68,6 +71,25 @@ function matchesPriceTier(place: Place, tier: string): boolean {
   return true
 }
 
+/** 0 = unrated; 1–5 = stars */
+function hotelStarBucket(place: Place): number {
+  const s = place.hotel?.star_rating
+  if (s != null && s >= 1 && s <= 5) return Math.round(s)
+  // Fallback from price_level when stars missing (OSM etc.)
+  const pl = place.price_level
+  if (pl != null && pl >= 1 && pl <= 5) return Math.min(5, Math.max(1, Math.round(pl)))
+  return 0
+}
+
+const STAR_ORDER = [5, 4, 3, 2, 1, 0] as const
+
+function starSectionLabel(stars: number, langAm: boolean): string {
+  if (stars === 0) return langAm ? 'ዋጋ ያልተገለጸ / Unrated' : 'Unrated'
+  const starsStr = '★'.repeat(stars)
+  if (langAm) return `${stars} ኮከብ ${starsStr}`
+  return `${stars}-star ${starsStr}`
+}
+
 export function PlaceListPage({
   title,
   subtitle,
@@ -76,10 +98,16 @@ export function PlaceListPage({
   emptyMessage,
   osmCategories,
   mergeOsm = true,
+  groupByStars = false,
 }: PlaceListPageProps) {
   const t = useT()
+  const langAm = t.common.home === 'መነሻ' || (t as { lang?: string }).lang === 'am'
+  // detect Amharic via a stable string if available
+  const isAm = typeof document !== 'undefined' && document.documentElement.lang === 'am'
+
   const [search, setSearch] = useState('')
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
+  const [starFilter, setStarFilter] = useState<number | null>(null)
   const [sort, setSort] = useState<SortOption>('featured')
   const [showSort, setShowSort] = useState(false)
   const { location } = useAppStore()
@@ -128,10 +156,23 @@ export function PlaceListPage({
       list = list.filter((p) => matchesPriceTier(p, activeFilter))
     }
 
+    if (groupByStars && starFilter != null) {
+      list = list.filter((p) => hotelStarBucket(p) === starFilter)
+    }
+
     if (sort === 'distance' && location.latitude != null && location.longitude != null) {
       return rankNearby(list, location.latitude, location.longitude, 50_000)
     }
     if (sort === 'name') return [...list].sort((a, b) => a.name.localeCompare(b.name))
+
+    if (groupByStars) {
+      return [...list].sort(
+        (a, b) =>
+          hotelStarBucket(b) - hotelStarBucket(a) ||
+          Number(b.featured) - Number(a.featured) ||
+          a.name.localeCompare(b.name)
+      )
+    }
 
     return [...list].sort(
       (a, b) =>
@@ -139,10 +180,71 @@ export function PlaceListPage({
         Number(b.verified) - Number(a.verified) ||
         a.name.localeCompare(b.name)
     )
-  }, [combined, search, sort, location.latitude, location.longitude, activeFilter])
+  }, [
+    combined,
+    search,
+    sort,
+    location.latitude,
+    location.longitude,
+    activeFilter,
+    groupByStars,
+    starFilter,
+  ])
+
+  const starGroups = useMemo(() => {
+    if (!groupByStars) return null
+    const map = new Map<number, Place[]>()
+    for (const s of STAR_ORDER) map.set(s, [])
+    for (const p of sorted) {
+      const b = hotelStarBucket(p)
+      const arr = map.get(b) ?? map.get(0)!
+      arr.push(p)
+    }
+    return STAR_ORDER.map((stars) => ({
+      stars,
+      places: map.get(stars) ?? [],
+    })).filter((g) => g.places.length > 0)
+  }, [groupByStars, sorted])
 
   const loading = isLoading && sorted.length === 0 && (osmLoading || !mergeOsm)
   const empty = emptyMessage ?? t.list.loadFail
+
+  const renderCard = (place: Place) => {
+    const isOsm = place.id.startsWith('osm-')
+    const links = placeGuideLinks(place)
+    const stars = hotelStarBucket(place)
+    return (
+      <div key={place.id} className="flex flex-col gap-2">
+        <PlaceCard place={place} />
+        {stars > 0 && (
+          <p className="flex items-center gap-1 px-1 text-xs font-medium text-amber-600 dark:text-amber-400">
+            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+            {stars} {stars === 1 ? 'star' : 'stars'}
+          </p>
+        )}
+        {isOsm && (
+          <div className="flex flex-wrap gap-2 px-1">
+            <a
+              href={links.googleMaps}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700 dark:bg-sky-950 dark:text-sky-300"
+            >
+              <ExternalLink className="h-3 w-3" /> {t.common.maps}
+            </a>
+            <a
+              href={links.googleDirections}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 rounded-lg bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 dark:bg-teal-950 dark:text-teal-300"
+            >
+              {t.common.directions}
+            </a>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -234,6 +336,61 @@ export function PlaceListPage({
         </div>
       )}
 
+      {groupByStars && (
+        <div className="mb-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            {isAm ? 'በኮከብ ደረጃ' : 'By star rating'}
+          </p>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            <button
+              type="button"
+              onClick={() => setStarFilter(null)}
+              className={cn(
+                'shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium',
+                starFilter === null
+                  ? 'border-amber-500 bg-amber-500 text-white'
+                  : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
+              )}
+            >
+              {t.common.all}
+            </button>
+            {[5, 4, 3, 2, 1].map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStarFilter(starFilter === s ? null : s)}
+                className={cn(
+                  'inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-medium',
+                  starFilter === s
+                    ? 'border-amber-500 bg-amber-500 text-white'
+                    : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
+                )}
+              >
+                <Star
+                  className={cn(
+                    'h-3.5 w-3.5',
+                    starFilter === s ? 'fill-white text-white' : 'fill-amber-400 text-amber-400'
+                  )}
+                />
+                {s}★
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setStarFilter(starFilter === 0 ? null : 0)}
+              className={cn(
+                'shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium',
+                starFilter === 0
+                  ? 'border-amber-500 bg-amber-500 text-white'
+                  : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
+              )}
+            >
+              {isAm ? 'ያልተገለጸ' : 'Unrated'}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
         <button
           type="button"
@@ -293,8 +450,15 @@ export function PlaceListPage({
           title={empty}
           action={
             <div className="flex flex-col items-center gap-2">
-              {activeFilter && (
-                <Button variant="outline" size="sm" onClick={() => setActiveFilter(null)}>
+              {(activeFilter || starFilter != null) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setActiveFilter(null)
+                    setStarFilter(null)
+                  }}
+                >
                   {t.common.showAll}
                 </Button>
               )}
@@ -319,37 +483,49 @@ export function PlaceListPage({
               <span className="text-slate-400"> · {t.discover.updatingOsm}</span>
             )}
           </p>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {sorted.map((place) => {
-              const isOsm = place.id.startsWith('osm-')
-              const links = placeGuideLinks(place)
-              return (
-                <div key={place.id} className="flex flex-col gap-2">
-                  <PlaceCard place={place} />
-                  {isOsm && (
-                    <div className="flex flex-wrap gap-2 px-1">
-                      <a
-                        href={links.googleMaps}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700 dark:bg-sky-950 dark:text-sky-300"
-                      >
-                        <ExternalLink className="h-3 w-3" /> {t.common.maps}
-                      </a>
-                      <a
-                        href={links.googleDirections}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-lg bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 dark:bg-teal-950 dark:text-teal-300"
-                      >
-                        {t.common.directions}
-                      </a>
+
+          {groupByStars && starGroups ? (
+            <div className="space-y-8">
+              {starGroups.map((group) => (
+                <section key={group.stars}>
+                  <div className="mb-3 flex items-center gap-2 border-b border-slate-200 pb-2 dark:border-slate-700">
+                    <div
+                      className={cn(
+                        'flex h-9 w-9 items-center justify-center rounded-full',
+                        group.stars >= 4
+                          ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                          : group.stars >= 2
+                            ? 'bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300'
+                            : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                      )}
+                    >
+                      {group.stars > 0 ? (
+                        <Star className="h-4 w-4 fill-current" />
+                      ) : (
+                        <span className="text-xs font-bold">?</span>
+                      )}
                     </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+                    <div>
+                      <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                        {starSectionLabel(group.stars, isAm)}
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        {group.places.length}{' '}
+                        {group.places.length === 1 ? 'hotel' : 'hotels'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {group.places.map(renderCard)}
+                  </div>
+                </section>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {sorted.map(renderCard)}
+            </div>
+          )}
         </>
       )}
     </div>
