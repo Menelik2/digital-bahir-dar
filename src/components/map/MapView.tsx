@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import {
   MapContainer,
   TileLayer,
@@ -12,6 +12,7 @@ import {
   useMapEvents,
   Polyline,
 } from 'react-leaflet'
+import { useEffect } from 'react'
 import L from 'leaflet'
 import type { Place } from '@/types/place'
 import { BAHIR_DAR_CENTER } from '@/constants'
@@ -20,7 +21,7 @@ import {
   BAHIR_DAR_MIN_ZOOM,
   BAHIR_DAR_MAX_ZOOM,
   BAHIR_DAR_DEFAULT_ZOOM,
-  MAPBOX_STYLES,
+  MAPBOX_RASTER_STYLES,
   getMapboxToken,
   mapboxTileUrl,
   mapboxAttribution,
@@ -28,6 +29,7 @@ import {
 import { placeGuideLinks } from '@/constants/guideSites'
 import { displayPlaceName } from '@/utils/realPlaces'
 import { inAppDirectionsPath } from '@/services/routing'
+import { MapViewGl, type MapViewProps } from './MapViewGl'
 import 'leaflet/dist/leaflet.css'
 
 function categoryColor(slug?: string | null): string {
@@ -84,17 +86,6 @@ function pinIcon(selected: boolean, featured: boolean, categorySlug?: string | n
     iconAnchor: [size / 2, size],
     popupAnchor: [0, -size],
   })
-}
-
-interface MapViewProps {
-  places: Place[]
-  selectedPlaceId: string | null
-  userLocation: { lat: number; lng: number } | null
-  center: { lat: number; lng: number }
-  onPlaceSelect: (place: Place) => void
-  onCenterChange?: (center: { lat: number; lng: number }) => void
-  /** In-app route polyline [lat, lng][] */
-  routeCoordinates?: [number, number][] | null
 }
 
 function MapCamera({ center }: { center: { lat: number; lng: number } }) {
@@ -161,7 +152,8 @@ function BahirDarLock() {
   return null
 }
 
-export function MapView({
+/** Leaflet map (fallback when no Mapbox token) */
+function LeafletMapView({
   places,
   selectedPlaceId,
   userLocation,
@@ -171,7 +163,7 @@ export function MapView({
   routeCoordinates,
 }: MapViewProps) {
   const token = getMapboxToken()
-  const useMapbox = !!token
+  const useMapboxTiles = !!token
   const markers = useMemo(() => places.slice(0, 500), [places])
 
   return (
@@ -210,12 +202,12 @@ export function MapView({
       )}
 
       <LayersControl position="topright">
-        {useMapbox && token ? (
+        {useMapboxTiles && token ? (
           <>
             <LayersControl.BaseLayer checked name="Streets">
               <TileLayer
                 attribution={mapboxAttribution()}
-                url={mapboxTileUrl(MAPBOX_STYLES.streets, token)}
+                url={mapboxTileUrl(MAPBOX_RASTER_STYLES.streets, token)}
                 tileSize={512}
                 zoomOffset={-1}
                 maxZoom={BAHIR_DAR_MAX_ZOOM}
@@ -224,7 +216,7 @@ export function MapView({
             <LayersControl.BaseLayer name="Outdoors">
               <TileLayer
                 attribution={mapboxAttribution()}
-                url={mapboxTileUrl(MAPBOX_STYLES.outdoors, token)}
+                url={mapboxTileUrl(MAPBOX_RASTER_STYLES.outdoors, token)}
                 tileSize={512}
                 zoomOffset={-1}
                 maxZoom={BAHIR_DAR_MAX_ZOOM}
@@ -233,7 +225,7 @@ export function MapView({
             <LayersControl.BaseLayer name="Satellite">
               <TileLayer
                 attribution={mapboxAttribution()}
-                url={mapboxTileUrl(MAPBOX_STYLES.satellite, token)}
+                url={mapboxTileUrl(MAPBOX_RASTER_STYLES.satellite, token)}
                 tileSize={512}
                 zoomOffset={-1}
                 maxZoom={BAHIR_DAR_MAX_ZOOM}
@@ -337,12 +329,20 @@ export function MapView({
   )
 }
 
-/** @deprecated Prefer inAppDirectionsPath + navigate — stays inside the app */
+/** Prefers Mapbox GL JS when VITE_MAPBOX_ACCESS_TOKEN is set; otherwise Leaflet + OSM */
+export function MapView(props: MapViewProps) {
+  const token = getMapboxToken()
+  if (token) {
+    return <MapViewGl {...props} token={token} />
+  }
+  return <LeafletMapView {...props} />
+}
+
+/** Opens in-app map directions (does not leave to Google Maps website) */
 export function openGoogleMapsDirections(
   dest: Place,
   _origin?: { lat: number; lng: number } | null,
   mode: 'walking' | 'driving' = 'walking'
 ) {
-  // Stay in app: open our Map page with directions query
   window.location.assign(inAppDirectionsPath(dest, mode))
 }

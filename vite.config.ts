@@ -10,9 +10,15 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  optimizeDeps: {
+    include: ['mapbox-gl'],
+  },
   build: {
     outDir: 'dist',
     sourcemap: true,
+    commonjsOptions: {
+      include: [/mapbox-gl/, /node_modules/],
+    },
   },
   server: {
     port: 5173,
