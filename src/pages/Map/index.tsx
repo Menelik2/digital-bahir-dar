@@ -15,16 +15,26 @@ import { BAHIR_DAR_CENTER } from '@/constants'
 import { getMapboxToken } from '@/constants/map'
 import { distanceMeters } from '@/utils/geo'
 import { filterRealPlaces } from '@/utils/realPlaces'
+import { CURATED_HOTELS } from '@/services/curatedHotels'
+import { CURATED_TOURISM_PLACES } from '@/services/curatedTourism'
 import { fetchRoute, type TravelMode } from '@/services/routing'
 import type { Place } from '@/types/place'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/hooks/useT'
 
+function nameKey(name: string) {
+  return (name || '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+    .split(' · ')[0]
+}
+
 function mergePlaces(primary: Place[], secondary: Place[]): Place[] {
-  const seen = new Set(primary.map((p) => (p.name || '').toLowerCase().trim()))
+  const seen = new Set(primary.map((p) => nameKey(p.name)))
   const out = [...primary]
   for (const p of secondary) {
-    const key = (p.name || '').toLowerCase().trim()
+    const key = nameKey(p.name)
     if (!key || seen.has(key)) continue
     seen.add(key)
     out.push(p)
@@ -99,9 +109,35 @@ export default function MapPage() {
   } = useOsmPlaces([...osmCategories], includeOsm)
 
   const places = useMemo(() => {
+    // Build list: curated local data first (always available offline), then DB, then OSM
+    let list: Place[] = []
+
+    if (!categorySlug || categorySlug === 'hotel') {
+      list = mergePlaces(list, CURATED_HOTELS)
+    }
+    if (!categorySlug || categorySlug === 'attraction') {
+      list = mergePlaces(list, CURATED_TOURISM_PLACES)
+    }
+
     const base = filterRealPlaces(dbPlaces)
-    let list = includeOsm ? mergePlaces(osmPlaces, base) : base
+    list = mergePlaces(list, base)
+
+    if (includeOsm) {
+      list = mergePlaces(list, osmPlaces)
+    }
+
     list = list.filter(isValidPlace)
+
+    // Near me: keep curated hotels even outside radius ranking — only sort later via rank if needed
+    if (nearMe && location.latitude != null && location.longitude != null) {
+      // keep all curated hotels for Hotels filter; for "near me" still show all curated within city
+      list = list.filter((p) => {
+        if (p.id.startsWith('curated-hotel-') || p.id.startsWith('curated-tourism-')) return true
+        const d = distanceMeters(location.latitude!, location.longitude!, p.latitude, p.longitude)
+        return d <= 12_000
+      })
+    }
+
     if (search.trim()) {
       const q = search.trim().toLowerCase()
       list = list.filter(
@@ -111,8 +147,18 @@ export default function MapPage() {
           p.address?.toLowerCase().includes(q)
       )
     }
+
     return list
-  }, [dbPlaces, osmPlaces, includeOsm, search])
+  }, [
+    dbPlaces,
+    osmPlaces,
+    includeOsm,
+    search,
+    categorySlug,
+    nearMe,
+    location.latitude,
+    location.longitude,
+  ])
 
   const selectedPlace = useMemo(
     () => places.find((p) => p.id === selectedPlaceId) ?? null,
@@ -151,7 +197,6 @@ export default function MapPage() {
     )
   }, [directionsPlace, userPos, routeDistanceM])
 
-  // Deep link once: /map?to=lat,lng&mode=walking&name=...
   useEffect(() => {
     const to = parseToParam(searchParams.get('to'))
     if (!to) {
@@ -296,7 +341,6 @@ export default function MapPage() {
     [requestLocation, userPos, setMapCenter]
   )
 
-  // Debounced center write from map drag (avoid thrashing)
   const centerTimer = useRef<number | null>(null)
   const handleCenterChange = useCallback(
     (c: { lat: number; lng: number }) => {
@@ -307,6 +351,8 @@ export default function MapPage() {
     },
     [setMapCenter]
   )
+
+  const curatedHotelCount = places.filter((p) => p.id.startsWith('curated-hotel-')).length
 
   return (
     <div className="relative h-[calc(100dvh-4rem)] overflow-hidden bg-slate-200">
@@ -360,6 +406,9 @@ export default function MapPage() {
           </button>
           <span className="rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-medium text-slate-600 shadow-sm dark:bg-slate-900/95">
             {places.length} {t.map.places}
+            {filter === 'hotel' && curatedHotelCount > 0 && (
+              <span className="text-emerald-600"> · {curatedHotelCount} hotels</span>
+            )}
           </span>
         </div>
       </div>
