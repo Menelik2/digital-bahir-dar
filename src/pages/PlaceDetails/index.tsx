@@ -18,6 +18,7 @@ import { ReviewCard } from '@/components/reviews/ReviewCard'
 import { ReviewForm } from '@/components/reviews/ReviewForm'
 import { useReviews, useMyReview, useRatingSummary } from '@/hooks/useReviews'
 import { placeCoverImage, placeImageAlt } from '@/utils/placeImage'
+import { PlaceGoogleEmbed } from '@/components/map/PlaceGoogleEmbed'
 import { useMemo, useState } from 'react'
 
 export default function PlaceDetailsPage() {
@@ -327,6 +328,9 @@ export default function PlaceDetailsPage() {
               <Button className="mt-2 w-full sm:w-auto" onClick={() => goDirections('driving')}>
                 <Navigation className="h-4 w-4" /> Show route on map
               </Button>
+              <div className="pt-2">
+                <PlaceGoogleEmbed lat={place.latitude} lng={place.longitude} name={name} />
+              </div>
             </CardContent>
           </Card>
         </section>
