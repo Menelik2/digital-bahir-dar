@@ -29,7 +29,8 @@ export function DirectionsPanel({
   routeError,
   routeDurationSec,
 }: Props) {
-  const [showGoogle, setShowGoogle] = useState(true)
+  // Default OFF so opening directions never blanks the page if Google iframe fails
+  const [showGoogle, setShowGoogle] = useState(false)
 
   const mins =
     routeDurationSec != null
@@ -38,10 +39,11 @@ export function DirectionsPanel({
         ? walkingMinutes(distanceM)
         : drivingMinutes(distanceM)
 
-  const name = destination.name.replace(' (DEMO)', '')
+  const name = (destination.name || 'Destination').replace(' (DEMO)', '')
+  const distLabel = Number.isFinite(distanceM) ? formatDistance(distanceM) : '—'
 
   return (
-    <div className="absolute left-3 right-3 top-[5.25rem] z-20 flex max-h-[calc(100dvh-9rem)] flex-col overflow-hidden rounded-2xl border border-black/5 bg-white/95 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-[#1c1c1e]/95 lg:left-auto lg:right-4 lg:w-[22rem]">
+    <div className="absolute left-3 right-3 top-[5.25rem] z-[1100] flex max-h-[calc(100dvh-9rem)] flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-xl dark:border-white/10 dark:bg-[#1c1c1e] lg:left-auto lg:right-4 lg:w-[22rem]">
       <div className="shrink-0 p-4 pb-2">
         <div className="mb-3 flex items-start justify-between gap-2">
           <div className="min-w-0">
@@ -92,9 +94,7 @@ export function DirectionsPanel({
             </p>
           ) : (
             <>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">
-                {formatDistance(distanceM)}
-              </p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{distLabel}</p>
               <p className="text-sm text-slate-500">
                 ≈ {mins} min {mode === 'walking' ? 'walking' : 'driving'}
               </p>
@@ -111,24 +111,24 @@ export function DirectionsPanel({
         <div className="mb-2 flex gap-2">
           <Button
             size="sm"
+            variant={!showGoogle ? 'default' : 'outline'}
+            className="flex-1"
+            onClick={() => setShowGoogle(false)}
+          >
+            <Navigation className="h-3.5 w-3.5" /> Our map
+          </Button>
+          <Button
+            size="sm"
             variant={showGoogle ? 'default' : 'outline'}
             className="flex-1"
             onClick={() => setShowGoogle(true)}
           >
             <MapIcon className="h-3.5 w-3.5" /> Google Map
           </Button>
-          <Button
-            size="sm"
-            variant={!showGoogle ? 'default' : 'outline'}
-            className="flex-1"
-            onClick={() => setShowGoogle(false)}
-          >
-            <Navigation className="h-3.5 w-3.5" /> Our map only
-          </Button>
         </div>
       </div>
 
-      {showGoogle && (
+      {showGoogle && Number.isFinite(destination.latitude) && Number.isFinite(destination.longitude) && (
         <div className="min-h-0 flex-1 px-3 pb-3">
           <GoogleMapsEmbed
             lat={destination.latitude}
@@ -137,10 +137,10 @@ export function DirectionsPanel({
             mode={mode}
             view="directions"
             title={`Directions to ${name}`}
-            className="h-[min(42vh,320px)] w-full"
+            className="h-[min(36vh,280px)] w-full"
           />
           <p className="mt-1.5 text-center text-[10px] text-slate-400">
-            Google Maps embedded in Digital Bahir Dar — you stay on this site
+            Google Maps inside the app
           </p>
         </div>
       )}

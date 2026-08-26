@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useEffect, lazy, Suspense } from 'react'
 import {
   MapContainer,
   TileLayer,
@@ -12,7 +12,6 @@ import {
   useMapEvents,
   Polyline,
 } from 'react-leaflet'
-import { useEffect } from 'react'
 import L from 'leaflet'
 import type { Place } from '@/types/place'
 import { BAHIR_DAR_CENTER } from '@/constants'
@@ -29,8 +28,14 @@ import {
 import { placeGuideLinks } from '@/constants/guideSites'
 import { displayPlaceName } from '@/utils/realPlaces'
 import { inAppDirectionsPath } from '@/services/routing'
-import { MapViewGl, type MapViewProps } from './MapViewGl'
+import type { MapViewProps } from './MapViewGl'
+import { MapErrorBoundary } from './MapErrorBoundary'
 import 'leaflet/dist/leaflet.css'
+
+// Lazy: do not load mapbox-gl unless token is present (avoids blank crash if GL fails)
+const MapViewGlLazy = lazy(() =>
+  import('./MapViewGl').then((m) => ({ default: m.MapViewGl }))
+)
 
 function categoryColor(slug?: string | null): string {
   switch (slug) {
@@ -88,14 +93,29 @@ function pinIcon(selected: boolean, featured: boolean, categorySlug?: string | n
   })
 }
 
+function isValidLatLng(lat: number, lng: number) {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  )
+}
+
+/** Programmatic pan only — does not feed back into React state */
 function MapCamera({ center }: { center: { lat: number; lng: number } }) {
   const map = useMap()
   useEffect(() => {
+    if (!isValidLatLng(center.lat, center.lng)) return
     const bounds = L.latLngBounds(BAHIR_DAR_MAX_BOUNDS)
     const target = L.latLng(center.lat, center.lng)
-    if (bounds.contains(target)) {
-      map.panTo(target, { animate: true })
-    }
+    if (!bounds.contains(target)) return
+    const cur = map.getCenter()
+    // Skip tiny moves to avoid pan ↔ moveend loops
+    if (Math.abs(cur.lat - center.lat) < 1e-5 && Math.abs(cur.lng - center.lng) < 1e-5) return
+    map.panTo(target, { animate: true, duration: 0.35 })
   }, [map, center.lat, center.lng])
   return null
 }
@@ -104,16 +124,30 @@ function FitRoute({ coords }: { coords: [number, number][] }) {
   const map = useMap()
   useEffect(() => {
     if (!coords.length) return
-    const bounds = L.latLngBounds(coords.map(([lat, lng]) => [lat, lng]))
-    map.fitBounds(bounds, { padding: [48, 48], maxZoom: 16, animate: true })
+    try {
+      const bounds = L.latLngBounds(coords.map(([lat, lng]) => [lat, lng] as [number, number]))
+      map.fitBounds(bounds, { padding: [48, 48], maxZoom: 16, animate: true })
+    } catch {
+      /* ignore bad coords */
+    }
   }, [map, coords])
   return null
 }
 
-function MapEvents({ onCenterChange }: { onCenterChange?: (c: { lat: number; lng: number }) => void }) {
+/** Only report user-driven moves (not our own panTo) */
+function MapEvents({
+  onCenterChange,
+}: {
+  onCenterChange?: (c: { lat: number; lng: number }) => void
+}) {
   const map = useMap()
   useMapEvents({
-    moveend: () => {
+    dragend: () => {
+      if (!onCenterChange) return
+      const c = map.getCenter()
+      onCenterChange({ lat: c.lat, lng: c.lng })
+    },
+    zoomend: () => {
       if (!onCenterChange) return
       const c = map.getCenter()
       onCenterChange({ lat: c.lat, lng: c.lng })
@@ -152,7 +186,6 @@ function BahirDarLock() {
   return null
 }
 
-/** Leaflet map (fallback when no Mapbox token) */
 function LeafletMapView({
   places,
   selectedPlaceId,
@@ -164,7 +197,17 @@ function LeafletMapView({
 }: MapViewProps) {
   const token = getMapboxToken()
   const useMapboxTiles = !!token
-  const markers = useMemo(() => places.slice(0, 500), [places])
+  const markers = useMemo(
+    () =>
+      places
+        .filter((p) => isValidLatLng(p.latitude, p.longitude))
+        .slice(0, 500),
+    [places]
+  )
+
+  const safeCenter = isValidLatLng(center.lat, center.lng)
+    ? center
+    : BAHIR_DAR_CENTER
 
   return (
     <MapContainer
@@ -183,7 +226,7 @@ function LeafletMapView({
       <ScaleControl position="bottomleft" imperial={false} />
       <InvalidateSize />
       <BahirDarLock />
-      <MapCamera center={center} />
+      <MapCamera center={safeCenter} />
       <MapEvents onCenterChange={onCenterChange} />
       {routeCoordinates && routeCoordinates.length > 1 && (
         <>
@@ -272,13 +315,20 @@ function LeafletMapView({
             position={[place.latitude, place.longitude]}
             icon={pinIcon(selected, !!place.featured, cat)}
             eventHandlers={{
-              click: () => onPlaceSelect(place),
+              click: (e) => {
+                L.DomEvent.stopPropagation(e)
+                try {
+                  onPlaceSelect(place)
+                } catch (err) {
+                  console.error('onPlaceSelect failed', err)
+                }
+              },
             }}
             zIndexOffset={selected ? 1000 : 1}
           >
             <Popup>
               <div style={{ minWidth: 170 }}>
-                <strong>{displayPlaceName(place.name)}</strong>
+                <strong>{displayPlaceName(place.name || 'Place')}</strong>
                 {place.category?.name && (
                   <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{place.category.name}</div>
                 )}
@@ -299,7 +349,7 @@ function LeafletMapView({
         )
       })}
 
-      {userLocation && (
+      {userLocation && isValidLatLng(userLocation.lat, userLocation.lng) && (
         <>
           <CircleMarker
             center={[userLocation.lat, userLocation.lng]}
@@ -309,6 +359,11 @@ function LeafletMapView({
               fillColor: '#0ea5e9',
               fillOpacity: 1,
               weight: 3,
+            }}
+            eventHandlers={{
+              click: (e) => {
+                L.DomEvent.stopPropagation(e)
+              },
             }}
           >
             <Popup>You are here</Popup>
@@ -322,6 +377,7 @@ function LeafletMapView({
               fillOpacity: 0.15,
               weight: 1,
             }}
+            interactive={false}
           />
         </>
       )}
@@ -329,16 +385,29 @@ function LeafletMapView({
   )
 }
 
-/** Prefers Mapbox GL JS when VITE_MAPBOX_ACCESS_TOKEN is set; otherwise Leaflet + OSM */
+/** Prefers Mapbox GL when token is set; otherwise Leaflet + OSM */
 export function MapView(props: MapViewProps) {
   const token = getMapboxToken()
-  if (token) {
-    return <MapViewGl {...props} token={token} />
-  }
-  return <LeafletMapView {...props} />
+
+  return (
+    <MapErrorBoundary>
+      {token ? (
+        <Suspense
+          fallback={
+            <div className="flex h-full min-h-[320px] items-center justify-center bg-slate-200 text-sm text-slate-500">
+              Loading map…
+            </div>
+          }
+        >
+          <MapViewGlLazy {...props} token={token} />
+        </Suspense>
+      ) : (
+        <LeafletMapView {...props} />
+      )}
+    </MapErrorBoundary>
+  )
 }
 
-/** Opens in-app map directions (does not leave to Google Maps website) */
 export function openGoogleMapsDirections(
   dest: Place,
   _origin?: { lat: number; lng: number } | null,
@@ -346,3 +415,5 @@ export function openGoogleMapsDirections(
 ) {
   window.location.assign(inAppDirectionsPath(dest, mode))
 }
+
+export type { MapViewProps }
