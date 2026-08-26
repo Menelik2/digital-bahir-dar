@@ -14,10 +14,10 @@ export function Layout() {
   const t = useT()
 
   return (
-    <div className="flex min-h-full flex-col bg-white dark:bg-slate-950">
+    <div className="flex min-h-full flex-col bg-[#f2f2f7] dark:bg-black">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-sky-600 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-sky-600 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
       >
         {t.common.skipToContent}
       </a>

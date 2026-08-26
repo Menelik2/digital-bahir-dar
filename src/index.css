@@ -3,11 +3,12 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
-  Digital Bahir Dar — Ethiopian design tokens
-  Flag-inspired green / gold / red · Lake Tana blue · coffee earth
+  Digital Bahir Dar — Ethiopian design + iOS-inspired mobile system
+  Flag green / gold / red · Lake Tana blue · SF-like type & glass chrome
 */
 @theme {
-  --font-sans: "Noto Sans Ethiopic", "Inter", "Noto Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Noto Sans Ethiopic", "Inter",
+    "Segoe UI", system-ui, sans-serif;
 
   --color-ethio-green: #078930;
   --color-ethio-green-dark: #056b24;
@@ -23,6 +24,13 @@
   --color-sky-500: #0b6e99;
   --color-sky-600: #0a5a7e;
   --color-sky-700: #084866;
+
+  /* iOS-like system surfaces */
+  --color-ios-bg: #f2f2f7;
+  --color-ios-card: #ffffff;
+  --color-ios-separator: rgba(60, 60, 67, 0.12);
+  --color-ios-label: #1c1c1e;
+  --color-ios-secondary: #8e8e93;
 }
 
 html,
@@ -33,6 +41,8 @@ body,
 
 html {
   color-scheme: light;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 html.dark {
@@ -42,19 +52,40 @@ html.dark {
 body {
   min-width: 320px;
   font-family: var(--font-sans);
-  @apply bg-[#faf8f5] text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
-  /* Notch / home-indicator friendly (with viewport-fit=cover) */
+  @apply antialiased;
+  background-color: #f2f2f7;
+  color: #1c1c1e;
+  /* iOS momentum scroll */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);
+}
+
+.dark body,
+html.dark body {
+  background-color: #000000;
+  color: #f5f5f7;
+}
+
+/* Tap highlight like iOS */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a,
+[role='button'] {
+  touch-action: manipulation;
 }
 
 body,
 header,
 nav {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease;
 }
 
-/* Safe-area utilities (iOS home indicator, Android gesture bar, notches) */
+/* Safe-area utilities */
 .pt-safe {
   padding-top: env(safe-area-inset-top, 0px);
 }
@@ -67,17 +98,53 @@ nav {
 .pr-safe {
   padding-right: env(safe-area-inset-right, 0px);
 }
-/* Main content clears fixed bottom nav (~4.5rem) + home indicator */
 .pb-nav-safe {
-  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
 }
-/* FAB sits above bottom nav + safe area */
 .bottom-fab-safe {
-  bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* iOS glass surfaces */
+.ios-glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+.dark .ios-glass {
+  background: rgba(28, 28, 30, 0.72);
+}
+
+.ios-hairline {
+  border-color: rgba(60, 60, 67, 0.18);
+}
+.dark .ios-hairline {
+  border-color: rgba(84, 84, 88, 0.45);
+}
+
+/* Soft continuous shadow (iOS card) */
+.ios-shadow {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 16px rgba(0, 0, 0, 0.06);
+}
+.dark .ios-shadow {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Press feedback */
+.ios-press {
+  transition: transform 0.18s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.15s ease;
+}
+.ios-press:active {
+  transform: scale(0.97);
+  opacity: 0.92;
 }
 
 .ethio-flag-bar {
-  height: 4px;
+  height: 3px;
   background: linear-gradient(
     90deg,
     #078930 0% 33.33%,
@@ -102,7 +169,7 @@ nav {
   display: block;
   margin-top: 0.35rem;
   height: 3px;
-  width: 2.5rem;
+  width: 2.25rem;
   border-radius: 999px;
   background: linear-gradient(90deg, #f5c518, #078930);
 }
@@ -130,13 +197,22 @@ nav {
   white-space: normal;
 }
 
+/* Hide scrollbars on chip rows (iOS feel) */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 .dark ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
+  background: #3a3a3c;
+  border-radius: 999px;
 }
 
 .leaflet-container {
@@ -148,4 +224,13 @@ nav {
 .leaflet-control-attribution {
   font-size: 10px;
   max-width: 60%;
+}
+
+/* Large titles feel on mobile sections */
+@media (max-width: 1023px) {
+  .ios-section-title {
+    font-size: 1.375rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
 }
