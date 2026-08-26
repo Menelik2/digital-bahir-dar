@@ -21,11 +21,11 @@ import { Button } from '@/components/ui/button'
 import { useT } from '@/hooks/useT'
 
 function mergePlaces(primary: Place[], secondary: Place[]): Place[] {
-  const seen = new Set(primary.map((p) => p.name.toLowerCase().trim()))
+  const seen = new Set(primary.map((p) => (p.name || '').toLowerCase().trim()))
   const out = [...primary]
   for (const p of secondary) {
-    const key = p.name.toLowerCase().trim()
-    if (seen.has(key)) continue
+    const key = (p.name || '').toLowerCase().trim()
+    if (!key || seen.has(key)) continue
     seen.add(key)
     out.push(p)
   }
@@ -39,6 +39,16 @@ function parseToParam(raw: string | null): { lat: number; lng: number } | null {
   return { lat: parts[0], lng: parts[1] }
 }
 
+function isValidPlace(p: Place | null | undefined): p is Place {
+  return (
+    !!p &&
+    Number.isFinite(p.latitude) &&
+    Number.isFinite(p.longitude) &&
+    typeof p.id === 'string' &&
+    p.id.length > 0
+  )
+}
+
 export default function MapPage() {
   const t = useT()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -46,6 +56,7 @@ export default function MapPage() {
   const { request: requestLocation, hasFix } = useGeolocation({ autoRequest: true, watch: true })
   const mapboxOn = !!getMapboxToken()
   const didCenterOnFix = useRef(false)
+  const didApplyDeepLink = useRef(false)
 
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<string | null>(null)
@@ -90,11 +101,12 @@ export default function MapPage() {
   const places = useMemo(() => {
     const base = filterRealPlaces(dbPlaces)
     let list = includeOsm ? mergePlaces(osmPlaces, base) : base
+    list = list.filter(isValidPlace)
     if (search.trim()) {
       const q = search.trim().toLowerCase()
       list = list.filter(
         (p) =>
-          p.name.toLowerCase().includes(q) ||
+          (p.name || '').toLowerCase().includes(q) ||
           p.short_description?.toLowerCase().includes(q) ||
           p.address?.toLowerCase().includes(q)
       )
@@ -110,7 +122,9 @@ export default function MapPage() {
   const userPos =
     (location.permission === 'granted' || hasFix) &&
     location.latitude != null &&
-    location.longitude != null
+    location.longitude != null &&
+    Number.isFinite(location.latitude) &&
+    Number.isFinite(location.longitude)
       ? { lat: location.latitude, lng: location.longitude }
       : null
 
@@ -137,10 +151,16 @@ export default function MapPage() {
     )
   }, [directionsPlace, userPos, routeDistanceM])
 
-  // Deep link: /map?to=lat,lng&mode=walking&name=...
+  // Deep link once: /map?to=lat,lng&mode=walking&name=...
   useEffect(() => {
     const to = parseToParam(searchParams.get('to'))
-    if (!to) return
+    if (!to) {
+      didApplyDeepLink.current = false
+      return
+    }
+    if (didApplyDeepLink.current) return
+    didApplyDeepLink.current = true
+
     const modeParam = searchParams.get('mode')
     const mode: TravelMode = modeParam === 'driving' ? 'driving' : 'walking'
     const name = searchParams.get('name') || 'Destination'
@@ -172,13 +192,13 @@ export default function MapPage() {
     setMapCenter({ lat: to.lat, lng: to.lng })
   }, [searchParams, places, setMapCenter, setSelectedPlaceId])
 
-  // Fetch road route when directions are active
   useEffect(() => {
-    if (!directionsPlace) {
+    if (!directionsPlace || !isValidPlace(directionsPlace)) {
       setRouteCoords(null)
       setRouteDistanceM(null)
       setRouteDurationSec(null)
       setRouteError(false)
+      setRouteLoading(false)
       return
     }
 
@@ -204,9 +224,7 @@ export default function MapPage() {
           [origin.lat, origin.lng],
           [dest.lat, dest.lng],
         ])
-        setRouteDistanceM(
-          distanceMeters(origin.lat, origin.lng, dest.lat, dest.lng)
-        )
+        setRouteDistanceM(distanceMeters(origin.lat, origin.lng, dest.lat, dest.lng))
         setRouteDurationSec(null)
         return
       }
@@ -227,12 +245,13 @@ export default function MapPage() {
 
   const handlePlaceSelect = useCallback(
     (place: Place) => {
+      if (!isValidPlace(place)) return
       setSelectedPlaceId(place.id)
       setMapCenter({ lat: place.latitude, lng: place.longitude })
       setDirectionsPlace(null)
       setRouteCoords(null)
-      // clear deep-link params
       if (searchParams.has('to')) {
+        didApplyDeepLink.current = false
         const next = new URLSearchParams(searchParams)
         next.delete('to')
         next.delete('mode')
@@ -245,6 +264,7 @@ export default function MapPage() {
   )
 
   const handleDirections = useCallback((place: Place) => {
+    if (!isValidPlace(place)) return
     setDirectionsPlace(place)
   }, [])
 
@@ -252,6 +272,7 @@ export default function MapPage() {
     setDirectionsPlace(null)
     setRouteCoords(null)
     if (searchParams.has('to')) {
+      didApplyDeepLink.current = false
       const next = new URLSearchParams(searchParams)
       next.delete('to')
       next.delete('mode')
@@ -263,7 +284,7 @@ export default function MapPage() {
 
   const handleLocate = useCallback(
     (lat?: number, lng?: number) => {
-      if (lat != null && lng != null) {
+      if (lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng)) {
         setMapCenter({ lat, lng })
         return
       }
@@ -273,6 +294,18 @@ export default function MapPage() {
       })
     },
     [requestLocation, userPos, setMapCenter]
+  )
+
+  // Debounced center write from map drag (avoid thrashing)
+  const centerTimer = useRef<number | null>(null)
+  const handleCenterChange = useCallback(
+    (c: { lat: number; lng: number }) => {
+      if (centerTimer.current) window.clearTimeout(centerTimer.current)
+      centerTimer.current = window.setTimeout(() => {
+        setMapCenter(c)
+      }, 200)
+    },
+    [setMapCenter]
   )
 
   return (
@@ -337,7 +370,7 @@ export default function MapPage() {
         userLocation={userPos}
         center={mapCenter}
         onPlaceSelect={handlePlaceSelect}
-        onCenterChange={setMapCenter}
+        onCenterChange={handleCenterChange}
         routeCoordinates={routeCoords}
       />
 
@@ -380,7 +413,7 @@ export default function MapPage() {
         </div>
       )}
 
-      {directionsPlace && (
+      {directionsPlace && isValidPlace(directionsPlace) && (
         <DirectionsPanel
           origin={userPos}
           destination={directionsPlace}
@@ -394,7 +427,7 @@ export default function MapPage() {
         />
       )}
 
-      {!directionsPlace && (
+      {!directionsPlace && selectedPlace && (
         <PlaceBottomSheet
           place={selectedPlace}
           distanceM={selectedDistance}
