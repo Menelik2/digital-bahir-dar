@@ -8,6 +8,7 @@ import {
   rankNearby,
 } from '@/services/places'
 import { CURATED_HOTELS } from '@/services/curatedHotels'
+import { CURATED_TOURISM_PLACES } from '@/services/curatedTourism'
 import type { Place } from '@/types/place'
 import { useAppStore } from '@/store'
 import { useMemo } from 'react'
@@ -28,10 +29,10 @@ function mergeByName(primary: Place[], secondary: Place[]): Place[] {
   return out
 }
 
-/** Hotels list always includes the full curated list (user map links) */
-function withCuratedHotels(data: Place[], categorySlug?: string): Place[] {
-  if (categorySlug !== 'hotel') return data
-  return mergeByName(CURATED_HOTELS, data)
+function withCuratedLocal(data: Place[], categorySlug?: string): Place[] {
+  if (categorySlug === 'hotel') return mergeByName(CURATED_HOTELS, data)
+  if (categorySlug === 'attraction') return mergeByName(CURATED_TOURISM_PLACES, data)
+  return data
 }
 
 export function usePlaces(categorySlug?: string) {
@@ -43,12 +44,12 @@ export function usePlaces(categorySlug?: string) {
       try {
         const data = await fetchPlaces({ categorySlug })
         const base = data.length > 0 ? data : curated
-        return withCuratedHotels(base, categorySlug)
+        return withCuratedLocal(base, categorySlug)
       } catch {
-        return withCuratedHotels(curated, categorySlug)
+        return withCuratedLocal(curated, categorySlug)
       }
     },
-    placeholderData: withCuratedHotels(curated, categorySlug),
+    placeholderData: withCuratedLocal(curated, categorySlug),
     staleTime: 10 * 60_000,
     gcTime: 30 * 60_000,
     retry: isSupabaseConfigured ? 1 : 0,

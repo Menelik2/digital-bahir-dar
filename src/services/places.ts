@@ -3,6 +3,7 @@ import type { Place, Category, PlaceWithDistance } from '@/types/place'
 import { distanceMeters } from '@/utils/geo'
 import { DEMO_PLACES, demoPlacesByCategory, CURATED_PLACES } from './demoPlaces'
 import { findCuratedHotelBySlug } from './curatedHotels'
+import { findCuratedTourismBySlug } from './curatedTourism'
 import { findCachedOsmPlace } from './osmPlaces'
 
 export { DEMO_PLACES, CURATED_PLACES }
@@ -14,19 +15,11 @@ export class PlacesFetchError extends Error {
   }
 }
 
-/** Instant guide data — never blocks on network */
 export function getCuratedPlaces(categorySlug?: string): Place[] {
   if (categorySlug) return demoPlacesByCategory(categorySlug)
   return CURATED_PLACES
 }
 
-/**
- * Fast path for lists:
- * 1) Supabase (short timeout) when configured
- * 2) Curated Bahir Dar guide data (always instant fallback)
- *
- * Live OpenStreetMap is loaded separately via useOsmPlaces (cached).
- */
 export async function fetchPlaces(opts?: {
   categorySlug?: string
   verifiedOnly?: boolean
@@ -39,9 +32,8 @@ export async function fetchPlaces(opts?: {
         sleepReject(4000, 'Supabase timeout'),
       ])
       if (rows.length > 0) {
-        // Merge curated hotels so the user list always appears even with DB data
-        if (!opts?.categorySlug || opts.categorySlug === 'hotel') {
-          return mergeByName(rows, getCuratedPlaces(opts?.categorySlug === 'hotel' ? 'hotel' : undefined))
+        if (!opts?.categorySlug || opts.categorySlug === 'hotel' || opts.categorySlug === 'attraction') {
+          return mergeByName(getCuratedPlaces(opts?.categorySlug), rows)
         }
         return rows
       }
@@ -54,15 +46,14 @@ export async function fetchPlaces(opts?: {
 }
 
 function mergeByName(primary: Place[], secondary: Place[]): Place[] {
-  const seen = new Set(primary.map((p) => p.name.toLowerCase().replace(/\s+/g, ' ').trim()))
+  const seen = new Set(
+    primary.map((p) => p.name.toLowerCase().replace(/\s+/g, ' ').trim().split(' · ')[0])
+  )
   const out = [...primary]
   for (const p of secondary) {
-    const key = p.name.toLowerCase().replace(/\s+/g, ' ').trim()
-    // Match base English name before " · " Amharic suffix
-    const base = key.split(' · ')[0]
-    if (seen.has(key) || seen.has(base)) continue
-    if ([...seen].some((s) => s.includes(base) || base.includes(s.split(' · ')[0]))) continue
-    seen.add(key)
+    const base = p.name.toLowerCase().replace(/\s+/g, ' ').trim().split(' · ')[0]
+    if (seen.has(base)) continue
+    seen.add(base)
     out.push(p)
   }
   return out
@@ -159,6 +150,9 @@ export async function fetchPlaceBySlug(slug: string): Promise<Place | null> {
 
   const hotel = findCuratedHotelBySlug(slug)
   if (hotel) return hotel
+
+  const tourism = findCuratedTourismBySlug(slug)
+  if (tourism) return tourism
 
   const curated = CURATED_PLACES.find((p) => p.slug === slug)
   if (curated) return curated
