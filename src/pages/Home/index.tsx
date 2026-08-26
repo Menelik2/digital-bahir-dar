@@ -52,7 +52,6 @@ export default function HomePage() {
       body: t.home.stayBody,
       icon: Hotel,
       gradient: 'from-[#0b6e99] to-[#0a4d6e]',
-      ring: 'hover:ring-[#0b6e99]/40',
     },
     {
       to: '/restaurants',
@@ -60,7 +59,6 @@ export default function HomePage() {
       body: t.home.eatBody,
       icon: UtensilsCrossed,
       gradient: 'from-[#c4a574] to-[#6f4e37]',
-      ring: 'hover:ring-[#c4a574]/50',
     },
     {
       to: '/transport',
@@ -68,7 +66,6 @@ export default function HomePage() {
       body: t.home.goBody,
       icon: Car,
       gradient: 'from-[#078930] to-[#056b24]',
-      ring: 'hover:ring-[#078930]/40',
     },
     {
       to: '/today',
@@ -76,12 +73,11 @@ export default function HomePage() {
       body: t.home.seeBody,
       icon: Sun,
       gradient: 'from-[#d4a017] to-[#b8860b]',
-      ring: 'hover:ring-[#f5c518]/50',
     },
   ] as const
 
   const moreTools = [
-    { label: t.nav.today, icon: Sun, path: '/today', color: 'bg-[#f5c518]/20 text-[#8a6d0b]' },
+    { label: t.nav.today, icon: Sun, path: '/today', color: 'bg-[#f5c518]/25 text-[#8a6d0b]' },
     { label: t.nav.planner, icon: Sparkles, path: '/trip-planner', color: 'bg-[#0b6e99]/12 text-[#0b6e99]' },
     { label: t.home.budget, icon: Wallet, path: '/budget', color: 'bg-[#0b6e99]/12 text-[#0b6e99]' },
     { label: t.home.thingsToDo, icon: ListTodo, path: '/todo', color: 'bg-[#078930]/12 text-[#078930]' },
@@ -89,7 +85,7 @@ export default function HomePage() {
     { label: t.nav.explore, icon: Search, path: '/explore', color: 'bg-[#0b6e99]/10 text-[#0a5a7e]' },
     { label: t.nav.map, icon: Navigation, path: '/map', color: 'bg-[#078930]/12 text-[#078930]' },
     { label: t.nav.attractions, icon: Landmark, path: '/attractions', color: 'bg-[#d4a017]/15 text-[#8a6d0b]' },
-    { label: t.nav.banks, icon: Building2, path: '/banks', color: 'bg-slate-100 text-slate-700' },
+    { label: t.nav.banks, icon: Building2, path: '/banks', color: 'bg-[#f2f2f7] text-[#3c3c43] dark:bg-white/10 dark:text-white' },
     { label: 'ATM', icon: CreditCard, path: '/banks', color: 'bg-[#0b6e99]/10 text-[#0b6e99]' },
     { label: t.nav.city, icon: Building, path: '/city', color: 'bg-[#f3e6c8]/60 text-[#6f4e37]' },
     { label: t.nav.events, icon: Calendar, path: '/events', color: 'bg-[#da121a]/10 text-[#da121a]' },
@@ -98,57 +94,63 @@ export default function HomePage() {
   ]
 
   return (
-    <div>
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#056b24] via-[#0b6e99] to-[#0a4d6e] px-4 py-14 text-white sm:py-20">
+    <div className="bg-[#f2f2f7] dark:bg-black">
+      {/* Compact iOS-style hero */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#056b24] via-[#0b6e99] to-[#0a4d6e] px-4 pb-8 pt-8 text-white sm:pb-14 sm:pt-14">
         <div className="ethio-flag-bar absolute inset-x-0 top-0" aria-hidden />
-        <div className="ethio-mesh pointer-events-none absolute inset-0 opacity-60" aria-hidden />
+        <div className="ethio-mesh pointer-events-none absolute inset-0 opacity-50" aria-hidden />
         <div className="relative mx-auto max-w-4xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
-            <MapPin className="h-4 w-4 text-[#f5c518]" /> {t.home.badge}
+          <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/15 px-3 py-1 text-[12px] font-semibold backdrop-blur-md sm:mb-4 sm:px-4 sm:py-1.5 sm:text-sm">
+            <MapPin className="h-3.5 w-3.5 text-[#f5c518] sm:h-4 sm:w-4" /> {t.home.badge}
           </div>
-          <h1 className="mb-3 text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">{t.home.title}</h1>
-          <p className="mx-auto mb-2 max-w-2xl text-lg text-[#f5c518]/95 sm:text-xl">{t.tagline}</p>
-          <p className="mx-auto mb-8 max-w-lg text-sm text-white/85">{t.home.heroHint}</p>
-          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link to="/today">
-              <Button size="lg" className="w-full bg-[#f5c518] text-[#3d3200] hover:bg-[#e6b800] sm:w-auto">
+          <h1 className="mb-2 text-[28px] font-bold leading-tight tracking-tight sm:mb-3 sm:text-5xl md:text-6xl">
+            {t.home.title}
+          </h1>
+          <p className="mx-auto mb-1 max-w-2xl text-[15px] font-medium text-[#f5c518]/95 sm:text-xl">
+            {t.tagline}
+          </p>
+          <p className="mx-auto mb-5 max-w-md text-[13px] leading-snug text-white/80 sm:mb-8 sm:text-sm">
+            {t.home.heroHint}
+          </p>
+          <div className="flex flex-col items-stretch justify-center gap-2.5 sm:flex-row sm:items-center">
+            <Link to="/today" className="w-full sm:w-auto">
+              <Button
+                size="lg"
+                className="w-full bg-[#f5c518] text-[#3d3200] shadow-lg shadow-black/10 hover:bg-[#e6b800]"
+              >
                 <Sun className="h-5 w-5" /> {t.home.todayTitle}
               </Button>
             </Link>
-            <Link to="/trip-planner">
+            <Link to="/trip-planner" className="w-full sm:w-auto">
               <Button
                 size="lg"
                 variant="outline"
-                className="w-full border-white/40 bg-white/10 text-white hover:bg-white/20 sm:w-auto"
+                className="w-full border-white/35 bg-white/15 text-white backdrop-blur-sm hover:bg-white/25"
               >
                 <Sparkles className="h-5 w-5" /> {t.home.planMultiDay}
-              </Button>
-            </Link>
-            <Link to="/ai-guide">
-              <Button size="lg" variant="ghost" className="w-full text-white hover:bg-white/15 sm:w-auto">
-                <Sparkles className="h-5 w-5" /> {t.nav.aiGuide}
               </Button>
             </Link>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
-        <div className="mb-3 flex items-end justify-between gap-2">
-          <div>
-            <h2 className="ethio-title text-lg sm:text-xl">{t.home.whatNeed}</h2>
-            <p className="mt-1.5 text-xs text-slate-500 sm:text-sm">{t.home.whatNeedSub}</p>
-          </div>
+      {/* What do you need — app grid */}
+      <section className="mx-auto max-w-6xl px-4 py-5 sm:py-8">
+        <div className="mb-3">
+          <h2 className="ios-section-title text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-xl">
+            {t.home.whatNeed}
+          </h2>
+          <p className="mt-0.5 text-[13px] text-[#8e8e93]">{t.home.whatNeedSub}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
           {desk.map((item) => (
-            <Link key={item.to} to={item.to} className="group block">
+            <Link key={item.to} to={item.to} className="group block ios-press">
               <div
-                className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${item.gradient} p-3.5 text-white shadow-sm transition active:scale-[0.98] group-hover:shadow-md sm:p-4 ${item.ring}`}
+                className={`relative overflow-hidden rounded-[1.25rem] bg-gradient-to-br ${item.gradient} p-3.5 text-white shadow-[0_4px_20px_rgba(0,0,0,0.12)] sm:p-4`}
               >
-                <item.icon className="mb-2 h-6 w-6 opacity-95 sm:h-7 sm:w-7" />
-                <p className="text-base font-bold tracking-tight sm:text-lg">{item.title}</p>
+                <item.icon className="mb-2 h-6 w-6 opacity-95 sm:h-7 sm:w-7" strokeWidth={2} />
+                <p className="text-[16px] font-bold tracking-tight sm:text-lg">{item.title}</p>
                 <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white/85 sm:text-xs">
                   {item.body}
                 </p>
@@ -157,58 +159,65 @@ export default function HomePage() {
           ))}
         </div>
 
-        <Link to="/today" className="mt-3 block">
-          <div className="flex items-center gap-3 rounded-2xl border border-[#f5c518]/45 bg-gradient-to-r from-[#f5c518]/15 to-[#078930]/8 px-3.5 py-3 transition hover:border-[#f5c518] dark:from-[#f5c518]/10 dark:to-[#078930]/15">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#f5c518] text-[#3d3200]">
+        <Link to="/today" className="mt-3 block ios-press">
+          <div className="flex items-center gap-3 rounded-[1.25rem] border border-black/[0.04] bg-white px-3.5 py-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:border-white/[0.08] dark:bg-[#1c1c1e]">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f5c518] text-[#3d3200]">
               <Sun className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">{t.home.todayTitle}</p>
-              <p className="truncate text-xs text-slate-500">{t.home.todayBody}</p>
+              <p className="text-[15px] font-semibold text-[#1c1c1e] dark:text-white">{t.home.todayTitle}</p>
+              <p className="truncate text-[12px] text-[#8e8e93]">{t.home.todayBody}</p>
             </div>
-            <ChevronRight className="h-4 w-4 shrink-0 text-[#056b24] dark:text-[#7dcea0]" />
+            <ChevronRight className="h-5 w-5 shrink-0 text-[#c7c7cc]" />
           </div>
         </Link>
       </section>
 
-      <section className="border-t border-[#078930]/10 bg-[#f3e6c8]/35 px-4 py-8 dark:border-[#078930]/20 dark:bg-slate-900/40">
+      {/* Tools — iOS app icon grid */}
+      <section className="px-4 pb-6 sm:pb-8">
         <div className="mx-auto max-w-6xl">
-          <h2 className="ethio-title mb-4 text-lg text-slate-700 dark:text-slate-200">{t.home.moreTools}</h2>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7">
+          <h2 className="mb-3 text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white">
+            {t.home.moreTools}
+          </h2>
+          <div className="grid grid-cols-4 gap-x-2 gap-y-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7">
             {moreTools.map((a) => (
-              <Link key={a.path + a.label} to={a.path}>
-                <Card className="transition hover:shadow-md active:scale-[0.98]">
-                  <CardContent className="flex flex-col items-center gap-1.5 p-3 text-center">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${a.color}`}>
-                      <a.icon className="h-5 w-5" />
-                    </div>
-                    <span className="text-[11px] font-medium leading-tight text-slate-700 dark:text-slate-300">
-                      {a.label}
-                    </span>
-                  </CardContent>
-                </Card>
+              <Link key={a.path + a.label} to={a.path} className="ios-press">
+                <div className="flex flex-col items-center gap-1.5 text-center">
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-[1.1rem] shadow-sm ${a.color}`}
+                  >
+                    <a.icon className="h-5 w-5" strokeWidth={2} />
+                  </div>
+                  <span className="line-clamp-2 max-w-[4.5rem] text-[11px] font-medium leading-tight text-[#3c3c43] dark:text-white/80">
+                    {a.label}
+                  </span>
+                </div>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="px-4 py-10">
+      <section className="px-4 py-6 sm:py-10">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="ethio-title text-xl">{t.home.happening}</h2>
-            <Link to="/events" className="text-sm font-medium text-[#078930] hover:underline">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white">
+              {t.home.happening}
+            </h2>
+            <Link to="/events" className="text-[15px] font-medium text-[#078930] dark:text-[#30d158]">
               {t.home.allEvents}
             </Link>
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
             {upcoming.map((e) => (
-              <Link key={e.id} to="/events">
-                <Card className="h-full border-[#078930]/10 transition hover:shadow-md">
+              <Link key={e.id} to="/events" className="ios-press">
+                <Card className="h-full">
                   <CardContent className="p-4">
-                    <p className="text-xs font-medium uppercase tracking-wide text-[#0b6e99]">{e.dateLabel}</p>
-                    <h3 className="mt-1 font-semibold">{e.title}</h3>
-                    <p className="mt-1 line-clamp-2 text-sm text-slate-500">{e.description}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#0b6e99]">
+                      {e.dateLabel}
+                    </p>
+                    <h3 className="mt-1 text-[15px] font-semibold">{e.title}</h3>
+                    <p className="mt-1 line-clamp-2 text-[13px] text-[#8e8e93]">{e.description}</p>
                   </CardContent>
                 </Card>
               </Link>
@@ -217,13 +226,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#f3e6c8]/25 px-4 py-10 dark:bg-slate-900/50">
+      <section className="px-4 py-6 sm:py-10">
         <div className="mx-auto max-w-6xl">
-          <h2 className="ethio-title mb-6 text-xl">{t.home.featured}</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Link to="/places/lake-tana">
-              <Card className="overflow-hidden transition hover:shadow-lg">
-                <div className="relative h-40 bg-[#0b6e99]/30">
+          <h2 className="mb-4 text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white">
+            {t.home.featured}
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+            <Link to="/places/lake-tana" className="ios-press">
+              <Card className="overflow-hidden">
+                <div className="relative h-36 bg-[#0b6e99]/30 sm:h-40">
                   <img
                     src={LAKE_TANA_IMG}
                     alt="Lake Tana"
@@ -239,17 +250,17 @@ export default function HomePage() {
                       }
                     }}
                   />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
                 </div>
                 <CardContent className="p-4">
-                  <h3 className="font-semibold">{t.home.lakeTana}</h3>
-                  <p className="text-sm text-slate-500">{t.home.lakeTanaDesc}</p>
+                  <h3 className="text-[15px] font-semibold">{t.home.lakeTana}</h3>
+                  <p className="text-[13px] text-[#8e8e93]">{t.home.lakeTanaDesc}</p>
                 </CardContent>
               </Card>
             </Link>
-            <Link to="/places/blue-nile-falls-tis-issat">
-              <Card className="overflow-hidden transition hover:shadow-lg">
-                <div className="relative h-40 bg-[#078930]/20">
+            <Link to="/places/blue-nile-falls-tis-issat" className="ios-press">
+              <Card className="overflow-hidden">
+                <div className="relative h-36 bg-[#078930]/20 sm:h-40">
                   <img
                     src={FALLS_IMG}
                     alt="Blue Nile Falls"
@@ -265,17 +276,17 @@ export default function HomePage() {
                       }
                     }}
                   />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
                 </div>
                 <CardContent className="p-4">
-                  <h3 className="font-semibold">{t.home.blueNileFalls}</h3>
-                  <p className="text-sm text-slate-500">{t.home.blueNileFallsDesc}</p>
+                  <h3 className="text-[15px] font-semibold">{t.home.blueNileFalls}</h3>
+                  <p className="text-[13px] text-[#8e8e93]">{t.home.blueNileFallsDesc}</p>
                 </CardContent>
               </Card>
             </Link>
-            <Link to="/todo">
-              <Card className="overflow-hidden transition hover:shadow-lg">
-                <div className="relative h-40 bg-[#d4a017]/20">
+            <Link to="/todo" className="ios-press">
+              <Card className="overflow-hidden">
+                <div className="relative h-36 bg-[#d4a017]/20 sm:h-40">
                   <img
                     src={CITY_IMG}
                     alt="Bahir Dar"
@@ -294,8 +305,8 @@ export default function HomePage() {
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                 </div>
                 <CardContent className="p-4">
-                  <h3 className="font-semibold">{t.home.checklist}</h3>
-                  <p className="text-sm text-slate-500">
+                  <h3 className="text-[15px] font-semibold">{t.home.checklist}</h3>
+                  <p className="text-[13px] text-[#8e8e93]">
                     {done} / {CITY_TODOS.length} {t.home.checklistDone}
                   </p>
                 </CardContent>
@@ -305,25 +316,27 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-t border-[#078930]/10 bg-white px-4 py-10 dark:border-slate-800 dark:bg-slate-950">
+      <section className="px-4 py-6 sm:py-10">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="ethio-title text-xl">{t.home.travelSmart}</h2>
-            <Link to="/directory" className="text-sm font-medium text-[#078930] hover:underline">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white">
+              {t.home.travelSmart}
+            </h2>
+            <Link to="/directory" className="text-[15px] font-medium text-[#078930] dark:text-[#30d158]">
               {t.home.fullDirectory}
             </Link>
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-3">
             {tips.map((tip) => (
-              <Card key={tip.id} className="border-[#078930]/10">
+              <Card key={tip.id}>
                 <CardContent className="p-4">
-                  <h3 className="font-semibold">{tip.title}</h3>
-                  <p className="mt-1 text-sm text-slate-500">{tip.body}</p>
+                  <h3 className="text-[15px] font-semibold">{tip.title}</h3>
+                  <p className="mt-1 text-[13px] leading-relaxed text-[#8e8e93]">{tip.body}</p>
                 </CardContent>
               </Card>
             ))}
           </div>
-          <div className="mt-6 flex flex-wrap gap-2">
+          <div className="mt-5 flex flex-wrap gap-2">
             <Link to="/transport">
               <Button variant="outline" size="sm">
                 <Car className="h-4 w-4" /> {t.home.fares}
@@ -348,17 +361,19 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-4xl px-4 py-16 text-center">
-        <h2 className="mb-3 text-2xl font-bold">{t.home.ctaTitle}</h2>
-        <p className="mb-6 text-slate-600 dark:text-slate-400">{t.home.ctaBody}</p>
-        <div className="flex flex-wrap items-center justify-center gap-3">
+      <section className="mx-auto max-w-4xl px-4 py-12 text-center sm:py-16">
+        <h2 className="mb-2 text-[22px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-2xl">
+          {t.home.ctaTitle}
+        </h2>
+        <p className="mb-6 text-[15px] text-[#8e8e93]">{t.home.ctaBody}</p>
+        <div className="flex flex-col items-stretch justify-center gap-2.5 sm:flex-row sm:items-center">
           <Link to="/today">
-            <Button size="lg">
+            <Button size="lg" className="w-full sm:w-auto">
               <Sun className="h-5 w-5" /> {t.home.startWithToday}
             </Button>
           </Link>
           <Link to="/trip-planner">
-            <Button size="lg" variant="outline">
+            <Button size="lg" variant="outline" className="w-full sm:w-auto">
               <Sparkles className="h-5 w-5" /> {t.home.multiDayPlanner}
             </Button>
           </Link>
