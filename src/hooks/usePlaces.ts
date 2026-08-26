@@ -7,11 +7,32 @@ import {
   searchPlaces,
   rankNearby,
 } from '@/services/places'
+import { CURATED_HOTELS } from '@/services/curatedHotels'
 import type { Place } from '@/types/place'
 import { useAppStore } from '@/store'
 import { useMemo } from 'react'
 import { qk } from '@/lib/queryKeys'
 import { isSupabaseConfigured } from '@/lib/supabase'
+
+function mergeByName(primary: Place[], secondary: Place[]): Place[] {
+  const seen = new Set(
+    primary.map((p) => p.name.toLowerCase().replace(/\s+/g, ' ').trim().split(' · ')[0])
+  )
+  const out = [...primary]
+  for (const p of secondary) {
+    const base = p.name.toLowerCase().replace(/\s+/g, ' ').trim().split(' · ')[0]
+    if (seen.has(base)) continue
+    seen.add(base)
+    out.push(p)
+  }
+  return out
+}
+
+/** Hotels list always includes the full curated list (user map links) */
+function withCuratedHotels(data: Place[], categorySlug?: string): Place[] {
+  if (categorySlug !== 'hotel') return data
+  return mergeByName(CURATED_HOTELS, data)
+}
 
 export function usePlaces(categorySlug?: string) {
   const curated = useMemo(() => getCuratedPlaces(categorySlug), [categorySlug])
@@ -21,13 +42,13 @@ export function usePlaces(categorySlug?: string) {
     queryFn: async () => {
       try {
         const data = await fetchPlaces({ categorySlug })
-        return data.length > 0 ? data : curated
+        const base = data.length > 0 ? data : curated
+        return withCuratedHotels(base, categorySlug)
       } catch {
-        // Never hard-fail the UI — curated guide data always works offline
-        return curated
+        return withCuratedHotels(curated, categorySlug)
       }
     },
-    placeholderData: curated,
+    placeholderData: withCuratedHotels(curated, categorySlug),
     staleTime: 10 * 60_000,
     gcTime: 30 * 60_000,
     retry: isSupabaseConfigured ? 1 : 0,

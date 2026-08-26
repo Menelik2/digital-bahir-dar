@@ -16,6 +16,7 @@ import { useGeolocation } from '@/hooks/useGeolocation'
 import { useOsmPlaces } from '@/hooks/useOsmPlaces'
 import { useAppStore } from '@/store'
 import { rankNearby } from '@/services/places'
+import { CURATED_HOTELS } from '@/services/curatedHotels'
 import { placeGuideLinks } from '@/constants/guideSites'
 import type { OsmCategory } from '@/services/osmPlaces'
 import type { Place, SortOption } from '@/types/place'
@@ -31,17 +32,18 @@ interface PlaceListPageProps {
   emptyMessage?: string
   osmCategories?: OsmCategory[]
   mergeOsm?: boolean
-  /** Group hotels into sections by star rating */
   groupByStars?: boolean
 }
 
 function mergePlaces(primary: Place[], secondary: Place[]): Place[] {
-  const seen = new Set(primary.map((p) => p.name.toLowerCase().trim()))
+  const seen = new Set(
+    primary.map((p) => p.name.toLowerCase().replace(/\s+/g, ' ').trim().split(' · ')[0])
+  )
   const out = [...primary]
   for (const p of secondary) {
-    const key = p.name.toLowerCase().trim()
-    if (seen.has(key)) continue
-    seen.add(key)
+    const base = p.name.toLowerCase().replace(/\s+/g, ' ').trim().split(' · ')[0]
+    if (seen.has(base)) continue
+    seen.add(base)
     out.push(p)
   }
   return out
@@ -56,22 +58,21 @@ function matchesPriceTier(place: Place, tier: string): boolean {
   if (tier === 'budget') {
     if (level != null) return level <= 2
     if (mid != null) return mid < 4000
-    return false
+    return true // keep unpriced hotels visible
   }
   if (tier === 'mid') {
     if (level != null) return level === 3
     if (mid != null) return mid >= 4000 && mid < 9000
-    return false
+    return true
   }
   if (tier === 'luxury') {
     if (level != null) return level >= 4
     if (mid != null) return mid >= 9000
-    return false
+    return true
   }
   return true
 }
 
-/** 0 = unrated; 1–5 = stars */
 function hotelStarBucket(place: Place): number {
   const s = place.hotel?.star_rating
   if (s != null && s >= 1 && s <= 5) return Math.round(s)
@@ -124,9 +125,15 @@ export function PlaceListPage({
   } = useOsmPlaces(osmCats, mergeOsm)
 
   const combined = useMemo(() => {
+    // Hotels: curated list first (all 20), then DB, then OSM extras
+    if (categorySlug === 'hotel') {
+      let list = mergePlaces(CURATED_HOTELS, places)
+      if (mergeOsm) list = mergePlaces(list, osmPlaces)
+      return list
+    }
     if (!mergeOsm) return places
-    return mergePlaces(osmPlaces, places)
-  }, [places, osmPlaces, mergeOsm])
+    return mergePlaces(places, osmPlaces)
+  }, [places, osmPlaces, mergeOsm, categorySlug])
 
   const sorted = useMemo(() => {
     let list: Place[] = [...combined]
@@ -202,11 +209,17 @@ export function PlaceListPage({
     })).filter((g) => g.places.length > 0)
   }, [groupByStars, sorted])
 
+  const curatedCount =
+    categorySlug === 'hotel'
+      ? sorted.filter((p) => p.id.startsWith('curated-hotel-')).length
+      : 0
+
   const loading = isLoading && sorted.length === 0 && (osmLoading || !mergeOsm)
   const empty = emptyMessage ?? t.list.loadFail
 
   const renderCard = (place: Place) => {
     const isOsm = place.id.startsWith('osm-')
+    const isCurated = place.id.startsWith('curated-hotel-')
     const links = placeGuideLinks(place)
     const stars = hotelStarBucket(place)
     return (
@@ -218,24 +231,28 @@ export function PlaceListPage({
             {stars} {stars === 1 ? 'star' : 'stars'}
           </p>
         )}
-        {isOsm && (
+        {(isOsm || isCurated) && (
           <div className="flex flex-wrap gap-2 px-1">
-            <a
-              href={links.googleMaps}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700 dark:bg-sky-950 dark:text-sky-300"
-            >
-              <ExternalLink className="h-3 w-3" /> {t.common.maps}
-            </a>
-            <a
-              href={links.googleDirections}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 rounded-lg bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 dark:bg-teal-950 dark:text-teal-300"
-            >
-              {t.common.directions}
-            </a>
+            {(isCurated ? place.website : links.googleMaps) && (
+              <a
+                href={(isCurated ? place.website : links.googleMaps) || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700 dark:bg-sky-950 dark:text-sky-300"
+              >
+                <ExternalLink className="h-3 w-3" /> {t.common.maps}
+              </a>
+            )}
+            {isOsm && (
+              <a
+                href={links.googleDirections}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 rounded-lg bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 dark:bg-teal-950 dark:text-teal-300"
+              >
+                {t.common.directions}
+              </a>
+            )}
           </div>
         )}
       </div>
@@ -248,6 +265,12 @@ export function PlaceListPage({
         <div>
           <h1 className="text-2xl font-bold sm:text-3xl">{title}</h1>
           {subtitle && <p className="mt-1 text-slate-500 dark:text-slate-400">{subtitle}</p>}
+          {categorySlug === 'hotel' && (
+            <p className="mt-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+              {CURATED_HOTELS.length} hotels in your list
+              {curatedCount > 0 ? ` · ${curatedCount} showing from list` : ''}
+            </p>
+          )}
           {mergeOsm && (
             <p className="mt-1 text-xs text-slate-400">
               {t.list.includesOsm} ·{' '}
@@ -470,6 +493,11 @@ export function PlaceListPage({
         <>
           <p className="mb-4 text-sm text-slate-500">
             {sorted.length} {t.common.places}
+            {categorySlug === 'hotel' && (
+              <span className="text-emerald-600 dark:text-emerald-400">
+                {' '}· your list + map data
+              </span>
+            )}
             {osmPlaces.length > 0 && (
               <span className="text-slate-400">
                 {' '}· {osmPlaces.length} {t.list.fromOsmCount}
