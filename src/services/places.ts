@@ -2,6 +2,7 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import type { Place, Category, PlaceWithDistance } from '@/types/place'
 import { distanceMeters } from '@/utils/geo'
 import { DEMO_PLACES, demoPlacesByCategory, CURATED_PLACES } from './demoPlaces'
+import { findCuratedHotelBySlug } from './curatedHotels'
 import { findCachedOsmPlace } from './osmPlaces'
 
 export { DEMO_PLACES, CURATED_PLACES }
@@ -24,8 +25,7 @@ export function getCuratedPlaces(categorySlug?: string): Place[] {
  * 1) Supabase (short timeout) when configured
  * 2) Curated Bahir Dar guide data (always instant fallback)
  *
- * Live OpenStreetMap is loaded separately via useOsmPlaces (cached) so we never
- * wait on Overpass for the first paint.
+ * Live OpenStreetMap is loaded separately via useOsmPlaces (cached).
  */
 export async function fetchPlaces(opts?: {
   categorySlug?: string
@@ -38,13 +38,34 @@ export async function fetchPlaces(opts?: {
         fetchFromSupabase(opts),
         sleepReject(4000, 'Supabase timeout'),
       ])
-      if (rows.length > 0) return rows
+      if (rows.length > 0) {
+        // Merge curated hotels so the user list always appears even with DB data
+        if (!opts?.categorySlug || opts.categorySlug === 'hotel') {
+          return mergeByName(rows, getCuratedPlaces(opts?.categorySlug === 'hotel' ? 'hotel' : undefined))
+        }
+        return rows
+      }
     } catch (e) {
       console.warn('places supabase:', e)
     }
   }
 
   return getCuratedPlaces(opts?.categorySlug)
+}
+
+function mergeByName(primary: Place[], secondary: Place[]): Place[] {
+  const seen = new Set(primary.map((p) => p.name.toLowerCase().replace(/\s+/g, ' ').trim()))
+  const out = [...primary]
+  for (const p of secondary) {
+    const key = p.name.toLowerCase().replace(/\s+/g, ' ').trim()
+    // Match base English name before " · " Amharic suffix
+    const base = key.split(' · ')[0]
+    if (seen.has(key) || seen.has(base)) continue
+    if ([...seen].some((s) => s.includes(base) || base.includes(s.split(' · ')[0]))) continue
+    seen.add(key)
+    out.push(p)
+  }
+  return out
 }
 
 async function fetchFromSupabase(opts?: {
@@ -135,6 +156,9 @@ export async function fetchPlaceBySlug(slug: string): Promise<Place | null> {
       console.warn('fetchPlaceBySlug supabase:', e)
     }
   }
+
+  const hotel = findCuratedHotelBySlug(slug)
+  if (hotel) return hotel
 
   const curated = CURATED_PLACES.find((p) => p.slug === slug)
   if (curated) return curated

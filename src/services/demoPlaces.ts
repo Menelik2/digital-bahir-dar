@@ -1,10 +1,12 @@
 import type { Place } from '@/types/place'
 import { BAHIR_DAR_CENTER } from '@/constants'
 import { HOTEL_NIGHT_ETB, FOOD_PERSON_DAY_ETB, ATTRACTION_ETB } from '@/data/bahirDarPrices'
+import { CURATED_HOTELS } from './curatedHotels'
 
 /**
  * Built-in Bahir Dar guide places — real landmarks + planning fixtures.
  * Shown instantly (no network). Commercial names with (DEMO) are not live bookings.
+ * Real hotels come from CURATED_HOTELS (user list + Google Maps links).
  */
 export const DEMO_PLACES: Place[] = [
   {
@@ -234,6 +236,7 @@ export const DEMO_PLACES: Place[] = [
       sort_order: 10,
     },
   },
+  // DEMO hotel planning bands only (not real properties)
   {
     id: 'demo-hotel-1',
     name: 'Lakeside View Hotel (DEMO)',
@@ -251,7 +254,7 @@ export const DEMO_PLACES: Place[] = [
     entrance_fee: null,
     currency: 'ETB',
     verified: false,
-    featured: true,
+    featured: false,
     status: 'published',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -270,86 +273,6 @@ export const DEMO_PLACES: Place[] = [
       minimum_price: HOTEL_NIGHT_ETB.mid.min,
       maximum_price: HOTEL_NIGHT_ETB.mid.max,
       amenities: ['WiFi', 'Restaurant', 'Lake view'],
-      check_in: '14:00',
-      check_out: '11:00',
-    },
-  },
-  {
-    id: 'demo-hotel-2',
-    name: 'City Center Guesthouse (DEMO)',
-    slug: 'city-center-guesthouse-demo',
-    category_id: 'demo-hotel',
-    description: `Planning example budget guesthouse. Typical ${HOTEL_NIGHT_ETB.budget.min}–${HOTEL_NIGHT_ETB.budget.max} ETB/night.`,
-    short_description: 'Planning · budget stay',
-    address: 'Central Bahir Dar',
-    latitude: 11.591,
-    longitude: 37.392,
-    phone: null,
-    email: null,
-    website: null,
-    price_level: 1,
-    entrance_fee: null,
-    currency: 'ETB',
-    verified: false,
-    featured: false,
-    status: 'published',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    category: {
-      id: 'demo-hotel',
-      name: 'Hotels',
-      slug: 'hotel',
-      icon: 'Hotel',
-      description: null,
-      sort_order: 1,
-    },
-    hotel: {
-      id: 'demo-h-2',
-      place_id: 'demo-hotel-2',
-      star_rating: 2,
-      minimum_price: HOTEL_NIGHT_ETB.budget.min,
-      maximum_price: HOTEL_NIGHT_ETB.budget.max,
-      amenities: ['WiFi'],
-      check_in: '13:00',
-      check_out: '10:00',
-    },
-  },
-  {
-    id: 'demo-hotel-3',
-    name: 'Lakeside Resort Band (DEMO)',
-    slug: 'kuriftu-style-resort-demo',
-    category_id: 'demo-hotel',
-    description: `Planning example comfort / lakeside tier ~${HOTEL_NIGHT_ETB.comfort.min}–${HOTEL_NIGHT_ETB.comfort.max} ETB/night. Not affiliated with any brand.`,
-    short_description: 'Planning · resort-class band',
-    address: 'Lake shore area',
-    latitude: 11.61,
-    longitude: 37.375,
-    phone: null,
-    email: null,
-    website: null,
-    price_level: 4,
-    entrance_fee: null,
-    currency: 'ETB',
-    verified: false,
-    featured: true,
-    status: 'published',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    category: {
-      id: 'demo-hotel',
-      name: 'Hotels',
-      slug: 'hotel',
-      icon: 'Hotel',
-      description: null,
-      sort_order: 1,
-    },
-    hotel: {
-      id: 'demo-h-3',
-      place_id: 'demo-hotel-3',
-      star_rating: 4,
-      minimum_price: HOTEL_NIGHT_ETB.comfort.min,
-      maximum_price: HOTEL_NIGHT_ETB.comfort.max,
-      amenities: ['WiFi', 'Pool', 'Restaurant', 'Lake view'],
       check_in: '14:00',
       check_out: '11:00',
     },
@@ -629,9 +552,13 @@ export const DEMO_PLACES: Place[] = [
   },
 ]
 
-/** Alias used by fast path — same as DEMO_PLACES */
-export const CURATED_PLACES = DEMO_PLACES
+/** Guide landmarks + all curated hotels (real names + Google Maps links) */
+export const CURATED_PLACES: Place[] = [...CURATED_HOTELS, ...DEMO_PLACES]
 
 export function demoPlacesByCategory(slug: string): Place[] {
-  return DEMO_PLACES.filter((p) => p.category?.slug === slug)
+  if (slug === 'hotel') {
+    // Prefer real curated hotels; keep DEMO bands at the end only if needed for budget tips
+    return [...CURATED_HOTELS, ...DEMO_PLACES.filter((p) => p.category?.slug === 'hotel')]
+  }
+  return CURATED_PLACES.filter((p) => p.category?.slug === slug)
 }
