@@ -82,7 +82,8 @@ export default function HomePage() {
       body: t.home.stayBody,
       icon: Hotel,
       gradient: 'from-[#0b6e99] to-[#0a4d6e]',
-      ring: 'hover:ring-[#0b6e99]/40',
+      tint: 'bg-[#0b6e99]/12 text-[#0a5a7e] dark:bg-[#0b6e99]/25 dark:text-[#7dd3fc]',
+      accent: 'bg-[#0b6e99]',
     },
     {
       to: '/restaurants',
@@ -90,7 +91,8 @@ export default function HomePage() {
       body: t.home.eatBody,
       icon: UtensilsCrossed,
       gradient: 'from-[#c4a574] to-[#6f4e37]',
-      ring: 'hover:ring-[#c4a574]/40',
+      tint: 'bg-[#c4a574]/20 text-[#6f4e37] dark:bg-[#c4a574]/20 dark:text-[#e8d5b5]',
+      accent: 'bg-[#c4a574]',
     },
     {
       to: '/transport',
@@ -98,7 +100,8 @@ export default function HomePage() {
       body: t.home.goBody,
       icon: Car,
       gradient: 'from-[#078930] to-[#056b24]',
-      ring: 'hover:ring-[#078930]/40',
+      tint: 'bg-[#078930]/12 text-[#056b24] dark:bg-[#078930]/25 dark:text-[#86efac]',
+      accent: 'bg-[#078930]',
     },
     {
       to: '/today',
@@ -106,7 +109,8 @@ export default function HomePage() {
       body: t.home.seeBody,
       icon: Sun,
       gradient: 'from-[#d4a017] to-[#b8860b]',
-      ring: 'hover:ring-[#d4a017]/40',
+      tint: 'bg-[#f5c518]/20 text-[#8a6d0b] dark:bg-[#f5c518]/20 dark:text-[#fde68a]',
+      accent: 'bg-[#f5c518]',
     },
   ] as const
 
@@ -129,7 +133,7 @@ export default function HomePage() {
 
   return (
     <div className="bg-[#f2f2f7] dark:bg-black">
-      {/* Hero — full-bleed, desktop-balanced */}
+      {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#056b24] via-[#0b6e99] to-[#0a4d6e] text-white">
         <div className="ethio-flag-bar absolute inset-x-0 top-0" aria-hidden />
         <div className="ethio-mesh pointer-events-none absolute inset-0 opacity-50" aria-hidden />
@@ -171,23 +175,22 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Desktop preview cards */}
           <div className="hidden lg:grid lg:grid-cols-2 lg:gap-3">
             {desk.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className="group relative overflow-hidden rounded-2xl bg-white/10 p-4 shadow-lg ring-1 ring-white/15 backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white/15 hover:shadow-xl"
+                className="group relative overflow-hidden rounded-[1.25rem] bg-white/12 p-4 shadow-lg ring-1 ring-white/20 backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/18 hover:shadow-xl"
               >
                 <div
                   className={cn(
-                    'mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-inner',
+                    'mb-3 flex h-10 w-10 items-center justify-center rounded-[0.85rem] bg-gradient-to-br text-white shadow-inner',
                     item.gradient
                   )}
                 >
                   <item.icon className="h-5 w-5" strokeWidth={2.25} />
                 </div>
-                <p className="text-[15px] font-bold">{item.title}</p>
+                <p className="text-[15px] font-semibold tracking-tight">{item.title}</p>
                 <p className="mt-0.5 line-clamp-2 text-[12px] text-white/75">{item.body}</p>
                 <ArrowRight className="absolute bottom-4 right-4 h-4 w-4 opacity-0 transition group-hover:opacity-80" />
               </Link>
@@ -196,58 +199,91 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* What do you need */}
-      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:py-12 xl:px-8">
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-2 sm:mb-6">
-          <div>
-            <h2 className="text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-2xl">
-              {t.home.whatNeed}
-            </h2>
-            <p className="mt-1 text-[13px] text-[#8e8e93] sm:text-sm">{t.home.whatNeedSub}</p>
-          </div>
+      {/* What do you need — iPhone clear style on desktop */}
+      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:py-14 xl:px-8">
+        <div className="mb-4 sm:mb-6 lg:mb-8">
+          <h2 className="text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-2xl lg:text-[28px]">
+            {t.home.whatNeed}
+          </h2>
+          <p className="mt-1 text-[13px] text-[#8e8e93] sm:text-sm lg:text-[15px]">{t.home.whatNeedSub}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+        {/* Mobile: compact gradient tiles */}
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:hidden">
           {desk.map((item) => (
             <Link key={item.to} to={item.to} className="group block ios-press">
               <div
                 className={cn(
-                  'relative flex min-h-[88px] flex-col justify-end overflow-hidden rounded-2xl bg-gradient-to-br px-3 py-3 text-white shadow-sm transition duration-300',
-                  'sm:min-h-[120px] sm:px-5 sm:py-5',
-                  'lg:min-h-[148px] lg:rounded-3xl lg:shadow-md',
-                  'lg:hover:-translate-y-1 lg:hover:shadow-xl lg:hover:ring-2',
-                  item.gradient,
-                  item.ring
+                  'relative flex min-h-[88px] flex-col justify-end overflow-hidden rounded-[1.15rem] bg-gradient-to-br px-3 py-3 text-white shadow-sm',
+                  'sm:min-h-[110px] sm:px-4 sm:py-4',
+                  item.gradient
                 )}
               >
-                <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10 blur-2xl transition group-hover:bg-white/20" />
-                <item.icon
-                  className="mb-1.5 h-5 w-5 opacity-95 sm:mb-2 sm:h-7 sm:w-7"
-                  strokeWidth={2.25}
-                />
-                <p className="text-[14px] font-bold leading-tight tracking-tight sm:text-lg">
-                  {item.title}
-                </p>
-                <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white/85 sm:text-[13px]">
-                  {item.body}
-                </p>
+                <item.icon className="mb-1.5 h-5 w-5 opacity-95 sm:h-6 sm:w-6" strokeWidth={2.25} />
+                <p className="text-[14px] font-bold leading-tight tracking-tight sm:text-[15px]">{item.title}</p>
+                <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white/85">{item.body}</p>
               </div>
             </Link>
           ))}
         </div>
 
-        <Link to="/today" className="mt-3 block ios-press sm:mt-4">
-          <div className="flex items-center gap-3 rounded-2xl border border-black/[0.04] bg-white px-3.5 py-3 shadow-sm transition hover:border-[#078930]/20 hover:shadow-md dark:border-white/[0.08] dark:bg-[#1c1c1e] sm:gap-4 sm:rounded-3xl sm:px-5 sm:py-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f5c518] text-[#3d3200] sm:h-12 sm:w-12">
-              <Sun className="h-5 w-5" />
+        {/* Desktop: clear iOS cards */}
+        <div className="hidden lg:grid lg:grid-cols-4 lg:gap-4 xl:gap-5">
+          {desk.map((item) => (
+            <Link key={item.to} to={item.to} className="group block">
+              <div
+                className={cn(
+                  'relative flex h-full min-h-[168px] flex-col rounded-[1.35rem] border border-black/[0.04]',
+                  'bg-white/90 p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]',
+                  'backdrop-blur-xl transition duration-300',
+                  'hover:-translate-y-1 hover:border-black/[0.06] hover:shadow-[0_8px_32px_rgba(0,0,0,0.08)]',
+                  'dark:border-white/[0.08] dark:bg-[#1c1c1e]/90 dark:hover:border-white/[0.12]'
+                )}
+              >
+                <div className="mb-4 flex items-start justify-between">
+                  <div
+                    className={cn(
+                      'flex h-12 w-12 items-center justify-center rounded-[0.95rem] transition group-hover:scale-105',
+                      item.tint
+                    )}
+                  >
+                    <item.icon className="h-6 w-6" strokeWidth={2.1} />
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-[#c7c7cc] transition group-hover:translate-x-0.5 group-hover:text-[#8e8e93]" />
+                </div>
+                <p className="text-[18px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white">
+                  {item.title}
+                </p>
+                <p className="mt-1.5 line-clamp-2 flex-1 text-[13px] leading-relaxed text-[#8e8e93]">
+                  {item.body}
+                </p>
+                <div className={cn('mt-4 h-1 w-10 rounded-full opacity-80', item.accent)} />
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Today row — iOS inset grouped style */}
+        <Link to="/today" className="mt-3 block ios-press sm:mt-4 lg:mt-5">
+          <div
+            className={cn(
+              'flex items-center gap-3 rounded-[1.15rem] border border-black/[0.04] bg-white px-3.5 py-3 shadow-sm',
+              'transition hover:bg-[#fafafa] dark:border-white/[0.08] dark:bg-[#1c1c1e] dark:hover:bg-[#242426]',
+              'sm:gap-4 sm:rounded-[1.25rem] sm:px-5 sm:py-4',
+              'lg:rounded-[1.35rem] lg:px-6 lg:py-5 lg:shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]',
+              'lg:hover:-translate-y-0.5 lg:hover:shadow-[0_8px_28px_rgba(0,0,0,0.07)]'
+            )}
+          >
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f5c518] text-[#3d3200] sm:h-12 sm:w-12 lg:h-14 lg:w-14">
+              <Sun className="h-5 w-5 lg:h-6 lg:w-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[15px] font-semibold text-[#1c1c1e] dark:text-white">
+              <p className="text-[15px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white lg:text-[17px]">
                 {t.home.todayTitle}
               </p>
-              <p className="truncate text-[12px] text-[#8e8e93] sm:text-[13px]">{t.home.todayBody}</p>
+              <p className="truncate text-[12px] text-[#8e8e93] sm:text-[13px] lg:text-[14px]">{t.home.todayBody}</p>
             </div>
-            <ChevronRight className="h-5 w-5 shrink-0 text-[#c7c7cc]" />
+            <ChevronRight className="h-5 w-5 shrink-0 text-[#c7c7cc] lg:h-5 lg:w-5" />
           </div>
         </Link>
       </section>
@@ -258,7 +294,7 @@ export default function HomePage() {
           <h2 className="mb-4 text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:mb-6 sm:text-2xl">
             {t.home.moreTools}
           </h2>
-          <div className="grid grid-cols-4 gap-x-2 gap-y-5 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-7 xl:grid-cols-7">
+          <div className="grid grid-cols-4 gap-x-2 gap-y-5 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-7">
             {moreTools.map((a) => (
               <Link key={a.path + a.label} to={a.path} className="ios-press group">
                 <div className="flex flex-col items-center gap-2 text-center">
@@ -383,15 +419,10 @@ export default function HomePage() {
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
             {tips.map((tip) => (
-              <Card
-                key={tip.id}
-                className="border-black/[0.04] shadow-sm dark:border-white/[0.08]"
-              >
+              <Card key={tip.id} className="border-black/[0.04] shadow-sm dark:border-white/[0.08]">
                 <CardContent className="p-4 sm:p-5">
                   <h3 className="text-[15px] font-semibold sm:text-[16px]">{tip.title}</h3>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-[#8e8e93] sm:text-[14px]">
-                    {tip.body}
-                  </p>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-[#8e8e93] sm:text-[14px]">{tip.body}</p>
                 </CardContent>
               </Card>
             ))}
