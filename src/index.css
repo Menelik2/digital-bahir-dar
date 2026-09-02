@@ -147,12 +147,81 @@ nav {
     0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
+/* Press feedback — mobile tap + desktop active */
 .ios-press {
-  transition: transform 0.18s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.15s ease;
+  transition:
+    transform 0.18s cubic-bezier(0.25, 0.1, 0.25, 1),
+    opacity 0.15s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    filter 0.15s ease;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.ios-press:hover {
+  filter: brightness(1.02);
 }
 .ios-press:active {
   transform: scale(0.97);
   opacity: 0.92;
+  filter: brightness(0.97);
+}
+@media (hover: hover) and (pointer: fine) {
+  .ios-press:hover {
+    transform: translateY(-1px);
+  }
+  .ios-press:active {
+    transform: scale(0.98) translateY(0);
+  }
+}
+
+/* Clear card interaction (desktop path cards) */
+.ios-card {
+  transition:
+    transform 0.22s cubic-bezier(0.25, 0.1, 0.25, 1),
+    box-shadow 0.22s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+.ios-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    0 12px 32px rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+.ios-card:active {
+  transform: translateY(-1px) scale(0.985);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.05),
+    0 6px 16px rgba(0, 0, 0, 0.06);
+}
+.dark .ios-card:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.35),
+    0 12px 32px rgba(0, 0, 0, 0.4);
+}
+.dark .ios-card:active {
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+/* Gradient tile hover / active (mobile path cards) */
+.ios-tile {
+  transition:
+    transform 0.18s cubic-bezier(0.25, 0.1, 0.25, 1),
+    box-shadow 0.2s ease,
+    filter 0.15s ease;
+}
+.ios-tile:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+.ios-tile:active {
+  transform: scale(0.96);
+  filter: brightness(0.94);
 }
 
 .ethio-flag-bar {
@@ -496,8 +565,12 @@ nav {
   .splash-footer,
   .splash-orb,
   .splash-exit,
-  .app-reveal {
+  .app-reveal,
+  .ios-press,
+  .ios-card,
+  .ios-tile {
     animation: none !important;
+    transition: none !important;
   }
   .splash-logo-wrap,
   .splash-title,
@@ -511,5 +584,13 @@ nav {
   }
   .splash-flash-flare {
     display: none;
+  }
+  .ios-press:active,
+  .ios-card:hover,
+  .ios-card:active,
+  .ios-tile:hover,
+  .ios-tile:active {
+    transform: none;
+    filter: none;
   }
 }
