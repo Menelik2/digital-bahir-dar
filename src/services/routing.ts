@@ -40,7 +40,9 @@ export async function fetchRoute(
     }
     const route = data.routes[0]
     // GeoJSON is [lng, lat] → Leaflet wants [lat, lng]
-    const coordinates = route.geometry.coordinates!.map(
+    const coords = route.geometry?.coordinates
+    if (!coords?.length) return null
+    const coordinates = coords.map(
       ([lng, lat]) => [lat, lng] as [number, number]
     )
     return {
