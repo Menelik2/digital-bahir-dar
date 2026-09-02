@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense, useCallback, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/queryClient'
@@ -45,13 +45,16 @@ function PageFallback() {
 
 export default function App() {
   const [splashDone, setSplashDone] = useState(false)
+  const onSplashDone = useCallback(() => setSplashDone(true), [])
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SplashScreen onDone={() => setSplashDone(true)} />
+      {/* Flash animation before website opens */}
+      <SplashScreen onDone={onSplashDone} />
+
       <div
-        className={splashDone ? 'opacity-100' : 'opacity-0'}
-        style={{ transition: 'opacity 0.35s ease' }}
+        className={splashDone ? 'app-reveal' : 'app-hidden'}
+        aria-hidden={!splashDone}
       >
         <BrowserRouter>
           <RealtimeProvider>
