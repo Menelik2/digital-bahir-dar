@@ -1,10 +1,11 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/queryClient'
 import { Layout } from '@/components/layout/Layout'
 import { RealtimeProvider } from '@/components/realtime/RealtimeProvider'
 import { StateMessage } from '@/components/feedback/StateMessage'
+import { SplashScreen } from '@/components/splash/SplashScreen'
 import { useT } from '@/hooks/useT'
 
 const HomePage = lazy(() => import('@/pages/Home'))
@@ -43,47 +44,55 @@ function PageFallback() {
 }
 
 export default function App() {
+  const [splashDone, setSplashDone] = useState(false)
+
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <RealtimeProvider>
-          <Suspense fallback={<PageFallback />}>
-            <Routes>
-              <Route element={<Layout />}>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/city" element={<CityHubPage />} />
-                <Route path="/todo" element={<TodoPage />} />
-                <Route path="/today" element={<TodayPage />} />
-                <Route path="/explore" element={<ExplorePage />} />
-                <Route path="/discover" element={<DiscoverPage />} />
-                <Route path="/map" element={<MapPage />} />
-                <Route path="/hotels" element={<HotelsPage />} />
-                <Route path="/restaurants" element={<RestaurantsPage />} />
-                <Route path="/attractions" element={<AttractionsPage />} />
-                <Route path="/banks" element={<BanksPage />} />
-                <Route path="/transport" element={<TransportPage />} />
-                <Route path="/events" element={<EventsPage />} />
-                <Route path="/directory" element={<DirectoryPage />} />
-                <Route path="/trips" element={<TripsPage />} />
-                <Route path="/trips/:tripId" element={<TripDetailPage />} />
-                <Route path="/trip-planner" element={<TripPlannerPage />} />
-                <Route path="/budget" element={<BudgetPage />} />
-                <Route path="/spend-guide" element={<SpendGuidePage />} />
-                <Route path="/expenses" element={<ExpensesPage />} />
-                <Route path="/ai-guide" element={<AIGuidePage />} />
-                <Route path="/guides" element={<GuidesPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/business" element={<BusinessPage />} />
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/admin/events" element={<AdminEventsPage />} />
-                <Route path="/places/:slug" element={<PlaceDetailsPage />} />
-                <Route path="/auth" element={<AuthPage />} />
-                <Route path="*" element={<NotFoundPage />} />
-              </Route>
-            </Routes>
-          </Suspense>
-        </RealtimeProvider>
-      </BrowserRouter>
+      <SplashScreen onDone={() => setSplashDone(true)} />
+      <div
+        className={splashDone ? 'opacity-100' : 'opacity-0'}
+        style={{ transition: 'opacity 0.35s ease' }}
+      >
+        <BrowserRouter>
+          <RealtimeProvider>
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
+                <Route element={<Layout />}>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/city" element={<CityHubPage />} />
+                  <Route path="/todo" element={<TodoPage />} />
+                  <Route path="/today" element={<TodayPage />} />
+                  <Route path="/explore" element={<ExplorePage />} />
+                  <Route path="/discover" element={<DiscoverPage />} />
+                  <Route path="/map" element={<MapPage />} />
+                  <Route path="/hotels" element={<HotelsPage />} />
+                  <Route path="/restaurants" element={<RestaurantsPage />} />
+                  <Route path="/attractions" element={<AttractionsPage />} />
+                  <Route path="/banks" element={<BanksPage />} />
+                  <Route path="/transport" element={<TransportPage />} />
+                  <Route path="/events" element={<EventsPage />} />
+                  <Route path="/directory" element={<DirectoryPage />} />
+                  <Route path="/trips" element={<TripsPage />} />
+                  <Route path="/trips/:tripId" element={<TripDetailPage />} />
+                  <Route path="/trip-planner" element={<TripPlannerPage />} />
+                  <Route path="/budget" element={<BudgetPage />} />
+                  <Route path="/spend-guide" element={<SpendGuidePage />} />
+                  <Route path="/expenses" element={<ExpensesPage />} />
+                  <Route path="/ai-guide" element={<AIGuidePage />} />
+                  <Route path="/guides" element={<GuidesPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/business" element={<BusinessPage />} />
+                  <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/admin/events" element={<AdminEventsPage />} />
+                  <Route path="/places/:slug" element={<PlaceDetailsPage />} />
+                  <Route path="/auth" element={<AuthPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Route>
+              </Routes>
+            </Suspense>
+          </RealtimeProvider>
+        </BrowserRouter>
+      </div>
     </QueryClientProvider>
   )
 }
