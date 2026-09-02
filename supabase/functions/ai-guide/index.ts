@@ -1,17 +1,19 @@
 // Supabase Edge Function: AI Guide for Digital Bahir Dar
-// Deploy: supabase functions deploy ai-guide
-// Secrets (Supabase only — never VITE_*):
+// Deploy: supabase functions deploy ai-guide --no-verify-jwt
+// Secrets (Dashboard → Edge Functions → Secrets — never VITE_*):
 //   AI_API_KEY  = Groq API key from https://console.groq.com/keys
 //   AI_MODEL    = optional (default: llama-3.3-70b-versatile)
 //   AI_BASE_URL = optional (default: https://api.groq.com/openai/v1)
-//   SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY for place context
+// Auto: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type, x-supabase-client-platform',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 const SYSTEM_PROMPT = `You are the Digital Bahir Dar AI travel guide for Bahir Dar, Ethiopia (Lake Tana, Blue Nile Falls, monasteries, local food, transport, safety).
@@ -26,6 +28,13 @@ Rules:
 - When CONTEXT places are provided, prefer recommending those names/slugs and mention if verified/featured.
 - Do not invent places that are not in CONTEXT or widely known public landmarks.`
 
+function json(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
+}
+
 async function loadPlaceContext(queryHint: string): Promise<string> {
   try {
     const url = Deno.env.get('SUPABASE_URL')
@@ -33,7 +42,26 @@ async function loadPlaceContext(queryHint: string): Promise<string> {
     if (!url || !key) return ''
 
     const sb = createClient(url, key)
-    let q = sb
+    const hint = queryHint.trim()
+
+    if (hint.length >= 3) {
+      try {
+        const { data: searchData } = await sb.rpc('search_places', { q: hint, lim: 12 })
+        if (searchData && Array.isArray(searchData) && searchData.length > 0) {
+          const lines = searchData.map((p: Record<string, unknown>) => {
+            const flags = [p.verified ? 'verified' : null, p.featured ? 'featured' : null]
+              .filter(Boolean)
+              .join(', ')
+            return `- ${p.name} (/places/${p.slug})${flags ? ` [${flags}]` : ''}${p.short_description ? `: ${p.short_description}` : ''}`
+          })
+          return 'CONTEXT — matching places from Digital Bahir Dar database:\n' + lines.join('\n')
+        }
+      } catch (rpcErr) {
+        console.warn('search_places rpc skipped', rpcErr)
+      }
+    }
+
+    const { data } = await sb
       .from('places')
       .select('name, slug, short_description, address, verified, featured, price_level, entrance_fee, status')
       .eq('status', 'published')
@@ -41,22 +69,11 @@ async function loadPlaceContext(queryHint: string): Promise<string> {
       .order('featured', { ascending: false })
       .limit(18)
 
-    const hint = queryHint.trim()
-    if (hint.length >= 3) {
-      const { data: searchData } = await sb.rpc('search_places', { q: hint, lim: 12 })
-      if (searchData && Array.isArray(searchData) && searchData.length > 0) {
-        const lines = searchData.map((p: Record<string, unknown>) => {
-          const flags = [p.verified ? 'verified' : null, p.featured ? 'featured' : null].filter(Boolean).join(', ')
-          return `- ${p.name} (/places/${p.slug})${flags ? ` [${flags}]` : ''}${p.short_description ? `: ${p.short_description}` : ''}`
-        })
-        return 'CONTEXT — matching places from Digital Bahir Dar database:\n' + lines.join('\n')
-      }
-    }
-
-    const { data } = await q
     if (!data?.length) return ''
     const lines = data.map((p: Record<string, unknown>) => {
-      const flags = [p.verified ? 'verified' : null, p.featured ? 'featured' : null].filter(Boolean).join(', ')
+      const flags = [p.verified ? 'verified' : null, p.featured ? 'featured' : null]
+        .filter(Boolean)
+        .join(', ')
       return `- ${p.name} (/places/${p.slug})${flags ? ` [${flags}]` : ''}${p.short_description ? `: ${p.short_description}` : ''}`
     })
     return 'CONTEXT — featured / published places in Digital Bahir Dar:\n' + lines.join('\n')
@@ -71,26 +88,32 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  if (req.method !== 'POST') {
+    return json({ error: 'POST only' }, 405)
+  }
+
   try {
-    const { messages, locale } = await req.json()
+    let body: { messages?: unknown; locale?: string }
+    try {
+      body = await req.json()
+    } catch {
+      return json({ error: 'Invalid JSON body', fallback: true }, 400)
+    }
+
+    const { messages, locale } = body
     if (!Array.isArray(messages) || messages.length === 0) {
-      return new Response(JSON.stringify({ error: 'messages required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+      return json({ error: 'messages required', fallback: true }, 400)
     }
 
     const apiKey = Deno.env.get('AI_API_KEY')
     if (!apiKey) {
-      return new Response(
-        JSON.stringify({
-          error: 'AI_API_KEY not configured',
-          fallback: true,
-          reply:
-            'The AI guide is not fully configured on the server yet. Use the in-app demo tips, map, and trip planner. Ask an admin to set AI_API_KEY (Groq) on the Edge Function.',
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return json({
+        error: 'AI_API_KEY not configured',
+        fallback: true,
+        debug: 'Set secret AI_API_KEY in Supabase Dashboard → Project Settings → Edge Functions → Secrets',
+        reply:
+          'The AI guide is not fully configured on the server yet. Offline tips still work in the app. Ask an admin to set AI_API_KEY (Groq) on the Edge Function.',
+      })
     }
 
     const lastUser = [...messages].reverse().find((m: { role?: string }) => m.role === 'user')
@@ -108,45 +131,62 @@ serve(async (req) => {
     const baseUrl = (Deno.env.get('AI_BASE_URL') || 'https://api.groq.com/openai/v1').replace(/\/$/, '')
     const model = Deno.env.get('AI_MODEL') || 'llama-3.3-70b-versatile'
 
-    const res = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: 'system', content: systemContent }, ...messages.slice(-20)],
-        temperature: 0.65,
-        max_tokens: 900,
-      }),
-    })
+    let res: Response
+    try {
+      res = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'system', content: systemContent }, ...messages.slice(-20)],
+          temperature: 0.65,
+          max_tokens: 900,
+        }),
+      })
+    } catch (netErr) {
+      console.error('AI fetch failed', netErr)
+      return json({
+        error: 'AI network error',
+        fallback: true,
+        debug: String(netErr),
+        reply:
+          'Could not reach the AI provider. Check Edge Function logs and AI_BASE_URL. Offline guide tips are still available in the app.',
+      })
+    }
 
     if (!res.ok) {
       const errText = await res.text()
       console.error('AI provider error', res.status, errText)
-      return new Response(JSON.stringify({ error: 'AI provider error', status: res.status, detail: errText.slice(0, 500) }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      // 200 + fallback so the mobile client always receives a body (no hard 502)
+      return json({
+        error: 'AI provider error',
+        status: res.status,
+        detail: errText.slice(0, 400),
+        fallback: true,
+        reply:
+          res.status === 401 || res.status === 403
+            ? 'AI API key was rejected. Update AI_API_KEY (Groq) in Supabase secrets.'
+            : 'AI provider returned an error. Try again later — offline tips still work in the app.',
       })
     }
 
     const data = await res.json()
     const reply = data.choices?.[0]?.message?.content ?? 'Sorry, I could not generate a reply.'
 
-    return new Response(
-      JSON.stringify({
-        reply,
-        model: data.model || model,
-        grounded: !!placeContext,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    return json({
+      reply,
+      model: data.model || model,
+      grounded: !!placeContext,
+    })
   } catch (e) {
     console.error(e)
-    return new Response(JSON.stringify({ error: String(e) }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    return json({
+      error: String(e),
+      fallback: true,
+      reply: 'Server error in AI guide. Please try again or use Map / Attractions offline tips.',
     })
   }
 })

@@ -128,7 +128,6 @@ function matchDemoReply(userText: string): string {
   }
   if (best && best.score > 0) return best.reply
 
-  // Broken / short English: "tell me where i go", "where i go", etc.
   if (
     /\b(go|see|visit|do|plan|trip|tour|place|places)\b/.test(lower) ||
     /where/.test(lower)
@@ -160,6 +159,8 @@ export async function sendGuideMessage(
     .map((m) => ({ role: m.role, content: m.content }))
 
   const lastUser = [...history].reverse().find((m) => m.role === 'user')
+  const offline = () =>
+    lastUser ? matchDemoReply(lastUser.content) : DEMO_KNOWLEDGE[0].reply
 
   try {
     const { data, error } = await supabase.functions.invoke('ai-guide', {
@@ -167,12 +168,17 @@ export async function sendGuideMessage(
     })
 
     if (error) {
-      console.warn('ai-guide invoke:', error.message)
-      return {
-        reply: lastUser ? matchDemoReply(lastUser.content) : DEMO_KNOWLEDGE[0].reply,
-        fallback: true,
-        error: error.message,
+      console.warn('ai-guide invoke:', error.message, data)
+      // Prefer server body when FunctionsHttpError still carries JSON
+      const body = data as AIGuideResponse | null
+      if (body?.reply && typeof body.reply === 'string') {
+        return {
+          reply: body.reply.includes('not fully configured') ? offline() : body.reply,
+          fallback: true,
+          error: error.message,
+        }
       }
+      return { reply: offline(), fallback: true, error: error.message }
     }
 
     if (data?.fallback || data?.error) {
@@ -180,11 +186,9 @@ export async function sendGuideMessage(
         reply:
           data.reply && !String(data.reply).includes('not fully configured')
             ? data.reply
-            : lastUser
-              ? matchDemoReply(lastUser.content)
-              : DEMO_KNOWLEDGE[0].reply,
+            : offline(),
         fallback: true,
-        error: data.error,
+        error: data.error ?? data.debug,
       }
     }
 
@@ -192,14 +196,11 @@ export async function sendGuideMessage(
       return { reply: data.reply, model: data.model }
     }
 
-    return {
-      reply: lastUser ? matchDemoReply(lastUser.content) : DEMO_KNOWLEDGE[0].reply,
-      fallback: true,
-    }
+    return { reply: offline(), fallback: true }
   } catch (e) {
     console.warn('aiGuide network:', e)
     return {
-      reply: lastUser ? matchDemoReply(lastUser.content) : DEMO_KNOWLEDGE[0].reply,
+      reply: offline(),
       fallback: true,
       error: e instanceof Error ? e.message : 'network',
     }
