@@ -40,7 +40,6 @@ const FALLS_FALLBACK =
 const CITY_FALLBACK =
   'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/The_city_of_Bahir_Dar%2C_Ethiopia.jpg/800px-The_city_of_Bahir_Dar%2C_Ethiopia.jpg'
 
-/** Hero photo — local first, then dramatic Blue Nile Falls */
 const HERO_LOCAL = '/images/hero-bahir-dar.jpg'
 const HERO_FALLS = FALLS_FALLBACK
 
@@ -141,11 +140,10 @@ export default function HomePage() {
 
   return (
     <div className="bg-[#f2f2f7] dark:bg-black">
-      {/* Hero — living photo of Blue Nile Falls */}
       <section className="relative overflow-hidden text-white">
         <div className="absolute inset-0">
           <img
-            src={HERO_LOCAL}
+            src={HERO_FALLS}
             alt="Blue Nile Falls near Bahir Dar"
             className="h-full w-full object-cover"
             fetchPriority="high"
@@ -155,8 +153,8 @@ export default function HomePage() {
               const el = e.currentTarget
               if (el.dataset.fb !== '1') {
                 el.dataset.fb = '1'
-                el.src = HERO_FALLS
- soft          }
+                el.src = HERO_LOCAL
+              }
             }}
           />
           <div
@@ -194,7 +192,7 @@ export default function HomePage() {
                   <Sun className="h-5 w-5" /> {t.home.todayTitle}
                 </Button>
               </Link>
-              <Link to="/trip-planner" className="w-full sm:w-auto">
+              <Link ento="/trip-planner" className="w-full sm:w-auto">
                 <Button
                   size="lg"
                   variant="outline"
@@ -223,7 +221,7 @@ export default function HomePage() {
                 </div>
                 <p className="text-[15px] font-semibold tracking-tight">{item.title}</p>
                 <p className="mt-0.5 line-clamp-2 text-[12px] text-white/80">{item.body}</p>
-                <ArrowRight className="absolute bottom-4 right-4 h-4 w-4 opacity-0 transition group-hover:opacity-90 group-active:opacity-70" />
+                <ArrowRight className="absolute bottom-4 right-4 h-4 w-4 opacity-0 transition group-hover:opacity-90" />
               </Link>
             ))}
           </div>
@@ -248,7 +246,7 @@ export default function HomePage() {
                   item.gradient
                 )}
               >
-                <item.icon className="mb-1.5 h-5 w-5 opacity-95 transition group-active:scale-90 sm:h-6 sm:w-6" strokeWidth={2.25} />
+                <item.icon className="mb-1.5 h-5 w-5 opacity-95 sm:h-6 sm:w-6" strokeWidth={2.25} />
                 <p className="text-[14px] font-bold leading-tight tracking-tight sm:text-[15px]">{item.title}</p>
                 <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white/85">{item.body}</p>
               </div>
@@ -263,57 +261,30 @@ export default function HomePage() {
                 className={cn(
                   'ios-card relative flex h-full min-h-[168px] flex-col rounded-[1.35rem] border border-black/[0.04]',
                   'bg-white/90 p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]',
-                  'backdrop-blur-xl',
-                  'dark:border-white/[0.08] dark:bg-[#1c1c1e]/90'
+                  'backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#1c1c1e]/90'
                 )}
               >
                 <div className="mb-4 flex items-start justify-between">
-                  <div
-                    className={cn(
-                      'flex h-12 w-12 items-center justify-center rounded-[0.95rem] transition duration-200',
-                      'group-hover:scale-110 group-active:scale-95',
-                      item.tint,
-                      item.tintHover
-                    )}
-                  >
+                  <div className={cn('flex h-12 w-12 items-center justify-center rounded-[0.95rem] transition group-hover:scale-110', item.tint, item.tintHover)}>
                     <item.icon className="h-6 w-6" strokeWidth={2.1} />
                   </div>
-                  <ChevronRight className="h-4 w-4 text-[#c7c7cc] transition duration-200 group-hover:translate-x-1 group-hover:text-[#8e8e93] group-active:translate-x-0" />
+                  <ChevronRight className="h-4 w-4 text-[#c7c7cc] transition group-hover:translate-x-1" />
                 </div>
-                <p className="text-[18px] font-semibold tracking-tight text-[#1c1c1e] transition group-hover:text-[#056b24] dark:text-white dark:group-hover:text-[#30d158]">
-                  {item.title}
-                </p>
-                <p className="mt-1.5 line-clamp-2 flex-1 text-[13px] leading-relaxed text-[#8e8e93]">
-                  {item.body}
-                </p>
-                <div
-                  className={cn(
-                    'mt-4 h-1 w-10 rounded-full opacity-80 transition-all duration-200',
-                    'group-hover:w-14 group-hover:opacity-100 group-active:w-12',
-                    item.accent
-                  )}
-                />
+                <p className="text-[18px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white">{item.title}</p>
+                <p className="mt-1.5 line-clamp-2 flex-1 text-[13px] leading-relaxed text-[#8e8e93]">{item.body}</p>
+                <div className={cn('mt-4 h-1 w-10 rounded-full opacity-80 transition group-hover:w-14', item.accent)} />
               </div>
             </Link>
           ))}
         </div>
 
         <Link to="/today" className="mt-3 block sm:mt-4 lg:mt-5">
-          <div
-            className={cn(
-              'ios-card flex items-center gap-3 rounded-[1.15rem] border border-black/[0.04] bg-white px-3.5 py-3 shadow-sm',
-              'dark:border-white/[0.08] dark:bg-[#1c1c1e]',
-              'sm:gap-4 sm:rounded-[1.25rem] sm:px-5 sm:py-4',
-              'lg:rounded-[1.35rem] lg:px-6 lg:py-5'
-            )}
-          >
+          <div className="ios-card flex items-center gap-3 rounded-[1.15rem] border border-black/[0.04] bg-white px-3.5 py-3 shadow-sm dark:border-white/[0.08] dark:bg-[#1c1c1e] sm:gap-4 sm:rounded-[1.25rem] sm:px-5 sm:py-4 lg:rounded-[1.35rem] lg:px-6 lg:py-5">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#f5c518] text-[#3d3200] sm:h-12 sm:w-12 lg:h-14 lg:w-14">
               <Sun className="h-5 w-5 lg:h-6 lg:w-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[15px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white lg:text-[17px]">
-                {t.home.todayTitle}
-              </p>
+              <p className="text-[15px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white lg:text-[17px]">{t.home.todayTitle}</p>
               <p className="truncate text-[12px] text-[#8e8e93] sm:text-[13px] lg:text-[14px]">{t.home.todayBody}</p>
             </div>
             <ChevronRight className="h-5 w-5 shrink-0 text-[#c7c7cc]" />
@@ -323,26 +294,15 @@ export default function HomePage() {
 
       <section className="border-y border-black/[0.03] bg-white/60 px-4 py-6 dark:border-white/[0.06] dark:bg-[#0c0c0e]/80 sm:px-6 sm:py-10 xl:px-8">
         <div className="mx-auto max-w-7xl">
-          <h2 className="mb-4 text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:mb-6 sm:text-2xl">
-            {t.home.moreTools}
-          </h2>
+          <h2 className="mb-4 text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:mb-6 sm:text-2xl">{t.home.moreTools}</h2>
           <div className="grid grid-cols-4 gap-x-2 gap-y-5 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-7">
             {moreTools.map((a) => (
               <Link key={a.path + a.label} to={a.path} className="ios-press group">
                 <div className="flex flex-col items-center gap-2 text-center">
-                  <div
-                    className={cn(
-                      'flex h-12 w-12 items-center justify-center rounded-[1.15rem] shadow-sm transition duration-200',
-                      'lg:h-14 lg:w-14 lg:rounded-2xl',
-                      'group-hover:scale-110 group-hover:shadow-md group-active:scale-95',
-                      a.color
-                    )}
-                  >
+                  <div className={cn('flex h-12 w-12 items-center justify-center rounded-[1.15rem] shadow-sm transition group-hover:scale-110 lg:h-14 lg:w-14 lg:rounded-2xl', a.color)}>
                     <a.icon className="h-5 w-5 lg:h-[22px] lg:w-[22px]" strokeWidth={2} />
                   </div>
-                  <span className="line-clamp-2 max-w-[5rem] text-[11px] font-medium leading-tight text-[#3c3c43] dark:text-white/80 sm:max-w-none sm:text-[12px]">
-                    {a.label}
-                  </span>
+                  <span className="line-clamp-2 max-w-[5rem] text-[11px] font-medium leading-tight text-[#3c3c43] dark:text-white/80 sm:max-w-none sm:text-[12px]">{a.label}</span>
                 </div>
               </Link>
             ))}
@@ -353,15 +313,8 @@ export default function HomePage() {
       <section className="px-4 py-8 sm:px-6 sm:py-12 xl:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-5 flex items-center justify-between gap-3">
-            <h2 className="text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-2xl">
-              {t.home.happening}
-            </h2>
-            <Link
-              to="/events"
-              className="text-[14px] font-semibold text-[#078930] hover:underline dark:text-[#30d158] sm:text-[15px]"
-            >
-              {t.home.allEvents}
-            </Link>
+            <h2 className="text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-2xl">{t.home.happening}</h2>
+            <Link to="/events" className="text-[14px] font-semibold text-[#078930] hover:underline dark:text-[#30d158] sm:text-[15px]">{t.home.allEvents}</Link>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             {upcoming.map((e) => (
@@ -369,9 +322,7 @@ export default function HomePage() {
                 <Card className="ios-card h-full border-black/[0.04] shadow-sm dark:border-white/[0.08]">
                   <CardContent className="p-4 sm:p-5">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#0b6e99]">{e.dateLabel}</p>
-                    <h3 className="mt-1.5 text-[16px] font-semibold leading-snug group-hover:text-[#056b24] dark:group-hover:text-[#30d158]">
-                      {e.title}
-                    </h3>
+                    <h3 className="mt-1.5 text-[16px] font-semibold leading-snug group-hover:text-[#056b24] dark:group-hover:text-[#30d158]">{e.title}</h3>
                     <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-[#8e8e93]">{e.description}</p>
                   </CardContent>
                 </Card>
@@ -383,9 +334,7 @@ export default function HomePage() {
 
       <section className="px-4 py-6 sm:px-6 sm:py-10 xl:px-8">
         <div className="mx-auto max-w-7xl">
-          <h2 className="mb-5 text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:mb-6 sm:text-2xl">
-            {t.home.featured}
-          </h2>
+          <h2 className="mb-5 text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:mb-6 sm:text-2xl">{t.home.featured}</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
             <Link to="/places/lake-tana" className="group block">
               <Card className="ios-card overflow-hidden border-black/[0.04] shadow-sm dark:border-white/[0.08]">
@@ -419,9 +368,7 @@ export default function HomePage() {
                 </div>
                 <CardContent className="p-4 sm:p-5">
                   <h3 className="text-[16px] font-semibold">{t.home.checklist}</h3>
-                  <p className="mt-1 text-[13px] text-[#8e8e93]">
-                    {done} / {CITY_TODOS.length} {t.home.checklistDone}
-                  </p>
+                  <p className="mt-1 text-[13px] text-[#8e8e93]">{done} / {CITY_TODOS.length} {t.home.checklistDone}</p>
                 </CardContent>
               </Card>
             </Link>
@@ -432,12 +379,8 @@ export default function HomePage() {
       <section className="border-t border-black/[0.03] bg-white/50 px-4 py-8 dark:border-white/[0.06] dark:bg-[#0c0c0e]/60 sm:px-6 sm:py-12 xl:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-5 flex items-center justify-between gap-3">
-            <h2 className="text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-2xl">
-              {t.home.travelSmart}
-            </h2>
-            <Link to="/directory" className="text-[14px] font-semibold text-[#078930] hover:underline dark:text-[#30d158] sm:text-[15px]">
-              {t.home.fullDirectory}
-            </Link>
+            <h2 className="text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-2xl">{t.home.travelSmart}</h2>
+            <Link to="/directory" className="text-[14px] font-semibold text-[#078930] hover:underline dark:text-[#30d158] sm:text-[15px]">{t.home.fullDirectory}</Link>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
             {tips.map((tip) => (
@@ -450,46 +393,20 @@ export default function HomePage() {
             ))}
           </div>
           <div className="mt-6 flex flex-wrap gap-2.5">
-            <Link to="/transport">
-              <Button variant="outline" size="sm" className="rounded-full">
-                <Car className="h-4 w-4" /> {t.home.fares}
-              </Button>
-            </Link>
-            <Link to="/directory#emergency">
-              <Button variant="outline" size="sm" className="rounded-full">
-                <Hospital className="h-4 w-4" /> {t.home.emergency}
-              </Button>
-            </Link>
-            <Link to="/budget">
-              <Button variant="outline" size="sm" className="rounded-full">
-                <Wallet className="h-4 w-4" /> {t.home.budget}
-              </Button>
-            </Link>
-            <Link to="/map">
-              <Button variant="outline" size="sm" className="rounded-full">
-                <Navigation className="h-4 w-4" /> {t.home.map}
-              </Button>
-            </Link>
+            <Link to="/transport"><Button variant="outline" size="sm" className="rounded-full"><Car className="h-4 w-4" /> {t.home.fares}</Button></Link>
+            <Link to="/directory#emergency"><Button variant="outline intr inter" size="sm" className="rounded-full"><Hospital className="h-4 w-4" /> {t.home.emergency}</Button></Link>
+            <Link to="/budget"><Button variant="outline" size="sm" className="rounded-full"><Wallet className="h-4 w-4" /> {t.home.budget}</Button></Link>
+            <Link to="/map"><Button variant="outline" size="sm" className="rounded-full"><Navigation className="h-4 w-4" /> {t.home.map}</Button></Link>
           </div>
         </div>
       </section>
 
       <section className="mx-auto max-w-4xl px-4 py-14 text-center sm:px-6 sm:py-20">
-        <h2 className="mb-3 text-[24px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-3xl">
-          {t.home.ctaTitle}
-        </h2>
+        <h2 className="mb-3 text-[24px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-3xl">{t.home.ctaTitle}</h2>
         <p className="mx-auto mb-8 max-w-lg text-[15px] text-[#8e8e93] sm:text-base">{t.home.ctaBody}</p>
         <div className="flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-          <Link to="/today">
-            <Button size="lg" className="h-12 w-full rounded-full px-8 sm:w-auto">
-              <Sun className="h-5 w-5" /> {t.home.startWithToday}
-            </Button>
-          </Link>
-          <Link to="/trip-planner">
-            <Button size="lg" variant="outline" className="h-12 w-full rounded-full px-8 sm:w-auto">
-              <Sparkles className="h-5 w-5" /> {t.home.multiDayPlanner}
-            </Button>
-          </Link>
+          <Link to="/today"><Button size="lg" className="h-12 w-full rounded-full px-8 sm:w-auto"><Sun className="h-5 w-5" /> {t.home.startWithToday}</Button></Link>
+          <Link to="/trip-planner"><Button size="lg" variant="outline" className="h-12 w-full rounded-full px-8 sm:w-auto"><Sparkles className="h-5 w-5" /> {t.home.multiDayPlanner}</Button></Link>
         </div>
       </section>
     </div>
