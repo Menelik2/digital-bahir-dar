@@ -2,16 +2,19 @@
  * Vercel Serverless Function — Digital Bahir Dar AI Guide
  * Works without Supabase Edge Function deploy.
  *
- * Set in Vercel → Project → Settings → Environment Variables:
+ * Vercel → Settings → Environment Variables (Production):
  *   AI_API_KEY   = Gemini key from https://aistudio.google.com/apikey
  *   AI_BASE_URL  = https://generativelanguage.googleapis.com/v1beta/openai
  *   AI_MODEL     = gemini-2.5-flash
  *
- * Also accepts GEMINI_API_KEY / GROQ_API_KEY aliases.
+ * Aliases: GEMINI_API_KEY, GROQ_API_KEY, OPENAI_API_KEY
  * Redeploy after adding env vars.
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ReqReq = any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ReqRes = any
 
 const SYSTEM_PROMPT = `You are the Digital Bahir Dar AI travel guide for Bahir Dar, Ethiopia (Lake Tana, Blue Nile Falls, monasteries, local food, transport, safety).
 
@@ -24,13 +27,13 @@ Rules:
 - You are not a booking engine; direct users to the app's map, places, and trip planner for details.
 - Do not invent places that are not widely known public landmarks in Bahir Dar / Lake Tana.`
 
-function setCors(res: VercelResponse) {
+function setCors(res: ReqRes) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: ReqReq, res: ReqRes) {
   setCors(res)
 
   if (req.method === 'OPTIONS') {
@@ -75,7 +78,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const model =
       process.env.AI_MODEL || process.env.OPENAI_MODEL || 'gemini-2.5-flash'
 
-    let systemContent =
+    const systemContent =
       locale === 'am'
         ? SYSTEM_PROMPT + '\nPrefer Amharic (አማርኛ) when the user writes in Amharic.'
         : SYSTEM_PROMPT
