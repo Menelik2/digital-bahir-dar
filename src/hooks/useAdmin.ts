@@ -10,6 +10,9 @@ import {
   fetchTransportForAdmin,
   setTransportVerified,
   updateTransportService,
+  createTransportService,
+  deleteTransportService,
+  fetchAdminActivity,
   createPlace,
   setPlaceStatus,
   updatePlace,
@@ -36,6 +39,7 @@ import {
   type PlaceEditInput,
   type PlaceCreateInput,
   type CategoryInput,
+  type TransportCreateInput,
 } from '@/services/admin'
 import {
   fetchAdminEvents,
@@ -154,6 +158,15 @@ export function useAdminUsers(enabled: boolean) {
   })
 }
 
+export function useAdminActivity(enabled: boolean) {
+  return useQuery({
+    queryKey: ['admin-activity'],
+    queryFn: () => fetchAdminActivity(14),
+    enabled,
+    staleTime: 20_000,
+  })
+}
+
 export function useAdminActions() {
   const { user } = useAuth()
   const qc = useQueryClient()
@@ -168,6 +181,7 @@ export function useAdminActions() {
     qc.invalidateQueries({ queryKey: ['admin-categories'] })
     qc.invalidateQueries({ queryKey: ['admin-transport'] })
     qc.invalidateQueries({ queryKey: ['admin-events'] })
+    qc.invalidateQueries({ queryKey: ['admin-activity'] })
     qc.invalidateQueries({ queryKey: ['city-events'] })
     qc.invalidateQueries({ queryKey: ['places'] })
   }
@@ -385,6 +399,23 @@ export function useAdminActions() {
     onSuccess: invalidate,
   })
 
+  const transportCreate = useMutation({
+    mutationFn: async (data: TransportCreateInput) => {
+      const res = await createTransportService(data)
+      if (res.error) throw new Error(res.error)
+      return res.id
+    },
+    onSuccess: invalidate,
+  })
+
+  const transportDelete = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await deleteTransportService(id)
+      if (res.error) throw new Error(res.error)
+    },
+    onSuccess: invalidate,
+  })
+
   const eventCreate = useMutation({
     mutationFn: async (data: CmsEventInput) => {
       const res = await createEvent(data)
@@ -434,6 +465,8 @@ export function useAdminActions() {
     categoryDelete,
     transportVerified,
     transportUpdate,
+    transportCreate,
+    transportDelete,
     eventCreate,
     eventUpdate,
     eventDelete,
