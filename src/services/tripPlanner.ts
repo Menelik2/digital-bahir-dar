@@ -1,4 +1,12 @@
-/** Offline-first Bahir Dar trip planner — realistic day sequencing. */
+/**
+ * Offline-first Bahir Dar trip planner.
+ * Realistic day sequencing + local price bands (ETB).
+ *
+ * Classic patterns:
+ * - 1 day both: morning boat (short Zege) + afternoon Falls (tight)
+ * - 2 days both: Day 1 monasteries boat, Day 2 Blue Nile Falls
+ * - 3+ days: city orientation → boat → Falls → flexible
+ */
 
 import {
   ATTRACTION_ETB,
@@ -96,19 +104,39 @@ function lodgingRate(tier: PlannerBudget) {
 
 function foodRate(tier: PlannerBudget) {
   if (tier === 'budget') return FOOD_PERSON_DAY_ETB.budget.typical
-  if (tier === 'comfort') return FOOD_PERSON_DAY_ETB.mid.max
+  if (tier === 'comfort') return FOOD_PERSON_DAY_ETB.comfort.typical
   return FOOD_PERSON_DAY_ETB.mid.typical
 }
 
 function transportDay(tier: PlannerBudget) {
   if (tier === 'budget') return TRANSPORT_DAY_ETB.budget.typical
-  if (tier === 'comfort') return TRANSPORT_DAY_ETB.mid.max
+  if (tier === 'comfort') return TRANSPORT_DAY_ETB.comfort.typical
   return TRANSPORT_DAY_ETB.mid.typical
+}
+
+/** Per-person boat cost by tier (shared vs private) */
+function boatCostPerPerson(tier: PlannerBudget): number {
+  if (tier === 'budget') return ATTRACTION_ETB.lakeTanaBoatSharedHalfDay.min + 200
+  if (tier === 'comfort') return ATTRACTION_ETB.lakeTanaBoatPrivateHalfDay.typical
+  return ATTRACTION_ETB.lakeTanaBoatSharedHalfDay.typical
+}
+
+/** Falls transport per person (bus vs share of private car) */
+function fallsTransportPerPerson(tier: PlannerBudget, travelers: number): number {
+  if (tier === 'budget') {
+    return ATTRACTION_ETB.busToTisAbay.typical * 2 // round trip bus
+  }
+  // mid/comfort: share private car round-trip
+  const car = tier === 'comfort'
+    ? ATTRACTION_ETB.privateCarFallsRoundTrip.max
+    : ATTRACTION_ETB.privateCarFallsRoundTrip.typical
+  return Math.round(car / Math.max(1, travelers))
 }
 
 function bestGuideMatch(input: PlannerInput): GuideItinerary | undefined {
   const days = clampDays(input.days)
   let best: { g: GuideItinerary; score: number } | null = null
+
   for (const g of BAHIR_DAR_ITINERARIES) {
     let score = 0
     score += Math.max(0, 10 - Math.abs(g.days - days) * 3)
@@ -125,13 +153,19 @@ function bestGuideMatch(input: PlannerInput): GuideItinerary | undefined {
   return best?.g
 }
 
-function cityDay(opts: { food: number; withMarket: boolean; withViewpoint: boolean }): PlannerDay {
+function cityDay(opts: {
+  food: number
+  withMarket: boolean
+  withViewpoint: boolean
+  pace: PlannerPace
+}): PlannerDay {
   const stops: PlannerStop[] = [
     {
       name: 'Lake Tana shore / pier area',
       time: '08:00',
       duration: '1–1.5 h',
-      notes: 'Morning light, boats, birds. Easy orientation walk.',
+      notes:
+        'Palm promenade, fishing boats, birds. Good orientation and photos in soft morning light.',
       estimatedCostEtb: 0,
       placeSlug: 'lake-tana',
       kind: 'sight',
@@ -140,8 +174,8 @@ function cityDay(opts: { food: number; withMarket: boolean; withViewpoint: boole
       name: 'Coffee break',
       time: '09:30',
       duration: '30–45 min',
-      notes: 'Local café — macchiato or traditional coffee.',
-      estimatedCostEtb: 60,
+      notes: 'Macchiato or full coffee ceremony — ask hotels for a quiet café.',
+      estimatedCostEtb: 80,
       kind: 'food',
     },
   ]
@@ -150,17 +184,17 @@ function cityDay(opts: { food: number; withMarket: boolean; withViewpoint: boole
       name: 'Bezawit Palace Viewpoint',
       time: '11:00',
       duration: '1–1.5 h',
-      notes: 'Lake + Blue Nile outlet panorama. Small fee possible.',
+      notes: 'Panorama over Lake Tana and the Blue Nile outlet. Small fee possible.',
       estimatedCostEtb: ATTRACTION_ETB.bezawitHill.typical,
       placeSlug: 'bezawit-palace-viewpoint',
       kind: 'sight',
     })
   }
   stops.push({
-    name: 'Lunch — fish or injera',
+    name: 'Lunch — lake fish or injera',
     time: '13:00',
     duration: '1 h',
-    notes: 'Lakeside fish or traditional tibs / shiro.',
+    notes: 'Try Nile perch or traditional tibs / shiro with injera.',
     estimatedCostEtb: Math.round(opts.food / 2),
     kind: 'food',
   })
@@ -169,8 +203,8 @@ function cityDay(opts: { food: number; withMarket: boolean; withViewpoint: boole
       name: 'Bahir Dar Central Market',
       time: '15:00',
       duration: '1–1.5 h',
-      notes: 'Spices, coffee, produce. Keep bags secure; bargain politely.',
-      estimatedCostEtb: 150,
+      notes: 'Spices, coffee, produce, crafts. Keep bags secure; bargain politely.',
+      estimatedCostEtb: 200,
       placeSlug: 'bahir-dar-central-market',
       kind: 'shop',
     })
@@ -186,134 +220,245 @@ function cityDay(opts: { food: number; withMarket: boolean; withViewpoint: boole
   return {
     dayNumber: 1,
     title: 'City · Lake · Viewpoint',
-    summary: 'Shore walk, viewpoint, market energy, and a proper dinner — ideal first day.',
+    summary:
+      'Shore walk, viewpoint, market energy, and a proper dinner — ideal first day to settle in.',
     stops,
     mealsTip: `Food band ~${Math.round(opts.food * 0.8)}–${Math.round(opts.food * 1.2)} ETB/person today.`,
-    transportTip: 'Walk + short bajaj hops. Agree price before you start.',
+    transportTip: 'Walk + short bajaj hops. Agree the price before you start.',
   }
 }
 
-function boatDay(opts: { food: number; budget: PlannerBudget }): PlannerDay {
-  const boat =
-    opts.budget === 'budget'
-      ? ATTRACTION_ETB.lakeTanaBoatSharedHalfDay.min
-      : opts.budget === 'comfort'
-        ? ATTRACTION_ETB.lakeTanaBoatSharedHalfDay.max
-        : ATTRACTION_ETB.lakeTanaBoatSharedHalfDay.typical
+function boatDay(opts: {
+  food: number
+  budget: PlannerBudget
+  short?: boolean
+}): PlannerDay {
+  const boat = boatCostPerPerson(opts.budget)
+  const entry = ATTRACTION_ETB.monasteryEntry.typical
+  const duration = opts.short ? '3–3.5 h' : '4–5.5 h'
   return {
     dayNumber: 2,
-    title: 'Lake Tana monasteries',
-    summary: 'Morning boat to Zege / island monasteries; afternoon rest by the shore.',
+    title: opts.short
+      ? 'Lake Tana monasteries (short)'
+      : 'Lake Tana monasteries (boat day)',
+    summary: opts.short
+      ? 'Morning boat to Zege Peninsula (Ura Kidane Mehret). Afternoon free for Falls if same day.'
+      : 'Full morning boat to Zege / island monasteries; afternoon rest by the shore.',
     stops: [
       {
         name: 'Lake Tana Boat Pier',
-        time: '08:00',
-        duration: '30 min',
-        notes: 'Compare 2–3 operators. Agree price, islands, and return time in ETB before boarding.',
+        time: '07:45',
+        duration: '20–30 min',
+        notes:
+          'Compare 2–3 operators. Agree price, islands, and return time in ETB before boarding. Hotels often arrange trusted boats.',
         estimatedCostEtb: 0,
         placeSlug: 'lake-tana-boat-pier',
         kind: 'transport',
       },
       {
-        name: 'Boat + monastery (e.g. Ura Kidane Mehret)',
-        time: '08:30',
-        duration: '4–5 h',
-        notes: 'Modest dress (cover shoulders & knees); shoes off in churches. Entry often separate from boat fee.',
-        estimatedCostEtb: boat + ATTRACTION_ETB.monasteryEntry.typical,
+        name: 'Boat + monastery (Ura Kidane Mehret / Zege)',
+        time: '08:15',
+        duration,
+        notes:
+          'Modest dress required; shoes off inside churches. Entry is usually separate from the boat fee. Frescoes & manuscripts are the highlight.',
+        estimatedCostEtb: boat + entry,
         placeSlug: 'ura-kidane-mehret',
         kind: 'sight',
       },
       {
-        name: 'Late lunch + rest',
-        time: '14:00',
-        duration: '2 h',
-        notes: 'Shade and water after the boat.',
+        name: opts.short ? 'Quick lunch near pier' : 'Late lunch + rest',
+        time: opts.short ? '12:00' : '14:00',
+        duration: opts.short ? '45 min' : '2 h',
+        notes: opts.short
+          ? 'Eat quickly if continuing to the Falls the same afternoon.'
+          : 'Shade and water after the boat — heat builds fast.',
         estimatedCostEtb: Math.round(opts.food / 2),
         kind: 'food',
       },
-      {
-        name: 'Optional Bezawit sunset',
-        time: '17:00',
-        duration: '1 h',
-        notes: 'Skip if tired — heat adds up.',
-        estimatedCostEtb: ATTRACTION_ETB.bezawitHill.typical,
-        placeSlug: 'bezawit-palace-viewpoint',
-        kind: 'sight',
-      },
+      ...(opts.short
+        ? []
+        : [
+            {
+              name: 'Optional Bezawit or hippo boat',
+              time: '16:30',
+              duration: '1–1.5 h',
+              notes: 'Skip if tired. Short hippo/bird boat near the outlet is popular.',
+              estimatedCostEtb: ATTRACTION_ETB.hippoBoat.typical,
+              placeSlug: 'bezawit-palace-viewpoint',
+              kind: 'sight' as const,
+            },
+          ]),
     ],
-    mealsTip: 'Keep dinner lighter after a big late lunch.',
-    transportTip: 'Bajaj hotel → pier. Morning departures are calmer.',
+    mealsTip: 'Keep dinner lighter after a long boat morning.',
+    transportTip: 'Bajaj hotel → pier. Morning departures are calmer and cooler.',
   }
 }
 
-function fallsDay(opts: { food: number; budget: PlannerBudget }): PlannerDay {
-  const road =
-    opts.budget === 'budget'
-      ? ATTRACTION_ETB.busToTisAbay.typical * 2
-      : ATTRACTION_ETB.privateCarFallsRoundTrip.typical / 3
+function fallsDay(opts: {
+  food: number
+  budget: PlannerBudget
+  travelers: number
+  afternoonOnly?: boolean
+}): PlannerDay {
+  const road = fallsTransportPerPerson(opts.budget, opts.travelers)
+  const entry = ATTRACTION_ETB.blueNileFallsEntry.typical
+  const start = opts.afternoonOnly ? '13:00' : '07:30'
   return {
     dayNumber: 3,
-    title: 'Blue Nile Falls (Tis Issat)',
-    summary: 'Day trip ~30 km to Tis Abay. Strongest flow after rains; paths can be steep.',
+    title: opts.afternoonOnly
+      ? 'Blue Nile Falls (afternoon)'
+      : 'Blue Nile Falls (Tis Issat)',
+    summary: opts.afternoonOnly
+      ? 'Afternoon drive ~30–40 km to Tis Abay after a morning boat. Tight schedule — start early if combining.'
+      : 'Full day trip ~30–40 km to Tis Abay. Strongest flow after rains (Jun–Oct); paths can be steep and muddy.',
     stops: [
       {
         name: 'Depart for Tis Abay',
-        time: '07:30',
+        time: start,
         duration: '45–75 min each way',
-        notes: 'Bus/minibus is cheapest; private car is easier in a group — split the vehicle fee.',
+        notes:
+          opts.budget === 'budget'
+            ? 'Local bus/minibus is cheapest. Confirm return times.'
+            : 'Private car from hotel is easier for groups and flexible timing.',
         estimatedCostEtb: Math.round(road),
         kind: 'transport',
       },
       {
         name: 'Blue Nile Falls (Tis Issat)',
-        time: '09:00',
-        duration: '2–4 h',
-        notes: 'Entry + optional guide. Grip shoes; pack water. Strongest flow Jun–Sep.',
-        estimatedCostEtb: ATTRACTION_ETB.blueNileFallsEntry.typical,
+        time: opts.afternoonOnly ? '14:15' : '09:00',
+        duration: opts.afternoonOnly ? '2–2.5 h' : '2.5–4 h',
+        notes:
+          'Entry ticket + optional local guide. Wear grip shoes; pack water. Portuguese bridge viewpoint is classic. Hydro diversion can reduce flow in dry months.',
+        estimatedCostEtb: entry,
         placeSlug: 'blue-nile-falls-tis-issat',
         kind: 'sight',
       },
       {
-        name: 'Return + city dinner',
-        time: '15:00',
+        name: opts.afternoonOnly ? 'Return + dinner' : 'Return + city dinner',
+        time: opts.afternoonOnly ? '17:00' : '15:00',
         duration: '—',
         notes: 'Buffer for showers and a proper meal back in Bahir Dar.',
         estimatedCostEtb: Math.round(opts.food / 2),
         kind: 'food',
       },
     ],
-    mealsTip: 'Pack a snack — village options are limited near the falls.',
-    transportTip: 'Confirm return time with your driver or bus.',
+    mealsTip: 'Pack a snack — options near the falls village are limited.',
+    transportTip: 'Confirm return time with your driver or bus. Roads can be slow after rain.',
+  }
+}
+
+function combinedOneDay(opts: {
+  food: number
+  budget: PlannerBudget
+  travelers: number
+}): PlannerDay {
+  const boat = boatCostPerPerson(opts.budget)
+  const entryM = ATTRACTION_ETB.monasteryEntry.typical
+  const road = fallsTransportPerPerson(opts.budget, opts.travelers)
+  const entryF = ATTRACTION_ETB.blueNileFallsEntry.typical
+  return {
+    dayNumber: 1,
+    title: 'Boat + Falls (packed day)',
+    summary:
+      'Classic but tight: morning Zege boat, afternoon Blue Nile Falls. Start by 07:30. Best with a private driver.',
+    stops: [
+      {
+        name: 'Early boat from Lake Tana pier',
+        time: '07:30',
+        duration: '3 h',
+        notes: 'Short Zege run (Ura Kidane Mehret). Agree return by ~11:00.',
+        estimatedCostEtb: boat + entryM,
+        placeSlug: 'ura-kidane-mehret',
+        kind: 'sight',
+      },
+      {
+        name: 'Quick lunch',
+        time: '11:15',
+        duration: '40 min',
+        notes: 'Eat near the pier or hotel before the road trip.',
+        estimatedCostEtb: Math.round(opts.food * 0.4),
+        kind: 'food',
+      },
+      {
+        name: 'Drive to Tis Abay + Blue Nile Falls',
+        time: '12:00',
+        duration: '3–3.5 h on site incl. drive',
+        notes: 'Entry + walk to viewpoints / Portuguese bridge. Return before dark.',
+        estimatedCostEtb: road + entryF,
+        placeSlug: 'blue-nile-falls-tis-issat',
+        kind: 'sight',
+      },
+      {
+        name: 'Dinner in Bahir Dar',
+        time: '18:30',
+        duration: '1.5 h',
+        notes: 'Reward yourself — this is a full active day.',
+        estimatedCostEtb: Math.round(opts.food * 0.5),
+        kind: 'food',
+      },
+    ],
+    mealsTip: 'Carry water and a snack; little time for long meals.',
+    transportTip: 'Private car recommended when packing both into one day.',
   }
 }
 
 function slowDay(opts: { food: number; interest: PlannerInterest[] }): PlannerDay {
   const foodFocus = opts.interest.includes('food')
   const shopFocus = opts.interest.includes('shopping')
+  const photoFocus = opts.interest.includes('photography')
   return {
     dayNumber: 4,
-    title: foodFocus ? 'Food & coffee culture' : 'Slow city day',
+    title: foodFocus
+      ? 'Food & coffee culture'
+      : shopFocus
+        ? 'Market & crafts day'
+        : photoFocus
+          ? 'Photo walk · lake light'
+          : 'Slow city day',
     summary: foodFocus
       ? 'Injera houses, lake fish, and coffee — no long road trips.'
       : 'Market, crafts, and lake time at an easy pace.',
     stops: [
-      { name: 'Morning coffee & people-watching', time: '09:00', estimatedCostEtb: 80, kind: 'food' },
+      {
+        name: 'Morning coffee & people-watching',
+        time: '09:00',
+        duration: '45 min',
+        estimatedCostEtb: 80,
+        kind: 'food',
+        notes: 'Traditional ceremony or lakeside café.',
+      },
       {
         name: shopFocus ? 'Crafts & souvenirs' : 'Central Market',
         time: '10:30',
+        duration: '1.5 h',
         placeSlug: 'bahir-dar-central-market',
-        estimatedCostEtb: shopFocus ? 400 : 150,
+        estimatedCostEtb: shopFocus ? 500 : 150,
         kind: 'shop',
-        notes: 'Bargain politely; compare quality.',
+        notes: 'Bargain politely; compare quality on coffee, textiles, and baskets.',
       },
       {
         name: foodFocus ? 'Lake fish lunch' : 'Traditional lunch',
         time: '13:00',
+        duration: '1 h',
         estimatedCostEtb: Math.round(opts.food / 2),
         kind: 'food',
       },
-      { name: 'Lake shore rest / photos', time: '16:00', placeSlug: 'lake-tana', estimatedCostEtb: 0, kind: 'rest' },
-      { name: 'Dinner', time: '19:00', estimatedCostEtb: Math.round(opts.food / 2), kind: 'food' },
+      {
+        name: photoFocus ? 'Golden-hour lake photos' : 'Lake shore rest',
+        time: '16:00',
+        duration: '1.5 h',
+        placeSlug: 'lake-tana',
+        estimatedCostEtb: 0,
+        kind: 'rest',
+        notes: 'Promenade and pier area are best near sunset.',
+      },
+      {
+        name: 'Dinner',
+        time: '19:00',
+        duration: '1.5 h',
+        estimatedCostEtb: Math.round(opts.food / 2),
+        kind: 'food',
+      },
     ],
     transportTip: 'Mostly walkable from center hotels.',
   }
@@ -323,89 +468,159 @@ export function dayActivityTotal(day: PlannerDay): number {
   return day.stops.reduce((sum, s) => sum + (s.estimatedCostEtb ?? 0), 0)
 }
 
+/**
+ * Build a realistic Bahir Dar plan from preferences.
+ * Sequencing rules (real tourist patterns):
+ * 1d boat only → boat day
+ * 1d falls only → falls day
+ * 1d both → packed combined day
+ * 2d both → Day1 boat, Day2 falls (classic weekend)
+ * 3d+ → city → boat → falls → flexible
+ */
 export function buildTripPlan(input: PlannerInput): PlannerResult {
   const days = clampDays(input.days)
   const travelers = Math.max(1, Math.floor(input.travelers) || 1)
-  const nights = input.nights != null ? Math.max(0, input.nights) : Math.max(0, days - 1)
+  const nights =
+    input.nights != null ? Math.max(0, input.nights) : Math.max(0, days - 1)
   const foodPer = foodRate(input.budget)
+  const wantBoat = input.includeBoat !== false
+  const wantFalls = input.includeFalls !== false
   const matched = bestGuideMatch(input)
 
   const planDays: PlannerDay[] = []
-  let dayNum = 1
 
-  if (days === 1 && input.includeBoat && !input.includeFalls) {
-    const d = boatDay({ food: foodPer, budget: input.budget })
-    d.dayNumber = 1
-    planDays.push(d)
-  } else if (days === 1 && input.includeFalls && !input.includeBoat) {
-    const d = fallsDay({ food: foodPer, budget: input.budget })
-    d.dayNumber = 1
-    planDays.push(d)
-  } else if (days === 2 && input.includeBoat !== false && input.includeFalls !== false) {
-    // Classic weekend: boat day 1, Falls day 2 (no wasted full city day)
-  } else {
-    const d = cityDay({
-      food: foodPer,
-      withMarket: input.interests.includes('shopping') || input.interests.includes('food') || days <= 2,
-      withViewpoint: input.pace !== 'relaxed' || days === 1,
-    })
-    d.dayNumber = dayNum++
-    planDays.push(d)
-  }
-
-  if (days >= 2) {
-    if (input.includeBoat !== false) {
-      const d = boatDay({ food: foodPer, budget: input.budget })
-      d.dayNumber = dayNum++
+  // ——— 1-day special cases ———
+  if (days === 1) {
+    if (wantBoat && wantFalls) {
+      planDays.push(
+        combinedOneDay({ food: foodPer, budget: input.budget, travelers })
+      )
+    } else if (wantBoat) {
+      const d = boatDay({ food: foodPer, budget: input.budget, short: false })
+      d.dayNumber = 1
       planDays.push(d)
-    } else if (input.includeFalls) {
-      const d = fallsDay({ food: foodPer, budget: input.budget })
-      d.dayNumber = dayNum++
+    } else if (wantFalls) {
+      const d = fallsDay({
+        food: foodPer,
+        budget: input.budget,
+        travelers,
+      })
+      d.dayNumber = 1
       planDays.push(d)
     } else {
+      planDays.push(
+        cityDay({
+          food: foodPer,
+          withMarket: true,
+          withViewpoint: true,
+          pace: input.pace,
+        })
+      )
+    }
+  }
+
+  // ——— 2-day classic weekend: boat then falls ———
+  else if (days === 2 && wantBoat && wantFalls) {
+    const d1 = boatDay({ food: foodPer, budget: input.budget })
+    d1.dayNumber = 1
+    planDays.push(d1)
+    const d2 = fallsDay({ food: foodPer, budget: input.budget, travelers })
+    d2.dayNumber = 2
+    planDays.push(d2)
+  }
+
+  // ——— 2-day boat only / falls only / neither ———
+  else if (days === 2) {
+    const d1 = cityDay({
+      food: foodPer,
+      withMarket: true,
+      withViewpoint: true,
+      pace: input.pace,
+    })
+    d1.dayNumber = 1
+    planDays.push(d1)
+    if (wantBoat) {
+      const d2 = boatDay({ food: foodPer, budget: input.budget })
+      d2.dayNumber = 2
+      planDays.push(d2)
+    } else if (wantFalls) {
+      const d2 = fallsDay({ food: foodPer, budget: input.budget, travelers })
+      d2.dayNumber = 2
+      planDays.push(d2)
+    } else {
+      const d2 = slowDay({ food: foodPer, interest: input.interests })
+      d2.dayNumber = 2
+      planDays.push(d2)
+    }
+  }
+
+  // ——— 3+ days: city → boat → falls → fill ———
+  else {
+    planDays.push(
+      cityDay({
+        food: foodPer,
+        withMarket:
+          input.interests.includes('shopping') ||
+          input.interests.includes('food') ||
+          true,
+        withViewpoint: input.pace !== 'relaxed',
+        pace: input.pace,
+      })
+    )
+
+    if (wantBoat) {
+      const d = boatDay({ food: foodPer, budget: input.budget })
+      planDays.push(d)
+    }
+
+    if (wantFalls) {
+      const d = fallsDay({ food: foodPer, budget: input.budget, travelers })
+      planDays.push(d)
+    }
+
+    while (planDays.length < days) {
       const d = slowDay({ food: foodPer, interest: input.interests })
-      d.dayNumber = dayNum++
+      d.title = `Flexible day ${planDays.length + 1}`
       planDays.push(d)
     }
   }
 
-  // Falls on day 2 when both boat+falls on a 2-day trip, or day 3+ for longer trips
-  if (input.includeFalls !== false && planDays.length < days) {
-    const needFalls = days >= 3 || (days === 2 && input.includeBoat !== false)
-    if (needFalls) {
-      const d = fallsDay({ food: foodPer, budget: input.budget })
-      d.dayNumber = dayNum++
-      planDays.push(d)
-    }
+  const finalDays = planDays.slice(0, days).map((d, i) => ({
+    ...d,
+    dayNumber: i + 1,
+  }))
+
+  // ——— Realistic per-person attraction total ———
+  let attractionPer = 0
+  if (wantBoat) {
+    attractionPer += boatCostPerPerson(input.budget) + ATTRACTION_ETB.monasteryEntry.typical
   }
-
-  while (planDays.length < days) {
-    const d = slowDay({ food: foodPer, interest: input.interests })
-    d.dayNumber = dayNum++
-    d.title = `Flexible city day ${d.dayNumber}`
-    planDays.push(d)
+  if (wantFalls) {
+    attractionPer +=
+      ATTRACTION_ETB.blueNileFallsEntry.typical +
+      fallsTransportPerPerson(input.budget, travelers)
   }
+  attractionPer += 150
+  if (!wantBoat && !wantFalls) attractionPer = 250
 
-  const finalDays = planDays.slice(0, days).map((d, i) => ({ ...d, dayNumber: i + 1 }))
+  const shoppingTotal = input.interests.includes('shopping')
+    ? 600 * travelers
+    : 200 * travelers
+  const otherTotal = 350 * travelers
 
-  const attractionPer =
-    (input.includeBoat !== false ? ATTRACTION_ETB.lakeTanaBoatSharedHalfDay.typical * 0.7 : 0) +
-    (input.includeFalls !== false && days >= 2
-      ? ATTRACTION_ETB.blueNileFallsEntry.typical + ATTRACTION_ETB.busToTisAbay.typical
-      : 200)
-
-  const shoppingTotal = input.interests.includes('shopping') ? 500 * travelers : 200 * travelers
-  const otherTotal = 300 * travelers
+  const localTransport =
+    transportDay(input.budget) * days * Math.max(1, Math.ceil(travelers / 2))
 
   const est = estimateTripBudget({
     travelers,
     nights,
     lodgingPerNight: lodgingRate(input.budget),
     foodPerDay: foodPer,
-    transportTotal: transportDay(input.budget) * days * Math.max(1, Math.ceil(travelers / 2)),
+    transportTotal: localTransport,
     attractionsPerPerson: attractionPer,
     shopping: shoppingTotal,
     other: otherTotal,
+    foodDays: days,
   })
 
   const lodging = Math.round(est.lodging)
@@ -416,12 +631,16 @@ export function buildTripPlan(input: PlannerInput): PlannerResult {
   const other = Math.round(est.other)
   const total = Math.round(est.total)
 
+  const rooms = Math.max(1, Math.ceil(travelers / 2))
   const lines: BudgetLine[] = [
     {
       key: 'lodging',
       label: 'Lodging / hotel',
       amount: lodging,
-      note: nights > 0 ? `${nights} night(s) × ${Math.max(1, Math.ceil(travelers / 2))} room(s) × ~${lodgingRate(input.budget).toLocaleString()} ETB` : 'Day trip — little or no lodging',
+      note:
+        nights > 0
+          ? `${nights} night(s) × ${rooms} room(s) × ~${lodgingRate(input.budget).toLocaleString()} ETB`
+          : 'Day trip — little or no lodging',
     },
     {
       key: 'food',
@@ -431,43 +650,58 @@ export function buildTripPlan(input: PlannerInput): PlannerResult {
     },
     {
       key: 'transport',
-      label: 'Local transport',
+      label: 'Local transport (bajaj)',
       amount: transport,
-      note: 'Bajaj, taxis, local hops (shared estimate)',
+      note: 'City hops only — Falls/boat road costs are under Activities',
     },
     {
       key: 'attraction',
       label: 'Activities & entries',
       amount: attraction,
-      note: 'Boats, falls, viewpoints (per-person band scaled to group)',
+      note: wantBoat || wantFalls
+        ? [
+            wantBoat ? 'Lake Tana boat + monastery entry' : null,
+            wantFalls ? 'Falls ticket + road transport' : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')
+        : 'City sights & small fees',
     },
     {
       key: 'shopping',
       label: 'Shopping / souvenirs',
       amount: shopping,
-      note: input.interests.includes('shopping') ? 'Higher — shopping focus' : 'Light buffer',
+      note: input.interests.includes('shopping')
+        ? 'Higher — shopping focus'
+        : 'Light buffer',
     },
     {
       key: 'other',
       label: 'Misc / buffer',
       amount: other,
-      note: 'ATM fees, tips, unexpected costs',
+      note: 'ATM fees, tips, water, unexpected costs',
     },
   ]
 
   const tips = [
     'Prices are estimates in ETB — confirm boats, cars, and meals on site before paying.',
-    'Carry cash; ATMs can run dry on weekends and holidays.',
-    'Start boat and Falls trips early; midday heat is strong year-round.',
-    'Modest dress for monasteries; shoes off in churches.',
-    'Rainy season (Jun–Sep): Falls are strongest but trails are muddier.',
+    'Carry cash; ATMs can run dry on busy days. Larger hotels often take cards.',
+    'Start boat and Falls trips early; midday heat is strong and boats fill up.',
+    'Modest dress for monasteries (shoulders/knees covered); shoes off inside churches.',
+    wantFalls
+      ? 'Blue Nile Falls flow is strongest Jun–Oct; dry season can look weak due to hydro diversion.'
+      : 'Ask your hotel about current lake conditions and trusted boat operators.',
     input.budget === 'budget'
-      ? 'Share boats and walk more than bajaj to keep costs down.'
-      : 'Hotels can arrange trusted drivers for the Falls day — often worth it for a group.',
+      ? 'Share boats and guides when you can; walk more than bajaj to save.'
+      : 'Hotels can arrange trusted drivers for the Falls day — agree a fixed ETB price.',
   ]
 
-  const title = days === 1 ? 'Your 1-day Bahir Dar plan' : `Your ${days}-day Bahir Dar plan`
-  const interestLabels = input.interests.length ? input.interests.join(', ') : 'classic highlights'
+  const title =
+    days === 1 ? 'Your 1-day Bahir Dar plan' : `Your ${days}-day Bahir Dar plan`
+
+  const interestLabels = input.interests.length
+    ? input.interests.join(', ')
+    : 'classic highlights'
 
   return {
     title,
@@ -485,7 +719,8 @@ export function buildTripPlan(input: PlannerInput): PlannerResult {
       shopping,
       other,
       currency: 'ETB',
-      disclaimer: 'Planning estimate only — not a quote. Verify boat, entry, and room rates locally.',
+      disclaimer:
+        'Planning estimate only — not a quote. Boat, car, and hotel rates change; verify locally.',
       lines,
       travelers,
       nights,
@@ -501,7 +736,10 @@ export async function narrateTripPlan(
   locale = 'en'
 ): Promise<{ text: string; fallback: boolean }> {
   const outline = plan.days
-    .map((d) => `Day ${d.dayNumber}: ${d.title} — ` + d.stops.map((s) => s.name).join('; '))
+    .map(
+      (d) =>
+        `Day ${d.dayNumber}: ${d.title} — ` + d.stops.map((s) => s.name).join('; ')
+    )
     .join('\n')
 
   const prompt =
@@ -510,7 +748,12 @@ export async function narrateTripPlan(
     `Mention rough budget ~${plan.budget.total} ETB total for the group. Remind to verify prices locally. No markdown tables.`
 
   const history: ChatMessage[] = [
-    { id: '1', role: 'user', content: prompt, createdAt: new Date().toISOString() },
+    {
+      id: '1',
+      role: 'user',
+      content: prompt,
+      createdAt: new Date().toISOString(),
+    },
   ]
 
   try {
@@ -535,7 +778,9 @@ export function planToPlainText(plan: PlannerResult): string {
     '',
     'PRICING BREAKDOWN (ETB, estimates)',
     ...plan.budget.lines.map(
-      (l) => `  ${l.label}: ${l.amount.toLocaleString()}` + (l.note ? ` — ${l.note}` : '')
+      (l) =>
+        `  ${l.label}: ${l.amount.toLocaleString()}` +
+        (l.note ? ` — ${l.note}` : '')
     ),
     `  TOTAL: ${plan.budget.total.toLocaleString()}  (~${plan.budget.perPerson.toLocaleString()} / person)`,
     plan.budget.disclaimer,
@@ -544,7 +789,8 @@ export function planToPlainText(plan: PlannerResult): string {
   for (const d of plan.days) {
     lines.push(`Day ${d.dayNumber}: ${d.title}`, d.summary)
     for (const s of d.stops) {
-      const cost = s.estimatedCostEtb != null ? ` (~${s.estimatedCostEtb} ETB)` : ''
+      const cost =
+        s.estimatedCostEtb != null ? ` (~${s.estimatedCostEtb} ETB)` : ''
       lines.push(`  • ${s.time ? s.time + ' ' : ''}${s.name}${cost}`)
       if (s.notes) lines.push(`    ${s.notes}`)
     }
