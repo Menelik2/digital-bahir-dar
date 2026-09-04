@@ -351,8 +351,12 @@ export async function bulkSetPlaceStatus(
   if (placeIds.length === 0) return { error: null, count: 0 }
   const patch: Record<string, unknown> = { status }
   if (verified !== undefined) patch.verified = verified
-  const { error, count } = await supabase.from('places').update(patch).in('id', placeIds)
-  return { error: error?.message ?? null, count: count ?? placeIds.length }
+  if (status === 'published' && verified) {
+    patch.verified_at = new Date().toISOString()
+    patch.last_verified_at = new Date().toISOString()
+  }
+  const { error } = await supabase.from('places').update(patch).in('id', placeIds)
+  return { error: error?.message ?? null, count: placeIds.length }
 }
 
 export async function bulkSoftDeletePlaces(
@@ -568,3 +572,10 @@ export function slugify(name: string): string {
     .replace(/-+/g, '-')
     .slice(0, 80)
 }
+
+export type { TransportCreateInput } from './adminExtras'
+export {
+  createTransportService,
+  deleteTransportService,
+  fetchAdminActivity,
+} from './adminExtras'
