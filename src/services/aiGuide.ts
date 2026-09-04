@@ -1,7 +1,7 @@
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import type { ChatMessage, AIGuideResponse, GuideAction } from '@/types/ai'
 
-/** Offline knowledge — used when Edge Function / AI_API_KEY is unavailable */
+/** Offline knowledge — used when live AI is unavailable */
 const DEMO_KNOWLEDGE: { keys: string[]; reply: string; priority?: number; actions?: GuideAction[] }[] = [
   {
     keys: ['hello', 'hi', 'hey', 'selam', 'ሰላም', 'good morning', 'good evening'],
@@ -174,7 +174,7 @@ function matchDemo(userText: string): { reply: string; actions?: GuideAction[] }
       '• "Rough budget for 2 nights"\n' +
       '• "How do I get to the Blue Nile Falls?"\n\n' +
       'Or open **Map**, **Attractions**, **Restaurants**, and **Trip Planner** in the app.\n\n' +
-      '_Offline guide tips work without a server key. Live AI needs the `ai-guide` Edge Function + `AI_API_KEY` (Groq)._',
+      '_Offline tips always work. Live AI uses Vercel `/api/ai-guide` or Supabase `ai-guide` with AI_API_KEY._',
     actions: [
       { label: 'Trip planner', to: '/trip-planner' },
       { label: 'Map', to: '/map' },
@@ -185,6 +185,70 @@ function matchDemo(userText: string): { reply: string; actions?: GuideAction[] }
 
 function topicActions(userText: string): GuideAction[] | undefined {
   return matchDemo(userText).actions
+}
+
+function isLiveSuccess(data: unknown): data is AIGuideResponse & { reply: string } {
+  if (!data || typeof data !== 'object') return false
+  const d = data as AIGuideResponse
+  return Boolean(d.reply && typeof d.reply === 'string' && !d.fallback && !d.error)
+}
+
+/** Call Vercel serverless /api/ai-guide (Gemini/Groq via env) */
+async function invokeVercelApi(
+  messages: { role: string; content: string }[],
+  locale: string
+): Promise<AIGuideResponse | null> {
+  try {
+    const res = await fetch('/api/ai-guide', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages, locale }),
+    })
+    if (!res.ok) {
+      // SPA rewrite or missing function → treat as unavailable
+      if (res.status === 404 || res.status === 405) return null
+      const text = await res.text()
+      try {
+        return JSON.parse(text) as AIGuideResponse
+      } catch {
+        return null
+      }
+    }
+    const data = (await res.json()) as AIGuideResponse
+    return data
+  } catch (e) {
+    console.warn('vercel /api/ai-guide:', e)
+    return null
+  }
+}
+
+/** Call Supabase Edge Function ai-guide */
+async function invokeSupabase(
+  messages: { role: string; content: string }[],
+  locale: string
+): Promise<AIGuideResponse | null> {
+  if (!isSupabaseConfigured) return null
+  try {
+    const { data, error } = await supabase.functions.invoke('ai-guide', {
+      body: { messages, locale },
+    })
+    if (error) {
+      console.warn('ai-guide invoke:', error.message, data)
+      // Function not deployed → null so we try Vercel next
+      const msg = (error.message || '').toLowerCase()
+      if (msg.includes('not found') || msg.includes('404') || msg.includes('failed to send')) {
+        return null
+      }
+      if (data && typeof data === 'object' && (data as AIGuideResponse).reply) {
+        return data as AIGuideResponse
+      }
+      return null
+    }
+    return (data as AIGuideResponse) || null
+  } catch (e) {
+    console.warn('supabase ai-guide:', e)
+    return null
+  }
 }
 
 export async function sendGuideMessage(
@@ -201,51 +265,68 @@ export async function sendGuideMessage(
     return matchDemo(lastUser.content)
   }
 
+  // 1) Prefer Vercel API (works after env + redeploy; no Supabase function needed)
+  // 2) Then Supabase Edge Function if deployed
+  // 3) Offline knowledge base
   try {
-    const { data, error } = await supabase.functions.invoke('ai-guide', {
-      body: { messages, locale },
-    })
-
-    if (error) {
-      console.warn('ai-guide invoke:', error.message, data)
-      const body = data as AIGuideResponse | null
-      if (body?.reply && typeof body.reply === 'string' && !body.reply.includes('not fully configured')) {
-        return {
-          reply: body.reply,
-          fallback: true,
-          error: error.message,
-          actions: lastUser ? topicActions(lastUser.content) : undefined,
-          grounded: body.grounded,
-        }
-      }
-      const fb = offline()
-      return { reply: fb.reply, fallback: true, error: error.message, actions: fb.actions }
-    }
-
-    if (data?.fallback || data?.error) {
-      const useOffline =
-        !data.reply || String(data.reply).includes('not fully configured')
-      const fb = offline()
+    const vercel = await invokeVercelApi(messages, locale)
+    if (vercel && isLiveSuccess(vercel)) {
       return {
-        reply: useOffline ? fb.reply : data.reply,
-        fallback: true,
-        error: data.error ?? data.debug,
-        actions: fb.actions,
-        grounded: data.grounded,
+        reply: vercel.reply,
+        model: vercel.model,
+        grounded: vercel.grounded,
+        actions: lastUser ? topicActions(lastUser.content) : undefined,
       }
     }
-
-    if (data?.reply) {
+    // Provider configured but returned soft error — still prefer its reply over offline if useful
+    if (vercel?.reply && !String(vercel.reply).includes('not configured') && !vercel.fallback) {
       return {
-        reply: data.reply,
-        model: data.model,
-        grounded: data.grounded,
+        reply: vercel.reply,
+        model: vercel.model,
         actions: lastUser ? topicActions(lastUser.content) : undefined,
       }
     }
 
+    const edge = await invokeSupabase(messages, locale)
+    if (edge && isLiveSuccess(edge)) {
+      return {
+        reply: edge.reply,
+        model: edge.model,
+        grounded: edge.grounded,
+        actions: lastUser ? topicActions(lastUser.content) : undefined,
+      }
+    }
+    if (edge?.reply && !String(edge.reply).includes('not fully configured') && edge.fallback === false) {
+      return {
+        reply: edge.reply,
+        model: edge.model,
+        grounded: edge.grounded,
+        actions: lastUser ? topicActions(lastUser.content) : undefined,
+      }
+    }
+
+    // Soft provider errors with a human reply (e.g. key rejected message)
+    if (vercel?.reply && !String(vercel.reply).includes('not configured')) {
+      const fb = offline()
+      // Prefer offline knowledge for travel Q&A over bare error strings
+      if (vercel.fallback && /API key|provider|configured|Model or endpoint/i.test(vercel.reply)) {
+        return { reply: fb.reply, fallback: true, error: vercel.error, actions: fb.actions }
+      }
+      return {
+        reply: vercel.reply,
+        fallback: true,
+        error: vercel.error,
+        actions: fb.actions,
+      }
+    }
+
     const fb = offline()
-    return { reply: fb.reply, fallback: true, actions: fb.actions }
+    return {
+      reply: fb.reply,
+      fallback: true,
+      error: vercel?.error || edge?.error || 'offline',
+      actions: fb.actions,
+    }
   } catch (e) {
     console.warn('aiGuide network:', e)
     const fb = offline()
