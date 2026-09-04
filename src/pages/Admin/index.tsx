@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
 import {
   Shield, Loader2, MapPin, MessageSquare, Building2, Flag, LayoutDashboard,
-  Check, X, EyeOff, BadgeCheck, Users, Search, Download, Star, RefreshCw,
-  Pencil, Trash2, RotateCcw, Plus, AlertTriangle, Clock, Tags, Bus, CalendarDays, Activity,
+  Check, EyeOff, BadgeCheck, Users, Search, Download, Star, RefreshCw,
+  Pencil, Trash2, Plus, AlertTriangle, Clock, Tags, Bus, CalendarDays, Activity,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -64,7 +64,6 @@ export default function AdminPage() {
   const [userRoleFilter, setUserRoleFilter] = useState('all')
   const [bizStatusFilter, setBizStatusFilter] = useState<'all' | 'pending' | 'approved' | 'suspended'>('pending')
   const [reportStatusFilter, setReportStatusFilter] = useState<'all' | 'open' | 'resolved' | 'dismissed'>('open')
-  const [selected, setSelected] = useState<Set<string>>(new Set())
   const [banner, setBanner] = useState<string | null>(null)
   const [editingPlaceId, setEditingPlaceId] = useState<string | null>(null)
   const [showDeleted, setShowDeleted] = useState(false)
@@ -403,8 +402,8 @@ export default function AdminPage() {
                         <p className="text-sm text-slate-400">No recent activity.</p>
                       )}
                       <ul className="space-y-2">
-                        {activity.slice(0, 12).map((a: { id?: string; summary?: string; created_at?: string; action?: string }) => (
-                          <li key={a.id ?? a.created_at} className="flex justify-between gap-2 border-b border-slate-100 py-1.5 text-sm last:border-0 dark:border-slate-800">
+                        {activity.slice(0, 12).map((a: { id?: string; summary?: string; created_at?: string; action?: string }, idx: number) => (
+                          <li key={a.id ?? `${a.created_at}-${idx}`} className="flex justify-between gap-2 border-b border-slate-100 py-1.5 text-sm last:border-0 dark:border-slate-800">
                             <span className="text-slate-700 dark:text-slate-200">{a.summary ?? a.action ?? 'Update'}</span>
                             <span className="shrink-0 text-xs text-slate-400">{relativeTime(a.created_at)}</span>
                           </li>
@@ -422,7 +421,7 @@ export default function AdminPage() {
           {tab === 'places' && (
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2">
-                <div className="relative flex-1 min-w-[160px]">
+                <div className="relative min-w-[160px] flex-1">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
                   <input value={placeQ} onChange={(e) => setPlaceQ(e.target.value)} placeholder="Search places…" className="w-full rounded-lg border py-2 pl-9 pr-3 text-sm dark:border-slate-700 dark:bg-slate-950" />
                 </div>
