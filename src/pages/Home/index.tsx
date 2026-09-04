@@ -6,7 +6,6 @@ import {
   Car,
   Building2,
   CreditCard,
-  Hospital,
   Calendar,
   AlertTriangle,
   Sparkles,
@@ -24,12 +23,12 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { CITY_EVENTS, PRACTICAL_TIPS } from '@/data/cityLife'
+import { CITY_EVENTS } from '@/data/cityLife'
 import { CITY_TODOS } from '@/data/thingsToDo'
 import { useTodoStore } from '@/store/todoStore'
 import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
-import { HERO_BLUE_NILE_DATA_URL, HERO_BLUE_NILE_SRC } from '@/data/heroBlueNile'
+import { HERO_BLUE_NILE_DATA_URL } from '@/data/heroBlueNile'
 
 const LAKE_TANA_IMG = '/images/lake-tana.jpg'
 const FALLS_IMG = '/images/blue-nile-falls.jpg'
@@ -72,7 +71,6 @@ function CoverImg({
 export default function HomePage() {
   const t = useT()
   const upcoming = CITY_EVENTS.filter((e) => e.featured).slice(0, 3)
-  const tips = PRACTICAL_TIPS.slice(0, 3)
   const completed = useTodoStore((s) => s.completed)
   const done = CITY_TODOS.filter((x) => completed[x.id]).length
 
