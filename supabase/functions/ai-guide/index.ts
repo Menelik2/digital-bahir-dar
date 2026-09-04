@@ -1,10 +1,25 @@
 // Supabase Edge Function: AI Guide for Digital Bahir Dar
-// Deploy: supabase functions deploy ai-guide --no-verify-jwt
-// Secrets (Dashboard → Edge Functions → Secrets — never VITE_*):
-//   AI_API_KEY  = Groq API key from https://console.groq.com/keys
-//   AI_MODEL    = optional (default: llama-3.3-70b-versatile)
-//   AI_BASE_URL = optional (default: https://api.groq.com/openai/v1)
-// Auto: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+// Deploy (required once):
+//   supabase login
+//   supabase link --project-ref cxhakfmtsrlpocjadygg
+//   supabase functions deploy ai-guide --no-verify-jwt
+//
+// Secrets (Dashboard → Project Settings → Edge Functions → Secrets):
+//   AI_API_KEY  = Gemini or Groq API key (never put in VITE_*)
+//   AI_BASE_URL = provider base (no trailing slash preferred; stripped automatically)
+//   AI_MODEL    = model id
+//
+// Gemini example:
+//   AI_API_KEY  = <key from https://aistudio.google.com/apikey>
+//   AI_BASE_URL = https://generativelanguage.googleapis.com/v1beta/openai
+//   AI_MODEL    = gemini-2.5-flash   (or gemini-2.0-flash / gemini-3.x-flash if available)
+//
+// Groq example:
+//   AI_API_KEY  = <key from https://console.groq.com/keys>
+//   AI_BASE_URL = https://api.groq.com/openai/v1
+//   AI_MODEL    = llama-3.3-70b-versatile
+//
+// Auto-injected by Supabase: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -105,14 +120,21 @@ serve(async (req) => {
       return json({ error: 'messages required', fallback: true }, 400)
     }
 
-    const apiKey = Deno.env.get('AI_API_KEY')
+    // Accept AI_API_KEY or common aliases
+    const apiKey =
+      Deno.env.get('AI_API_KEY') ||
+      Deno.env.get('GEMINI_API_KEY') ||
+      Deno.env.get('GROQ_API_KEY') ||
+      Deno.env.get('OPENAI_API_KEY')
+
     if (!apiKey) {
       return json({
         error: 'AI_API_KEY not configured',
         fallback: true,
-        debug: 'Set secret AI_API_KEY in Supabase Dashboard → Project Settings → Edge Functions → Secrets',
+        debug:
+          'Set secret AI_API_KEY in Supabase Dashboard → Project Settings → Edge Functions → Secrets. Then deploy: supabase functions deploy ai-guide --no-verify-jwt',
         reply:
-          'The AI guide is not fully configured on the server yet. Offline tips still work in the app. Ask an admin to set AI_API_KEY (Groq) on the Edge Function.',
+          'The AI guide is not fully configured on the server yet. Offline tips still work in the app. Ask an admin to set AI_API_KEY and deploy the ai-guide Edge Function.',
       })
     }
 
@@ -128,8 +150,17 @@ serve(async (req) => {
       systemContent += '\n\n' + placeContext
     }
 
-    const baseUrl = (Deno.env.get('AI_BASE_URL') || 'https://api.groq.com/openai/v1').replace(/\/$/, '')
-    const model = Deno.env.get('AI_MODEL') || 'llama-3.3-70b-versatile'
+    const rawBase =
+      Deno.env.get('AI_BASE_URL') ||
+      Deno.env.get('OPENAI_BASE_URL') ||
+      'https://api.groq.com/openai/v1'
+    const baseUrl = rawBase.replace(/\/+$/, '')
+    const model =
+      Deno.env.get('AI_MODEL') ||
+      Deno.env.get('OPENAI_MODEL') ||
+      'llama-3.3-70b-versatile'
+
+    const isGemini = /generativelanguage\.googleapis\.com/i.test(baseUrl) || /gemini/i.test(model)
 
     let res: Response
     try {
@@ -153,23 +184,32 @@ serve(async (req) => {
         fallback: true,
         debug: String(netErr),
         reply:
-          'Could not reach the AI provider. Check Edge Function logs and AI_BASE_URL. Offline guide tips are still available in the app.',
+          'Could not reach the AI provider. Check Edge Function logs, AI_BASE_URL, and that the function is deployed. Offline guide tips are still available in the app.',
       })
     }
 
     if (!res.ok) {
       const errText = await res.text()
       console.error('AI provider error', res.status, errText)
-      // 200 + fallback so the mobile client always receives a body (no hard 502)
+      const detail = errText.slice(0, 500)
+      let hintMsg =
+        'AI provider returned an error. Try again later — offline tips still work in the app.'
+      if (res.status === 401 || res.status === 403) {
+        hintMsg = isGemini
+          ? 'Gemini API key was rejected. Update AI_API_KEY in Supabase secrets (key from aistudio.google.com).'
+          : 'AI API key was rejected. Update AI_API_KEY in Supabase secrets.'
+      } else if (res.status === 404) {
+        hintMsg = isGemini
+          ? 'Gemini model or URL not found. Set AI_MODEL to a valid id (e.g. gemini-2.5-flash) and AI_BASE_URL to https://generativelanguage.googleapis.com/v1beta/openai'
+          : 'AI model or endpoint not found. Check AI_MODEL and AI_BASE_URL secrets.'
+      }
+      // Always 200 + fallback so the client receives a body (no hard 502)
       return json({
         error: 'AI provider error',
         status: res.status,
-        detail: errText.slice(0, 400),
+        detail,
         fallback: true,
-        reply:
-          res.status === 401 || res.status === 403
-            ? 'AI API key was rejected. Update AI_API_KEY (Groq) in Supabase secrets.'
-            : 'AI provider returned an error. Try again later — offline tips still work in the app.',
+        reply: hintMsg,
       })
     }
 
@@ -180,6 +220,7 @@ serve(async (req) => {
       reply,
       model: data.model || model,
       grounded: !!placeContext,
+      provider: isGemini ? 'gemini' : 'openai-compat',
     })
   } catch (e) {
     console.error(e)
