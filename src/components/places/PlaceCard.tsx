@@ -18,7 +18,6 @@ interface PlaceCardProps {
   className?: string
 }
 
-/** City skyline fallback if primary cover 404s */
 const CITY_FALLBACK =
   'https://commons.wikimedia.org/wiki/Special:FilePath/The%20city%20of%20Bahir%20Dar%2C%20Ethiopia.jpg?width=640'
 
@@ -30,10 +29,7 @@ function CoverImage({ place, className }: { place: Place; className?: string }) 
   if (failed) {
     return (
       <div
-        className={cn(
-          'bg-gradient-to-br from-sky-400 via-sky-500 to-teal-600',
-          className
-        )}
+        className={cn('bg-gradient-to-br from-sky-400 via-sky-500 to-teal-600', className)}
         role="img"
         aria-label={placeImageAlt(place)}
       />
@@ -78,23 +74,23 @@ export function PlaceCard({
 
   if (variant === 'compact') {
     return (
-      <Link to={detailTo} onClick={onNavigateDetail}>
-        <Card className={cn('transition hover:shadow-md', className)}>
-          <CardContent className="flex items-center gap-3 p-3">
-            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-sky-100">
+      <Link to={detailTo} onClick={onNavigateDetail} className="block ios-press">
+        <Card className={cn('overflow-hidden', className)}>
+          <CardContent className="flex min-h-[64px] items-center gap-3 p-3 sm:p-3.5">
+            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-sky-100 sm:h-12 sm:w-12 sm:rounded-lg">
               <CoverImage place={place} className="h-full w-full" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <p className="truncate font-medium">{name}</p>
+                <p className="truncate text-[15px] font-semibold tracking-tight sm:text-sm sm:font-medium">{name}</p>
                 {place.verified && <BadgeCheck className="h-4 w-4 shrink-0 text-emerald-500" />}
                 {isOsm && (
-                  <span className="shrink-0 rounded bg-slate-100 px-1 text-[10px] font-medium text-slate-500 dark:bg-slate-800">
+                  <span className="shrink-0 rounded-md bg-slate-100 px-1.5 text-[10px] font-medium text-slate-500 dark:bg-slate-800">
                     OSM
                   </span>
                 )}
               </div>
-              <p className="truncate text-xs text-slate-500">
+              <p className="truncate text-[13px] text-[#8e8e93]">
                 {place.category?.name}
                 {place.distance_m != null && ` · ${formatDistance(place.distance_m)}`}
               </p>
@@ -106,37 +102,39 @@ export function PlaceCard({
   }
 
   return (
-    <Card className={cn('overflow-hidden transition hover:shadow-lg', className)}>
-      <Link to={detailTo} onClick={onNavigateDetail}>
-        <div className="relative h-40 bg-slate-200 dark:bg-slate-800">
+    <Card className={cn('place-card-mobile overflow-hidden ios-press', className)}>
+      <Link to={detailTo} onClick={onNavigateDetail} className="block">
+        <div className="relative h-44 bg-slate-200 sm:h-40 dark:bg-slate-800">
           <CoverImage place={place} className="h-full w-full" />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-black/5 to-transparent" />
           {place.featured && (
-            <span className="absolute left-2 top-2 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-amber-950">
+            <span className="absolute left-2.5 top-2.5 rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-bold text-amber-950 shadow-sm">
               Featured
             </span>
           )}
           {isDemo && (
-            <span className="absolute right-2 top-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800">
+            <span className="absolute right-2.5 top-2.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-medium text-amber-800">
               DEMO
             </span>
           )}
           {isOsm && !isDemo && (
-            <span className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-medium text-slate-700">
+            <span className="absolute right-2.5 top-2.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-medium text-slate-700 shadow-sm">
               OpenStreetMap
             </span>
           )}
         </div>
-        <CardContent className="p-4">
+        <CardContent className="p-4 sm:p-4">
           <div className="mb-1 flex items-start justify-between gap-2">
-            <h3 className="font-semibold leading-tight">{name}</h3>
-            {place.verified && <BadgeCheck className="h-5 w-5 shrink-0 text-emerald-500" />}
+            <h3 className="text-[16px] font-semibold leading-snug tracking-tight sm:text-[15px]">{name}</h3>
+            {place.verified && <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />}
           </div>
-          <p className="mb-2 text-xs font-medium text-sky-600">{place.category?.name}</p>
+          <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[#0b6e99] dark:text-sky-400">
+            {place.category?.name}
+          </p>
           {place.short_description && (
-            <p className="mb-3 line-clamp-2 text-sm text-slate-500">{place.short_description}</p>
+            <p className="mb-3 line-clamp-2 text-[14px] leading-relaxed text-[#8e8e93]">{place.short_description}</p>
           )}
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+          <div className="flex flex-wrap items-center gap-2 text-[12px] text-[#8e8e93]">
             {place.distance_m != null && (
               <span className="flex items-center gap-1">
                 <MapPin className="h-3.5 w-3.5" />
@@ -157,9 +155,9 @@ export function PlaceCard({
         </CardContent>
       </Link>
       {(showDirections && onDirections) || isOsm ? (
-        <div className="flex flex-wrap gap-2 border-t border-slate-100 px-4 py-2 dark:border-slate-800">
+        <div className="flex flex-wrap gap-2 border-t border-black/[0.06] px-3 py-2.5 dark:border-white/[0.08]">
           {showDirections && onDirections && (
-            <Button variant="ghost" size="sm" className="flex-1" onClick={() => onDirections(place)}>
+            <Button variant="ghost" size="sm" className="min-h-[40px] flex-1" onClick={() => onDirections(place)}>
               <Navigation className="h-4 w-4" /> Directions
             </Button>
           )}
@@ -169,7 +167,7 @@ export function PlaceCard({
                 href={guides.googleMaps}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-sky-700 hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-950"
+                className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-1 rounded-full px-2 text-[13px] font-semibold text-sky-700 active:bg-sky-50 dark:text-sky-300 dark:active:bg-sky-950"
               >
                 <ExternalLink className="h-3.5 w-3.5" /> Maps
               </a>
@@ -177,7 +175,7 @@ export function PlaceCard({
                 href={guides.googleDirections}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-teal-700 hover:bg-teal-50 dark:text-teal-300 dark:hover:bg-teal-950"
+                className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-1 rounded-full px-2 text-[13px] font-semibold text-teal-700 active:bg-teal-50 dark:text-teal-300 dark:active:bg-teal-950"
               >
                 <Navigation className="h-3.5 w-3.5" /> Go
               </a>
