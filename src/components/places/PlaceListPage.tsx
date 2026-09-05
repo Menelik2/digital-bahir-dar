@@ -5,7 +5,6 @@ import {
   SlidersHorizontal,
   Loader2,
   RefreshCw,
-  ExternalLink,
   X,
   Star,
 } from 'lucide-react'
@@ -17,7 +16,6 @@ import { useOsmPlaces } from '@/hooks/useOsmPlaces'
 import { useAppStore } from '@/store'
 import { rankNearby } from '@/services/places'
 import { CURATED_HOTELS } from '@/services/curatedHotels'
-import { placeGuideLinks } from '@/constants/guideSites'
 import type { OsmCategory } from '@/services/osmPlaces'
 import type { Place, SortOption } from '@/types/place'
 import { cn } from '@/lib/utils'
@@ -58,7 +56,7 @@ function matchesPriceTier(place: Place, tier: string): boolean {
   if (tier === 'budget') {
     if (level != null) return level <= 2
     if (mid != null) return mid < 4000
-    return true // keep unpriced hotels visible
+    return true
   }
   if (tier === 'mid') {
     if (level != null) return level === 3
@@ -106,7 +104,7 @@ export function PlaceListPage({
   const [sort, setSort] = useState<SortOption>('featured')
   const [filterId, setFilterId] = useState<string | null>(null)
   const [showFilters, setShowFilters] = useState(false)
-  const { request, loading: geoLoading, hasFix, location } = useGeolocation()
+  const { request, hasFix, location } = useGeolocation()
 
   const {
     places: dbPlaces,
@@ -217,7 +215,6 @@ export function PlaceListPage({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-5 sm:py-8">
-      {/* Large title — iOS style */}
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3 sm:mb-6">
         <div>
           <h1 className="text-[28px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-3xl">
@@ -258,7 +255,6 @@ export function PlaceListPage({
         )}
       </div>
 
-      {/* Search bar — 48pt touch target */}
       <div className="mb-3 flex gap-2">
         <div className="flex min-h-[48px] flex-1 items-center gap-2 rounded-[1rem] border border-black/[0.06] bg-white px-3.5 dark:border-white/[0.08] dark:bg-[#1c1c1e]">
           <Search className="h-5 w-5 shrink-0 text-[#8e8e93]" />
@@ -291,7 +287,6 @@ export function PlaceListPage({
         </Button>
       </div>
 
-      {/* Filter chips — horizontal scroll */}
       {(filters.length > 0 || categorySlug === 'hotel') && (
         <div className="mobile-chips mb-5 gap-2">
           <button
@@ -344,7 +339,6 @@ export function PlaceListPage({
         </div>
       )}
 
-      {/* Sort + near me */}
       {showFilters && (
         <div className="mb-4 flex flex-wrap gap-2 rounded-[1rem] border border-black/[0.06] bg-white p-3 dark:border-white/[0.08] dark:bg-[#1c1c1e]">
           {(
@@ -375,7 +369,7 @@ export function PlaceListPage({
         </div>
       )}
 
-      {isLoading && sorted.length === 0 && (
+      {(isLoading || osmLoading) && sorted.length === 0 && (
         <p className="flex items-center justify-center gap-2 py-12 text-[#8e8e93]">
           <Loader2 className="h-5 w-5 animate-spin text-[#078930]" />
           {t.common.loading}
