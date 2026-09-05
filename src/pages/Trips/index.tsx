@@ -193,17 +193,19 @@ export default function TripsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6 sm:py-8">
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold sm:text-3xl">{t.trips.title}</h1>
-        <p className="text-sm text-slate-500 sm:text-base">{t.trips.subtitle}</p>
+    <div className="mx-auto max-w-4xl px-4 py-5 pb-nav-safe sm:py-8">
+      <div className="mb-5 sm:mb-6">
+        <h1 className="text-[28px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-3xl">
+          {t.trips.title}
+        </h1>
+        <p className="mt-0.5 text-[14px] text-[#8e8e93] sm:text-[15px]">{t.trips.subtitle}</p>
       </div>
 
       <section className="mb-8">
         <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className="ethio-title text-lg font-semibold">{t.trips.newTrip}</h2>
           {isAuthenticated && !showForm && (
-            <Button size="sm" onClick={() => setShowForm(true)}>
+            <Button size="sm" className="min-h-[40px] rounded-full" onClick={() => setShowForm(true)}>
               <Plus className="h-4 w-4" /> {t.common.create}
             </Button>
           )}
@@ -215,7 +217,7 @@ export default function TripsPage() {
               <MapPin className="h-10 w-10 text-[#078930]/40" />
               <p className="max-w-md text-sm text-slate-500">{t.trips.loginBody}</p>
               <Link to="/auth">
-                <Button>
+                <Button className="min-h-[48px] rounded-full px-6">
                   <Plus className="h-4 w-4" /> {t.trips.loginToSave}
                 </Button>
               </Link>
@@ -231,10 +233,7 @@ export default function TripsPage() {
           >
             <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{t.trips.newTrip}</p>
             {formMessage && (
-              <p
-                className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300"
-                role="alert"
-              >
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300" role="alert">
                 {formMessage}
               </p>
             )}
@@ -248,9 +247,7 @@ export default function TripsPage() {
                 placeholder={placeholders.tripTitle}
                 className={cn(
                   'w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-[#078930] dark:bg-slate-950',
-                  formErrors.title
-                    ? 'border-red-400 dark:border-red-500'
-                    : 'border-slate-200 dark:border-slate-700'
+                  formErrors.title ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-700'
                 )}
                 aria-invalid={!!formErrors.title}
                 autoFocus
@@ -269,15 +266,12 @@ export default function TripsPage() {
                   value={budget}
                   onChange={(e) => {
                     setBudget(e.target.value)
-                    if (formErrors.budget_total)
-                      setFormErrors((prev) => ({ ...prev, budget_total: undefined }))
+                    if (formErrors.budget_total) setFormErrors((prev) => ({ ...prev, budget_total: undefined }))
                   }}
                   placeholder={placeholders.tripBudget}
                   className={cn(
                     'w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-[#078930] dark:bg-slate-950',
-                    formErrors.budget_total
-                      ? 'border-red-400 dark:border-red-500'
-                      : 'border-slate-200 dark:border-slate-700'
+                    formErrors.budget_total ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-700'
                   )}
                   aria-invalid={!!formErrors.budget_total}
                 />
@@ -294,15 +288,12 @@ export default function TripsPage() {
                   value={travelers}
                   onChange={(e) => {
                     setTravelers(e.target.value)
-                    if (formErrors.traveler_count)
-                      setFormErrors((prev) => ({ ...prev, traveler_count: undefined }))
+                    if (formErrors.traveler_count) setFormErrors((prev) => ({ ...prev, traveler_count: undefined }))
                   }}
                   placeholder={placeholders.tripTravelers}
                   className={cn(
                     'w-full rounded-xl border px-3 py-3 text-base outline-none focus:border-[#078930] dark:bg-slate-950',
-                    formErrors.traveler_count
-                      ? 'border-red-400 dark:border-red-500'
-                      : 'border-slate-200 dark:border-slate-700'
+                    formErrors.traveler_count ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-slate-700'
                   )}
                   aria-invalid={!!formErrors.traveler_count}
                 />
@@ -312,7 +303,7 @@ export default function TripsPage() {
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Button type="submit" disabled={createMut.isPending} className="w-full sm:w-auto" size="lg">
+              <Button type="submit" disabled={createMut.isPending} className="min-h-[48px] w-full rounded-full sm:w-auto" size="lg">
                 {createMut.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" /> {t.common.loading}
@@ -324,12 +315,7 @@ export default function TripsPage() {
                 )}
               </Button>
               {personalTrips.length > 0 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full sm:w-auto"
-                  onClick={() => setShowForm(false)}
-                >
+                <Button type="button" variant="ghost" className="w-full sm:w-auto" onClick={() => setShowForm(false)}>
                   {t.common.cancel}
                 </Button>
               )}
@@ -338,7 +324,7 @@ export default function TripsPage() {
         )}
 
         {isAuthenticated && !showForm && personalTrips.length === 0 && (
-          <Button className="w-full sm:w-auto" size="lg" onClick={() => setShowForm(true)}>
+          <Button className="min-h-[48px] w-full rounded-full sm:w-auto" size="lg" onClick={() => setShowForm(true)}>
             <Plus className="h-4 w-4" /> {t.trips.newTrip}
           </Button>
         )}
@@ -369,9 +355,7 @@ export default function TripsPage() {
           </div>
         )}
 
-        {!isAuthenticated && (
-          <p className="text-sm text-slate-500">{t.trips.loginToSave}</p>
-        )}
+        {!isAuthenticated && <p className="text-sm text-slate-500">{t.trips.loginToSave}</p>}
       </section>
 
       <Link to="/trip-planner" className="mb-10 block">
@@ -395,17 +379,17 @@ export default function TripsPage() {
           <h2 className="text-lg font-semibold">{t.trips.readyMade}</h2>
         </div>
         <p className="mb-3 text-sm text-slate-500">{t.trips.readyMadeBody}</p>
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mobile-chips mb-4 gap-2">
           {tagOptions.map((opt) => (
             <button
               key={String(opt.id)}
               type="button"
               onClick={() => setTagFilter(opt.id)}
               className={cn(
-                'rounded-full border px-3 py-1.5 text-xs font-medium transition',
+                'min-h-[36px] shrink-0 rounded-full border px-3.5 py-2 text-[13px] font-semibold transition active:scale-[0.97]',
                 tagFilter === opt.id
-                  ? 'border-[#078930] bg-[#078930] text-white'
-                  : 'border-slate-200 bg-white text-slate-600 hover:border-[#078930]/40 dark:border-slate-700 dark:bg-slate-900'
+                  ? 'border-[#078930] bg-[#078930] text-white shadow-sm shadow-[#078930]/25'
+                  : 'border-black/[0.08] bg-white text-[#1c1c1e] dark:border-white/10 dark:bg-[#1c1c1e] dark:text-white'
               )}
             >
               {opt.label}
