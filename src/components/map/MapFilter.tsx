@@ -18,9 +18,10 @@ interface Props {
   className?: string
 }
 
+/** Horizontal filter chips — iPhone Maps / Explore style */
 export function MapFilter({ active, onChange, className }: Props) {
   return (
-    <div className={cn('flex gap-2 overflow-x-auto pb-1 scrollbar-none', className)}>
+    <div className={cn('mobile-chips gap-2', className)}>
       {FILTERS.map((f) => {
         const isActive = active === f.id
         return (
@@ -29,10 +30,10 @@ export function MapFilter({ active, onChange, className }: Props) {
             type="button"
             onClick={() => onChange(isActive ? null : f.id)}
             className={cn(
-              'shrink-0 rounded-full border px-4 py-2 text-sm font-medium shadow-md transition',
+              'shrink-0 rounded-full px-3.5 py-2.5 text-[13px] font-semibold shadow-md transition active:scale-[0.97]',
               isActive
-                ? 'border-sky-500 bg-sky-500 text-white'
-                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200'
+                ? 'bg-[#078930] text-white shadow-[#078930]/30'
+                : 'border border-black/[0.08] bg-white/95 text-[#1c1c1e] backdrop-blur-md dark:border-white/12 dark:bg-[#1c1c1e]/95 dark:text-white'
             )}
           >
             {f.label}
