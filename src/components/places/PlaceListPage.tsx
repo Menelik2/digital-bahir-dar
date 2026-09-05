@@ -201,8 +201,9 @@ export function PlaceListPage({
     return (
       <div className="mx-auto max-w-6xl px-4 py-8">
         <StateMessage
+          variant="error"
           title={t.common.error}
-          description={t.list.loadError}
+          body={t.list.loadFail}
           action={
             <Button onClick={() => void refetch()} variant="outline" className="rounded-full">
               <RefreshCw className="h-4 w-4" /> {t.common.retry}

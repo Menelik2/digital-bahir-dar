@@ -30,6 +30,10 @@ export interface Place {
   status: PlaceStatus
   created_at: string
   updated_at: string
+  /** Optional tags for filtering (e.g. cuisine, amenities) */
+  tags?: string[] | null
+  /** Aggregate rating when available (reviews / OSM) */
+  rating?: number | null
   category?: Category
   distance_m?: number
   hotel?: HotelDetails | null
@@ -134,4 +138,11 @@ export type CategorySlug =
   | 'government'
   | 'emergency'
 
-export type SortOption = 'distance' | 'name' | 'featured' | 'price_asc' | 'price_desc'
+export type SortOption =
+  | 'distance'
+  | 'name'
+  | 'featured'
+  | 'price_asc'
+  | 'price_desc'
+  | 'nearby'
+  | 'rating'
