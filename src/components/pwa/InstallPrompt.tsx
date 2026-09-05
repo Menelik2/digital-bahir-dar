@@ -47,21 +47,37 @@ export function InstallPrompt() {
     <div
       role="dialog"
       aria-label={t.pwa.installTitle}
-      className="fixed bottom-20 left-3 right-3 z-50 mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-900 sm:bottom-6"
+      className="fixed left-3 right-3 z-50 mx-auto max-w-md rounded-[1.15rem] border border-black/[0.06] bg-white/95 p-4 shadow-[0_8px_32px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-[#1c1c1e]/95 sm:bottom-6 lg:bottom-6"
+      style={{
+        // Above mobile tab bar; desktop uses bottom-6 via classes
+        bottom: 'calc(5.75rem + env(safe-area-inset-bottom, 0px))',
+        WebkitBackdropFilter: 'saturate(180%) blur(20px)',
+      }}
     >
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.85rem] bg-[#0b6e99]/12 text-[#0b6e99] dark:bg-sky-950 dark:text-sky-300">
           <Download className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">{t.pwa.installTitle}</p>
-          <p className="mt-0.5 text-xs text-slate-500">{t.pwa.installBody}</p>
+          <p className="text-[15px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white">
+            {t.pwa.installTitle}
+          </p>
+          <p className="mt-0.5 text-[13px] leading-snug text-[#8e8e93]">{t.pwa.installBody}</p>
           <div className="mt-3 flex gap-2">
-            <Button size="sm" onClick={install}>{t.pwa.install}</Button>
-            <Button size="sm" variant="ghost" onClick={dismiss}>{t.pwa.dismiss}</Button>
+            <Button size="sm" className="min-h-[40px] px-4" onClick={install}>
+              {t.pwa.install}
+            </Button>
+            <Button size="sm" variant="ghost" className="min-h-[40px]" onClick={dismiss}>
+              {t.pwa.dismiss}
+            </Button>
           </div>
         </div>
-        <button type="button" onClick={dismiss} className="rounded p-1 text-slate-400 hover:text-slate-600" aria-label={t.pwa.dismiss}>
+        <button
+          type="button"
+          onClick={dismiss}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#8e8e93] active:bg-black/5 dark:active:bg-white/10"
+          aria-label={t.pwa.dismiss}
+        >
           <X className="h-4 w-4" />
         </button>
       </div>
