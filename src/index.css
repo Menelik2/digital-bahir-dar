@@ -114,10 +114,11 @@ nav {
   padding-right: env(safe-area-inset-right, 0px);
 }
 .pb-nav-safe {
-  padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+  /* Tab bar ~52px + home indicator + safe area */
+  padding-bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
 }
 .bottom-fab-safe {
-  bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(5.85rem + env(safe-area-inset-bottom, 0px));
 }
 
 .ios-glass {
@@ -147,7 +148,6 @@ nav {
     0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-/* Press feedback — mobile tap + desktop active */
 .ios-press {
   transition:
     transform 0.18s cubic-bezier(0.25, 0.1, 0.25, 1),
@@ -175,7 +175,6 @@ nav {
   }
 }
 
-/* Clear card interaction (desktop path cards) */
 .ios-card {
   transition:
     transform 0.22s cubic-bezier(0.25, 0.1, 0.25, 1),
@@ -208,7 +207,6 @@ nav {
     0 6px 18px rgba(0, 0, 0, 0.35);
 }
 
-/* Gradient tile hover / active (mobile path cards) */
 .ios-tile {
   transition:
     transform 0.18s cubic-bezier(0.25, 0.1, 0.25, 1),
@@ -306,11 +304,98 @@ nav {
   max-width: 60%;
 }
 
+/* ─── Mobile-only (phones / small tablets) — iPhone-clear UX ─── */
 @media (max-width: 1023px) {
   .ios-section-title {
     font-size: 1.375rem;
     font-weight: 700;
     letter-spacing: -0.02em;
+  }
+
+  /* Prevent iOS zoom on focus */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Comfortable page gutters */
+  .mobile-page {
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  }
+
+  /* Large title style (iOS navigation) */
+  .ios-large-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+
+  /* Grouped list container */
+  .ios-group {
+    overflow: hidden;
+    border-radius: 0.875rem;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  .dark .ios-group {
+    background: #1c1c1e;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .ios-group-row {
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    font-size: 16px;
+  }
+  .ios-group-row + .ios-group-row {
+    border-top: 1px solid rgba(60, 60, 67, 0.12);
+  }
+  .dark .ios-group-row + .ios-group-row {
+    border-top-color: rgba(84, 84, 88, 0.45);
+  }
+
+  /* Place cards: clearer on small screens */
+  .place-card-mobile {
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+
+  /* Horizontal chips scroll without ugly scrollbar */
+  .mobile-chips {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    padding-bottom: 0.25rem;
+    margin-left: -0.25rem;
+    margin-right: -0.25rem;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+  .mobile-chips > * {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+  .mobile-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Primary CTA full width on phone */
+  .mobile-cta {
+    display: flex;
+    width: 100%;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    font-size: 16px;
+    font-weight: 600;
   }
 }
 
