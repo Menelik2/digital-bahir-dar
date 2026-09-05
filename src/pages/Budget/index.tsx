@@ -42,7 +42,7 @@ export default function BudgetPage() {
     onChange: (n: number) => void,
     opts?: { min?: number }
   ) => (
-    <div className="ios-group-row flex-col items-stretch gap-1 !py-3">
+    <div className="ios-group-row ios-group-row-stack ios-group-row-fullsep">
       <label className="text-[13px] font-medium text-[#8e8e93]">{label}</label>
       <input
         type="number"
@@ -50,7 +50,7 @@ export default function BudgetPage() {
         min={opts?.min ?? 0}
         value={value}
         onChange={(e) => onChange(Number(e.target.value) || 0)}
-        className="min-h-[44px] w-full rounded-xl border border-black/[0.06] bg-[#f2f2f7] px-3 text-[16px] font-medium outline-none focus:border-[#078930] focus:ring-2 focus:ring-[#078930]/15 dark:border-white/10 dark:bg-[#2c2c2e] dark:focus:border-[#30d158]"
+        className="min-h-[44px] w-full rounded-xl border-0 bg-[#f2f2f7] px-3 text-[16px] font-medium outline-none ring-1 ring-black/[0.06] focus:ring-2 focus:ring-[#078930]/30 dark:bg-[#2c2c2e] dark:ring-white/10 dark:focus:ring-[#30d158]/35"
       />
     </div>
   )
@@ -92,12 +92,12 @@ export default function BudgetPage() {
       </div>
 
       <div className="mb-4 flex flex-wrap gap-2">
-        <Link to="/spend-guide" className="flex-1 min-w-[140px]">
+        <Link to="/spend-guide" className="min-w-[140px] flex-1">
           <Button className="h-11 w-full rounded-full bg-gradient-to-r from-[#0b6e99] to-[#078930] text-[15px] font-semibold shadow-md">
             <Sparkles className="h-4 w-4" /> {b.spendGuide}
           </Button>
         </Link>
-        <Link to="/expenses" className="flex-1 min-w-[140px]">
+        <Link to="/expenses" className="min-w-[140px] flex-1">
           <Button variant="outline" className="h-11 w-full rounded-full border-black/10 text-[15px] dark:border-white/15">
             <Receipt className="h-4 w-4" /> {b.trackExpenses}
           </Button>
@@ -114,20 +114,22 @@ export default function BudgetPage() {
         </Link>
       </div>
 
-      <h2 className="mb-2 px-1 text-[13px] font-semibold uppercase tracking-wide text-[#8e8e93]">Inputs</h2>
-      <div className="ios-group mb-5">
-        <div className="grid sm:grid-cols-2">
-          {field(b.travelers, travelers, setTravelers, { min: 1 })}
-          {field(b.nights, nights, setNights, { min: 0 })}
-          {field(`${b.lodgingPerNight} (${currency})`, lodgingPerNight, setLodgingPerNight)}
-          {field(`${b.foodPerDay} (${currency})`, foodPerDay, setFoodPerDay)}
-          {field(`${b.transportTotal} (${currency})`, transport, setTransport)}
-          {field(`${b.attractionsPerPerson} (${currency})`, attractions, setAttractions)}
-          {field(`${b.shopping} (${currency})`, shopping, setShopping)}
-          {field(`${b.other} (${currency})`, other, setOther)}
-          {field(`${b.budgetCap} (${currency})`, budgetCap, setBudgetCap)}
+      <section className="ios-section">
+        <p className="ios-section-label">Inputs</p>
+        <div className="ios-group ios-group-fullsep">
+          <div className="grid sm:grid-cols-2">
+            {field(b.travelers, travelers, setTravelers, { min: 1 })}
+            {field(b.nights, nights, setNights, { min: 0 })}
+            {field(`${b.lodgingPerNight} (${currency})`, lodgingPerNight, setLodgingPerNight)}
+            {field(`${b.foodPerDay} (${currency})`, foodPerDay, setFoodPerDay)}
+            {field(`${b.transportTotal} (${currency})`, transport, setTransport)}
+            {field(`${b.attractionsPerPerson} (${currency})`, attractions, setAttractions)}
+            {field(`${b.shopping} (${currency})`, shopping, setShopping)}
+            {field(`${b.other} (${currency})`, other, setOther)}
+            {field(`${b.budgetCap} (${currency})`, budgetCap, setBudgetCap)}
+          </div>
         </div>
-      </div>
+      </section>
 
       <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         {[
