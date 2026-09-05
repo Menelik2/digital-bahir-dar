@@ -222,6 +222,193 @@ nav {
   filter: brightness(0.94);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   iOS Grouped List System (Settings-style)
+   Use: .ios-section > .ios-section-label + .ios-group > .ios-group-row
+   Separators are inset (start after icon/label) like real iOS.
+   ═══════════════════════════════════════════════════════════════ */
+
+.ios-section {
+  margin-bottom: 1.75rem;
+}
+
+.ios-section-label {
+  margin: 0 0 0.4rem 1rem;
+  padding: 0;
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: #6d6d72;
+  text-transform: uppercase;
+}
+.dark .ios-section-label {
+  color: #8e8e93;
+}
+
+.ios-section-footer {
+  margin: 0.45rem 1rem 0;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: #6d6d72;
+}
+.dark .ios-section-footer {
+  color: #8e8e93;
+}
+
+.ios-group {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem; /* 12px — matches iOS inset grouped */
+  background: #ffffff;
+  /* No outer border — pure iOS look on #f2f2f7 */
+  box-shadow: 0 0.5px 0 rgba(0, 0, 0, 0.04);
+}
+.dark .ios-group {
+  background: #1c1c1e;
+  box-shadow: none;
+}
+
+/* Row — flex, 44pt+ target, relative for inset separator */
+.ios-group-row {
+  position: relative;
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6875rem 1rem; /* ~11px 16px */
+  font-size: 1.0625rem; /* 17px — system body */
+  line-height: 1.25;
+  letter-spacing: -0.022em;
+  color: #1c1c1e;
+  background: transparent;
+  transition: background-color 0.12s ease;
+  -webkit-user-select: none;
+  user-select: none;
+  text-decoration: none;
+  cursor: default;
+}
+.dark .ios-group-row {
+  color: #f5f5f7;
+}
+
+/* Interactive rows (links / buttons) */
+a.ios-group-row,
+button.ios-group-row,
+.ios-group-row[role='button'],
+.ios-group-row-interactive {
+  cursor: pointer;
+}
+a.ios-group-row:active,
+button.ios-group-row:active,
+.ios-group-row[role='button']:active,
+.ios-group-row-interactive:active {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+.dark a.ios-group-row:active,
+.dark button.ios-group-row:active,
+.dark .ios-group-row[role='button']:active,
+.dark .ios-group-row-interactive:active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Inset hairline separator — starts after leading icon column (~52px) */
+.ios-group-row + .ios-group-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 3.25rem; /* 52px — under text, not under icon */
+  height: 1px;
+  background: rgba(60, 60, 67, 0.18);
+  transform: scaleY(0.5); /* retina hairline feel on 2x */
+  transform-origin: top;
+  pointer-events: none;
+}
+.dark .ios-group-row + .ios-group-row::before {
+  background: rgba(84, 84, 88, 0.55);
+}
+
+/* Full-bleed separator variant (no icon column) */
+.ios-group-row-fullsep + .ios-group-row-fullsep::before,
+.ios-group.ios-group-fullsep .ios-group-row + .ios-group-row::before {
+  left: 1rem;
+}
+
+/* Leading icon chip */
+.ios-group-icon {
+  display: flex;
+  height: 1.875rem; /* 30px */
+  width: 1.875rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.4375rem; /* 7px */
+  font-size: 0;
+}
+.ios-group-icon > svg {
+  height: 1.125rem;
+  width: 1.125rem;
+}
+
+/* Label grows; value + chevron stay right */
+.ios-group-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ios-group-value {
+  flex-shrink: 0;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.0625rem;
+  color: #8e8e93;
+  text-align: right;
+}
+
+.ios-group-chevron {
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  color: #c7c7cc;
+  margin-right: -0.15rem;
+}
+.dark .ios-group-chevron {
+  color: #636366;
+}
+
+/* Destructive row (Log out) */
+.ios-group-row-destructive {
+  justify-content: center;
+  font-weight: 400;
+  color: #da121a;
+}
+.dark .ios-group-row-destructive {
+  color: #ff453a;
+}
+
+/* Multi-line / form field rows inside group */
+.ios-group-row-stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  min-height: auto;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+/* Compact section spacing on dense screens */
+@media (max-width: 1023px) {
+  .ios-section {
+    margin-bottom: 1.5rem;
+  }
+}
+
 .ethio-flag-bar {
   height: 3px;
   background: linear-gradient(
@@ -331,32 +518,6 @@ nav {
     font-weight: 700;
     letter-spacing: -0.03em;
     line-height: 1.15;
-  }
-
-  /* Grouped list container */
-  .ios-group {
-    overflow: hidden;
-    border-radius: 0.875rem;
-    background: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-  }
-  .dark .ios-group {
-    background: #1c1c1e;
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .ios-group-row {
-    display: flex;
-    min-height: 48px;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    font-size: 16px;
-  }
-  .ios-group-row + .ios-group-row {
-    border-top: 1px solid rgba(60, 60, 67, 0.12);
-  }
-  .dark .ios-group-row + .ios-group-row {
-    border-top-color: rgba(84, 84, 88, 0.45);
   }
 
   /* Place cards: clearer on small screens */
