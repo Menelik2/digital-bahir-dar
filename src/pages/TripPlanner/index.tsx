@@ -124,26 +124,28 @@ export default function TripPlannerPage() {
   )
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <div className="mb-6">
-        <div className="mb-2 flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-teal-500 text-white">
-            <Sparkles className="h-5 w-5" />
+    <div className="mx-auto max-w-3xl px-4 py-5 pb-nav-safe sm:py-8">
+      <div className="mb-5 sm:mb-6">
+        <div className="mb-1 flex items-center gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#078930] via-[#0b6e99] to-[#d4a017] text-white shadow-md">
+            <Sparkles className="h-5 w-5" strokeWidth={2.25} />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold sm:text-3xl">{t.planner.title}</h1>
-            <p className="text-sm text-slate-500">{t.planner.subtitle}</p>
+          <div className="min-w-0">
+            <h1 className="text-[28px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-3xl">
+              {t.planner.title}
+            </h1>
+            <p className="text-[14px] text-[#8e8e93] sm:text-[15px]">{t.planner.subtitle}</p>
           </div>
         </div>
       </div>
 
       {!plan && (
-        <Card className="mb-8 overflow-hidden border-sky-100 dark:border-sky-900">
-          <div className="h-1.5 bg-gradient-to-r from-sky-500 via-teal-500 to-amber-400" />
+        <Card className="mb-8 overflow-hidden border-black/[0.06] shadow-sm dark:border-white/[0.08]">
+          <div className="h-1.5 bg-gradient-to-r from-[#078930] via-[#0b6e99] to-[#d4a017]" />
           <CardContent className="space-y-6 p-5 sm:p-6">
             <section>
               <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
-                <Calendar className="h-4 w-4 text-sky-600" /> {t.planner.howManyDays}
+                <Calendar className="h-4 w-4 text-[#0b6e99]" /> {t.planner.howManyDays}
               </label>
               <div className="flex flex-wrap gap-2">
                 {DAY_OPTIONS.map((d) => (
@@ -152,10 +154,10 @@ export default function TripPlannerPage() {
                     type="button"
                     onClick={() => setDays(d)}
                     className={cn(
-                      'h-11 min-w-[3rem] rounded-xl border text-sm font-semibold transition',
+                      'h-12 min-w-[3.25rem] rounded-full border text-[15px] font-semibold transition active:scale-[0.97]',
                       days === d
-                        ? 'border-sky-600 bg-sky-600 text-white'
-                        : 'border-slate-200 bg-white hover:border-sky-300 dark:border-slate-700 dark:bg-slate-900'
+                        ? 'border-[#078930] bg-[#078930] text-white shadow-sm shadow-[#078930]/25'
+                        : 'border-black/[0.08] bg-white text-[#1c1c1e] dark:border-white/10 dark:bg-[#1c1c1e] dark:text-white'
                     )}
                   >
                     {d}
@@ -166,14 +168,14 @@ export default function TripPlannerPage() {
 
             <section>
               <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
-                <Users className="h-4 w-4 text-sky-600" /> {t.planner.travelers}
+                <Users className="h-4 w-4 text-[#0b6e99]" /> {t.planner.travelers}
               </label>
               <div className="flex items-center gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-11 w-11"
+                  className="h-12 w-12 rounded-full"
                   onClick={() => setTravelers((n) => Math.max(1, n - 1))}
                 >
                   −
@@ -183,7 +185,7 @@ export default function TripPlannerPage() {
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-11 w-11"
+                  className="h-12 w-12 rounded-full"
                   onClick={() => setTravelers((n) => Math.min(12, n + 1))}
                 >
                   +
@@ -193,7 +195,7 @@ export default function TripPlannerPage() {
 
             <section>
               <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
-                <Wallet className="h-4 w-4 text-sky-600" /> {t.planner.budgetStyle}
+                <Wallet className="h-4 w-4 text-[#0b6e99]" /> {t.planner.budgetStyle}
               </label>
               <div className="grid gap-2 sm:grid-cols-3">
                 {budgetOptions.map((b) => (
@@ -202,10 +204,10 @@ export default function TripPlannerPage() {
                     type="button"
                     onClick={() => setBudget(b.id)}
                     className={cn(
-                      'rounded-xl border p-3 text-left transition',
+                      'min-h-[72px] rounded-[1rem] border p-3.5 text-left transition active:scale-[0.98]',
                       budget === b.id
-                        ? 'border-sky-600 bg-sky-50 dark:bg-sky-950/40'
-                        : 'border-slate-200 hover:border-sky-300 dark:border-slate-700'
+                        ? 'border-[#078930] bg-[#078930]/08 dark:bg-[#078930]/15'
+                        : 'border-black/[0.08] bg-white dark:border-white/10 dark:bg-[#1c1c1e]'
                     )}
                   >
                     <p className="font-semibold">{b.label}</p>
@@ -217,7 +219,7 @@ export default function TripPlannerPage() {
 
             <section>
               <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
-                <Clock className="h-4 w-4 text-sky-600" /> {t.planner.pace}
+                <Clock className="h-4 w-4 text-[#0b6e99]" /> {t.planner.pace}
               </label>
               <div className="flex flex-wrap gap-2">
                 {paceOptions.map((p) => (
@@ -226,10 +228,10 @@ export default function TripPlannerPage() {
                     type="button"
                     onClick={() => setPace(p.id)}
                     className={cn(
-                      'rounded-full border px-4 py-2 text-sm font-medium',
+                      'min-h-[40px] rounded-full border px-4 py-2 text-[13px] font-semibold transition active:scale-[0.97]',
                       pace === p.id
-                        ? 'border-sky-600 bg-sky-600 text-white'
-                        : 'border-slate-200 dark:border-slate-700'
+                        ? 'border-[#078930] bg-[#078930] text-white shadow-sm'
+                        : 'border-black/[0.08] bg-white text-[#1c1c1e] dark:border-white/10 dark:bg-[#1c1c1e] dark:text-white'
                     )}
                   >
                     {p.label}
@@ -250,10 +252,10 @@ export default function TripPlannerPage() {
                       type="button"
                       onClick={() => toggleInterest(opt.id)}
                       className={cn(
-                        'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium',
+                        'inline-flex min-h-[36px] items-center gap-1.5 rounded-full border px-3.5 py-2 text-[13px] font-semibold transition active:scale-[0.97]',
                         on
-                          ? 'border-teal-600 bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-200'
-                          : 'border-slate-200 dark:border-slate-700'
+                          ? 'border-[#0b6e99] bg-[#0b6e99]/12 text-[#0a5a7e] dark:border-[#30d158]/40 dark:bg-[#30d158]/15 dark:text-[#30d158]'
+                          : 'border-black/[0.08] bg-white text-[#1c1c1e] dark:border-white/10 dark:bg-[#1c1c1e] dark:text-white'
                       )}
                     >
                       <Icon className="h-3.5 w-3.5" />
@@ -264,29 +266,33 @@ export default function TripPlannerPage() {
               </div>
             </section>
 
-            <section className="flex flex-col gap-2 sm:flex-row sm:gap-6">
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <section className="flex flex-col gap-3 sm:flex-row sm:gap-6">
+              <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5 text-[15px]">
                 <input
                   type="checkbox"
                   checked={includeBoat}
                   onChange={(e) => setIncludeBoat(e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-sky-600"
+                  className="h-5 w-5 rounded border-slate-300 text-[#078930]"
                 />
                 {t.planner.includeBoat}
               </label>
-              <label className="flex cursor-pointer items-center gap-2 text-sm">
+              <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5 text-[15px]">
                 <input
                   type="checkbox"
                   checked={includeFalls}
                   onChange={(e) => setIncludeFalls(e.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-sky-600"
+                  className="h-5 w-5 rounded border-slate-300 text-[#078930]"
                 />
                 {t.planner.includeFalls}
               </label>
             </section>
 
-            <Button size="lg" className="w-full sm:w-auto" onClick={generate}>
-              <Sparkles className="h-4 w-4" /> {t.planner.buildPlan}
+            <Button
+              size="lg"
+              className="mobile-cta min-h-[52px] w-full rounded-full text-[16px] shadow-md shadow-[#078930]/25"
+              onClick={generate}
+            >
+              <Sparkles className="h-5 w-5" /> {t.planner.buildPlan}
             </Button>
             <p className="text-xs text-slate-400">{t.planner.offlineNote}</p>
           </CardContent>
@@ -297,26 +303,26 @@ export default function TripPlannerPage() {
         <div className="space-y-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold">{plan.title}</h2>
-              <p className="text-sm text-slate-500">{plan.subtitle}</p>
-              <p className="mt-1 text-xs text-slate-400">
+              <h2 className="text-xl font-bold tracking-tight text-[#1c1c1e] dark:text-white">{plan.title}</h2>
+              <p className="text-sm text-[#8e8e93]">{plan.subtitle}</p>
+              <p className="mt-1 text-xs text-[#8e8e93]">
                 {totalStops} {t.planner.stopsAcross} {plan.days.length}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={() => setPlan(null)}>
+              <Button variant="outline" size="sm" className="min-h-[40px] rounded-full" onClick={() => setPlan(null)}>
                 {t.planner.editChoices}
               </Button>
-              <Button variant="outline" size="sm" onClick={copyPlan}>
+              <Button variant="outline" size="sm" className="min-h-[40px] rounded-full" onClick={copyPlan}>
                 {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                 {copied ? t.planner.copied : t.planner.copy}
               </Button>
             </div>
           </div>
 
-          <Card className="border-teal-100 bg-gradient-to-br from-teal-50 to-sky-50 dark:border-teal-900 dark:from-teal-950/40 dark:to-sky-950/40">
+          <Card className="border-[#078930]/20 bg-gradient-to-br from-[#078930]/08 to-[#0b6e99]/08 dark:border-[#078930]/30 dark:from-[#078930]/15 dark:to-[#0b6e99]/15">
             <CardContent className="p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-teal-700 dark:text-teal-300">
+              <p className="text-xs font-medium uppercase tracking-wide text-[#056b24] dark:text-[#30d158]">
                 {t.planner.estimatedTotal}
               </p>
               <p className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -330,10 +336,10 @@ export default function TripPlannerPage() {
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden border-black/[0.06] dark:border-white/[0.08]">
             <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
               <h3 className="flex items-center gap-2 font-semibold">
-                <Wallet className="h-4 w-4 text-teal-600" /> {t.planner.pricingBreakdown}
+                <Wallet className="h-4 w-4 text-[#078930]" /> {t.planner.pricingBreakdown}
               </h3>
               <p className="text-xs text-slate-500">{t.planner.pricingHint}</p>
             </div>
@@ -358,7 +364,7 @@ export default function TripPlannerPage() {
                           {line.note && <p className="text-[11px] text-slate-400">{line.note}</p>}
                           <div className="mt-1.5 h-1 max-w-[12rem] overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                             <div
-                              className="h-full rounded-full bg-teal-500/80"
+                              className="h-full rounded-full bg-[#078930]/80"
                               style={{
                                 width: `${Math.min(100, pct(line.amount, plan.budget.total))}%`,
                               }}
@@ -380,7 +386,7 @@ export default function TripPlannerPage() {
                   <tfoot>
                     <tr className="bg-slate-50 font-semibold dark:bg-slate-900/60">
                       <td className="px-4 py-3">{t.planner.total}</td>
-                      <td className="px-4 py-3 text-right tabular-nums text-teal-700 dark:text-teal-400">
+                      <td className="px-4 py-3 text-right tabular-nums text-[#056b24] dark:text-[#30d158]">
                         {plan.budget.total.toLocaleString()}
                       </td>
                       <td className="hidden px-4 py-3 text-right sm:table-cell">100%</td>
@@ -434,140 +440,105 @@ export default function TripPlannerPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <div className="space-y-3">
+            {plan.days.map((day) => (
+              <Card key={day.dayNumber} className="overflow-hidden border-black/[0.06] dark:border-white/[0.08]">
+                <div className="border-b border-slate-100 bg-[#f2f2f7]/80 px-4 py-3 dark:border-white/[0.08] dark:bg-[#1c1c1e]/60">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[#078930]">
+                    {t.planner.day} {day.dayNumber}
+                  </p>
+                  <h3 className="text-[17px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white">
+                    {day.title}
+                  </h3>
+                  {day.summary && (
+                    <p className="mt-0.5 text-[13px] text-[#8e8e93]">{day.summary}</p>
+                  )}
+                </div>
+                <CardContent className="divide-y divide-black/[0.05] p-0 dark:divide-white/[0.08]">
+                  {day.stops.map((stop, i) => (
+                    <div key={i} className="flex gap-3 px-4 py-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#078930]/12 text-[13px] font-bold text-[#056b24]">
+                        {i + 1}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-[#1c1c1e] dark:text-white">{stop.name}</p>
+                        {stop.time && (
+                          <p className="flex items-center gap-1 text-[12px] text-[#8e8e93]">
+                            <Clock className="h-3 w-3" /> {stop.time}
+                          </p>
+                        )}
+                        {stop.note && (
+                          <p className="mt-0.5 text-[13px] leading-snug text-[#8e8e93]">{stop.note}</p>
+                        )}
+                        {stop.cost != null && stop.cost > 0 && (
+                          <p className="mt-0.5 text-[12px] font-medium text-[#078930]">
+                            ~{stop.cost.toLocaleString()} ETB
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {plan.tips && plan.tips.length > 0 && (
+            <Card className="border-black/[0.06] dark:border-white/[0.08]">
+              <CardContent className="p-4">
+                <p className="mb-2 text-sm font-semibold">{t.planner.tips}</p>
+                <ul className="space-y-2">
+                  {plan.tips.map((tip, i) => (
+                    <li key={i} className="flex gap-2 text-[14px] leading-relaxed text-[#3c3c43] dark:text-white/80">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#078930]" />
+                      {tip}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card className="border-black/[0.06] dark:border-white/[0.08]">
             <CardContent className="p-4">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="text-sm font-semibold">{t.planner.tripStory}</p>
                 {!story && (
-                  <Button size="sm" variant="outline" disabled={storyLoading} onClick={loadStory}>
+                  <Button size="sm" variant="outline" className="min-h-[36px] rounded-full" disabled={storyLoading} onClick={loadStory}>
                     {storyLoading ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
                       <Sparkles className="h-3.5 w-3.5" />
                     )}
-                    {storyLoading ? t.planner.writing : t.planner.generateAi}
+                    {t.planner.generateStory}
                   </Button>
                 )}
               </div>
-              {story ? (
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              {story && (
+                <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-[#3c3c43] dark:text-white/85">
                   {story}
                 </p>
-              ) : (
-                <p className="text-sm text-slate-500">{t.planner.storyHint}</p>
+              )}
+              {!story && !storyLoading && (
+                <p className="text-[13px] text-[#8e8e93]">{t.planner.storyHint}</p>
               )}
             </CardContent>
           </Card>
-
-          {plan.days.map((d) => (
-            <Card key={d.dayNumber} className="overflow-hidden">
-              <div className="border-b border-slate-100 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/50">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-sky-600">
-                      {t.planner.day} {d.dayNumber}
-                    </p>
-                    <h3 className="text-lg font-semibold">{d.title}</h3>
-                  </div>
-                  <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-800 dark:bg-teal-950 dark:text-teal-200">
-                    ~{dayActivityTotal(d).toLocaleString()} ETB
-                  </span>
-                </div>
-                <p className="text-sm text-slate-500">{d.summary}</p>
-              </div>
-              <CardContent className="space-y-3 p-4">
-                {d.stops.map((s, i) => (
-                  <div key={i} className="flex gap-3">
-                    <div className="flex w-14 shrink-0 flex-col items-center">
-                      <span className="text-xs font-medium text-slate-400">{s.time || '—'}</span>
-                      {i < d.stops.length - 1 && (
-                        <div className="mt-1 w-px flex-1 bg-slate-200 dark:bg-slate-700" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1 pb-2">
-                      <div className="flex flex-wrap items-baseline gap-2">
-                        {s.placeSlug ? (
-                          <Link
-                            to={`/places/${s.placeSlug}`}
-                            className="font-medium text-sky-700 hover:underline dark:text-sky-400"
-                          >
-                            {s.name}
-                          </Link>
-                        ) : (
-                          <span className="font-medium">{s.name}</span>
-                        )}
-                        {s.estimatedCostEtb != null && s.estimatedCostEtb > 0 && (
-                          <span className="text-xs text-teal-700 dark:text-teal-400">
-                            ~{s.estimatedCostEtb} ETB
-                          </span>
-                        )}
-                      </div>
-                      {s.duration && <p className="text-xs text-slate-400">{s.duration}</p>}
-                      {s.notes && <p className="mt-0.5 text-sm text-slate-500">{s.notes}</p>}
-                    </div>
-                  </div>
-                ))}
-                {(d.mealsTip || d.transportTip) && (
-                  <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
-                    {d.mealsTip && <p>{d.mealsTip}</p>}
-                    {d.transportTip && <p className="mt-0.5">{d.transportTip}</p>}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-
-          <Card>
-            <CardContent className="p-4">
-              <p className="mb-2 text-sm font-semibold">{t.planner.tips}</p>
-              <ul className="space-y-1.5 text-sm text-slate-600 dark:text-slate-300">
-                {plan.tips.map((tip) => (
-                  <li key={tip} className="flex gap-2">
-                    <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-sky-500" />
-                    {tip}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Link to="/map">
-              <Button variant="outline" className="w-full justify-start">
-                <MapPin className="h-4 w-4" /> {t.planner.openMap}
-              </Button>
-            </Link>
-            <Link to="/budget">
-              <Button variant="outline" className="w-full justify-start">
-                <Wallet className="h-4 w-4" /> {t.planner.adjustBudget}
-              </Button>
-            </Link>
-            <Link to="/trips">
-              <Button variant="outline" className="w-full justify-start">
-                <Route className="h-4 w-4" /> {t.planner.readyMade}
-              </Button>
-            </Link>
-            <Link to="/ai-guide">
-              <Button variant="outline" className="w-full justify-start">
-                <Sparkles className="h-4 w-4" /> {t.planner.askAi}
-              </Button>
-            </Link>
-          </div>
 
           {plan.matchedGuideId && (
             <p className="text-center text-sm text-slate-500">
               {t.planner.similarGuide}{' '}
               <Link
                 to={`/trips/${plan.matchedGuideId}`}
-                className="font-medium text-sky-600 hover:underline"
+                className="font-medium text-[#0b6e99] hover:underline"
               >
                 {t.planner.viewGuide}
               </Link>
             </p>
           )}
 
-          <Button className="w-full" onClick={generate}>
-            <Sparkles className="h-4 w-4" /> {t.planner.regenerate}
+          <Button className="mobile-cta min-h-[52px] w-full rounded-full text-[16px]" onClick={generate}>
+            <Sparkles className="h-5 w-5" /> {t.planner.regenerate}
           </Button>
         </div>
       )}
