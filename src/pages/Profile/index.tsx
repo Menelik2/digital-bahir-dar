@@ -48,9 +48,9 @@ export default function ProfilePage() {
     (user?.user_metadata?.full_name as string) || user?.email?.split('@')[0] || t.profile.traveler
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
+    <div className="mx-auto max-w-3xl bg-[#f2f2f7] px-4 py-6 pb-nav-safe dark:bg-black sm:py-8">
       {/* Large title + avatar */}
-      <div className="mb-6 flex items-center gap-3.5">
+      <div className="mb-7 flex items-center gap-3.5">
         <div className="flex h-[64px] w-[64px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#078930] to-[#0b6e99] text-[22px] font-bold text-white shadow-md">
           {displayName.charAt(0).toUpperCase()}
         </div>
@@ -62,147 +62,135 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Preferences — iOS grouped list */}
-      <p className="mb-1.5 px-1 text-[13px] font-semibold uppercase tracking-wide text-[#8e8e93]">
-        {t.profile.preferences}
-      </p>
-      <div className="ios-group mb-6">
-        <div className="ios-group-row justify-between gap-3">
-          <span className="flex items-center gap-2.5 text-[16px] text-[#1c1c1e] dark:text-white">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0b6e99]/12 text-[#0b6e99]">
-              <Globe className="h-4 w-4" />
+      {/* Preferences */}
+      <section className="ios-section">
+        <p className="ios-section-label">{t.profile.preferences}</p>
+        <div className="ios-group">
+          <div className="ios-group-row justify-between">
+            <span className="ios-group-icon bg-[#0b6e99]/12 text-[#0b6e99]">
+              <Globe />
             </span>
-            {t.profile.language}
-          </span>
-          <div className="flex gap-1.5">
-            {(['en', 'am'] as const).map((l) => (
-              <button
-                key={l}
-                type="button"
-                onClick={() => setLanguage(l)}
-                className={cn(
-                  'min-h-[36px] rounded-full px-3.5 text-[13px] font-semibold transition',
-                  language === l
-                    ? 'bg-[#078930] text-white'
-                    : 'bg-black/[0.05] text-[#3c3c43] dark:bg-white/10 dark:text-white/80'
-                )}
-              >
-                {l === 'en' ? 'EN' : 'አማ'}
-              </button>
-            ))}
+            <span className="ios-group-label">{t.profile.language}</span>
+            <div className="flex shrink-0 gap-1.5">
+              {(['en', 'am'] as const).map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => setLanguage(l)}
+                  className={cn(
+                    'min-h-[32px] rounded-full px-3 text-[13px] font-semibold transition',
+                    language === l
+                      ? 'bg-[#078930] text-white'
+                      : 'bg-black/[0.05] text-[#3c3c43] dark:bg-white/10 dark:text-white/80'
+                  )}
+                >
+                  {l === 'en' ? 'EN' : 'አማ'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="ios-group-row justify-between">
+            <span className="ios-group-icon bg-[#f5c518]/25 text-[#8a6d0b]">
+              <Coins />
+            </span>
+            <span className="ios-group-label">{t.profile.currency}</span>
+            <div className="flex shrink-0 flex-wrap justify-end gap-1">
+              {(['ETB', 'USD', 'EUR', 'GBP'] as const).map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCurrency(c)}
+                  className={cn(
+                    'min-h-[28px] rounded-full px-2.5 text-[12px] font-semibold',
+                    currency === c
+                      ? 'bg-[#078930] text-white'
+                      : 'bg-black/[0.05] text-[#3c3c43] dark:bg-white/10 dark:text-white/80'
+                  )}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="ios-group-row justify-between gap-3">
-          <span className="flex items-center gap-2.5 text-[16px] text-[#1c1c1e] dark:text-white">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f5c518]/25 text-[#8a6d0b]">
-              <Coins className="h-4 w-4" />
-            </span>
-            {t.profile.currency}
-          </span>
-          <div className="flex flex-wrap justify-end gap-1">
-            {(['ETB', 'USD', 'EUR', 'GBP'] as const).map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setCurrency(c)}
-                className={cn(
-                  'min-h-[32px] rounded-full px-2.5 text-[12px] font-semibold',
-                  currency === c
-                    ? 'bg-[#078930] text-white'
-                    : 'bg-black/[0.05] text-[#3c3c43] dark:bg-white/10 dark:text-white/80'
-                )}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      </section>
 
-      {/* Quick links — grouped */}
-      <p className="mb-1.5 px-1 text-[13px] font-semibold uppercase tracking-wide text-[#8e8e93]">
-        {t.profile.quickLinks}
-      </p>
-      <div className="ios-group mb-6">
-        {[{
-          to: '/trips',
-          label: t.profile.myTrips,
-          icon: Route,
-          tint: 'bg-[#078930]/12 text-[#078930]',
-        },
-        {
-          to: '/map',
-          label: t.nav.map,
-          icon: MapIcon,
-          tint: 'bg-[#0b6e99]/12 text-[#0b6e99]',
-        },
-        {
-          to: '/explore',
-          label: t.nav.explore,
-          icon: Compass,
-          tint: 'bg-[#0b6e99]/10 text-[#0a5a7e]',
-        },
-        {
-          to: '/ai-guide',
-          label: t.nav.aiGuide,
-          icon: Bot,
-          tint: 'bg-gradient-to-br from-[#078930]/15 to-[#0b6e99]/15 text-[#056b24]',
-        },
-        ].map((l, i) => (
-          <Link
-            key={l.to}
-            to={l.to}
-            className={cn(
-              'ios-group-row justify-between active:bg-black/[0.03] dark:active:bg-white/5',
-              i > 0 && 'border-t border-black/[0.06] dark:border-white/[0.08]'
-            )}
-          >
-            <span className="flex items-center gap-2.5 text-[16px] font-medium text-[#1c1c1e] dark:text-white">
-              <span className={cn('flex h-8 w-8 items-center justify-center rounded-lg', l.tint)}>
-                <l.icon className="h-4 w-4" />
+      {/* Quick links */}
+      <section className="ios-section">
+        <p className="ios-section-label">{t.profile.quickLinks}</p>
+        <div className="ios-group">
+          {[
+            {
+              to: '/trips',
+              label: t.profile.myTrips,
+              icon: Route,
+              tint: 'bg-[#078930]/12 text-[#078930]',
+            },
+            {
+              to: '/map',
+              label: t.nav.map,
+              icon: MapIcon,
+              tint: 'bg-[#0b6e99]/12 text-[#0b6e99]',
+            },
+            {
+              to: '/explore',
+              label: t.nav.explore,
+              icon: Compass,
+              tint: 'bg-[#0b6e99]/10 text-[#0a5a7e]',
+            },
+            {
+              to: '/ai-guide',
+              label: t.nav.aiGuide,
+              icon: Bot,
+              tint: 'bg-gradient-to-br from-[#078930]/15 to-[#0b6e99]/15 text-[#056b24]',
+            },
+          ].map((l) => (
+            <Link key={l.to} to={l.to} className="ios-group-row">
+              <span className={cn('ios-group-icon', l.tint)}>
+                <l.icon />
               </span>
-              {l.label}
-            </span>
-            <ChevronRight className="h-5 w-5 text-[#c7c7cc]" />
-          </Link>
-        ))}
-      </div>
+              <span className="ios-group-label font-normal">{l.label}</span>
+              <ChevronRight className="ios-group-chevron" strokeWidth={2.25} />
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* Saved places */}
-      <div className="mb-3 flex items-center justify-between px-1">
-        <p className="flex items-center gap-1.5 text-[13px] font-semibold uppercase tracking-wide text-[#8e8e93]">
-          <Heart className="h-3.5 w-3.5 text-rose-500" /> {t.profile.savedPlaces}
-        </p>
-        <span className="text-[13px] font-medium text-[#8e8e93]">{favorites.length}</span>
-      </div>
-      {favLoading && (
-        <p className="py-6 text-center text-sm text-[#8e8e93]">{t.common.loading}</p>
-      )}
-      {!favLoading && favorites.length === 0 && (
-        <div className="ios-group mb-6 px-4 py-8 text-center">
-          <MapPin className="mx-auto mb-2 h-8 w-8 text-[#c7c7cc]" />
-          <p className="text-[15px] text-[#8e8e93]">{t.profile.noSaved}</p>
-          <Link to="/explore" className="mt-3 inline-block">
-            <Button size="sm" variant="outline" className="rounded-full">
-              {t.profile.explorePlaces}
-            </Button>
-          </Link>
+      <section className="ios-section">
+        <div className="mb-1.5 flex items-center justify-between px-4">
+          <p className="ios-section-label !m-0 flex items-center gap-1.5">
+            <Heart className="h-3.5 w-3.5 text-rose-500" /> {t.profile.savedPlaces}
+          </p>
+          <span className="text-[13px] font-medium text-[#8e8e93]">{favorites.length}</span>
         </div>
-      )}
-      <div className="mb-6 grid gap-2.5 sm:grid-cols-2">
-        {favorites.map((f) =>
-          f.place ? <PlaceCard key={f.id} place={f.place} variant="compact" /> : null
+        {favLoading && (
+          <p className="py-6 text-center text-sm text-[#8e8e93]">{t.common.loading}</p>
         )}
-      </div>
+        {!favLoading && favorites.length === 0 && (
+          <div className="ios-group px-4 py-8 text-center">
+            <MapPin className="mx-auto mb-2 h-8 w-8 text-[#c7c7cc]" />
+            <p className="text-[15px] text-[#8e8e93]">{t.profile.noSaved}</p>
+            <Link to="/explore" className="mt-3 inline-block">
+              <Button size="sm" variant="outline" className="rounded-full">
+                {t.profile.explorePlaces}
+              </Button>
+            </Link>
+          </div>
+        )}
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          {favorites.map((f) =>
+            f.place ? <PlaceCard key={f.id} place={f.place} variant="compact" /> : null
+          )}
+        </div>
+      </section>
 
       {/* Log out */}
-      <button
-        type="button"
-        onClick={() => signOut()}
-        className="ios-group flex min-h-[48px] w-full items-center justify-center gap-2 text-[16px] font-semibold text-[#da121a] active:bg-black/[0.03] dark:active:bg-white/5"
-      >
-        <LogOut className="h-4.5 w-4.5" /> {t.profile.logOut}
-      </button>
+      <div className="ios-group mb-2">
+        <button type="button" onClick={() => signOut()} className="ios-group-row ios-group-row-destructive">
+          <LogOut className="h-4 w-4" /> {t.profile.logOut}
+        </button>
+      </div>
     </div>
   )
 }
