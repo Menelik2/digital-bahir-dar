@@ -6,16 +6,13 @@ import {
   Loader2,
   RefreshCw,
   X,
-  Star,
 } from 'lucide-react'
 import { PlaceCard } from './PlaceCard'
 import { Button } from '@/components/ui/button'
 import { useFilteredPlaces } from '@/hooks/usePlaces'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useOsmPlaces } from '@/hooks/useOsmPlaces'
-import { useAppStore } from '@/store'
 import { rankNearby } from '@/services/places'
-import { CURATED_HOTELS } from '@/services/curatedHotels'
 import type { OsmCategory } from '@/services/osmPlaces'
 import type { Place, SortOption } from '@/types/place'
 import { cn } from '@/lib/utils'
@@ -26,6 +23,7 @@ interface PlaceListPageProps {
   title: string
   subtitle?: string
   categorySlug: string
+  /** Reserved for future chip filters (price tier, stars, tags) */
   filters?: { id: string; label: string }[]
   emptyMessage?: string
   osmCategories?: OsmCategory[]
@@ -79,30 +77,20 @@ function hotelStarBucket(place: Place): number {
   return 0
 }
 
-const STAR_ORDER = [5, 4, 3, 2, 1, 0] as const
-
-function starSectionLabel(stars: number, isAm: boolean): string {
-  if (stars === 0) return isAm ? 'ዋጋ ያልተገለጸ / Unrated' : 'Unrated'
-  if (isAm) return `${stars} ኮከብ ${'★'.repeat(stars)}`
-  return `${stars}-star ${'★'.repeat(stars)}`
-}
-
 export function PlaceListPage({
   title,
   subtitle,
   categorySlug,
-  filters = [],
+  filters: _filters = [],
   emptyMessage,
   osmCategories,
   mergeOsm = true,
-  groupByStars = false,
+  groupByStars: _groupByStars = false,
 }: PlaceListPageProps) {
   const t = useT()
-  const { language } = useAppStore()
-  const isAm = language === 'am'
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState<SortOption>('featured')
-  const [filterId, setFilterId] = useState<string | null>(null)
+  const [filterId] = useState<string | null>(null)
   const [showFilters, setShowFilters] = useState(false)
   const { request, hasFix, location } = useGeolocation()
 
@@ -123,13 +111,6 @@ export function PlaceListPage({
     isFetching: osmFetching,
     refetch: refetchOsm,
   } = useOsmPlaces(osmCategories ?? ['all'], mergeOsm)
-
-  const curatedCount = useMemo(() => {
-    if (categorySlug !== 'hotel') return 0
-    return CURATED_HOTELS.filter((h) =>
-      dbPlaces.some((p) => p.name.toLowerCase().includes(h.name.toLowerCase().slice(0, 12)))
-    ).length
-  }, [dbPlaces, categorySlug])
 
   const places = useMemo(() => {
     let list = mergeOsm && osmPlaces.length > 0 ? mergePlaces(dbPlaces, osmPlaces) : dbPlaces
@@ -180,20 +161,6 @@ export function PlaceListPage({
   ])
 
   const sorted = places
-
-  const starGroups = useMemo(() => {
-    if (!groupByStars) return null
-    const map = new Map<number, Place[]>()
-    for (const p of sorted) {
-      const s = hotelStarBucket(p)
-      if (!map.has(s)) map.set(s, [])
-      map.get(s)!.push(p)
-    }
-    return STAR_ORDER.filter((s) => map.has(s)).map((s) => ({
-      stars: s,
-      places: map.get(s)!,
-    }))
-  }, [sorted, groupByStars])
 
   const renderCard = (p: Place) => <PlaceCard key={p.id} place={p} />
 
