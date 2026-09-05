@@ -12,7 +12,7 @@
 // Gemini example:
 //   AI_API_KEY  = <key from https://aistudio.google.com/apikey>
 //   AI_BASE_URL = https://generativelanguage.googleapis.com/v1beta/openai
-//   AI_MODEL    = gemini-2.5-flash   (or gemini-2.0-flash / gemini-3.x-flash if available)
+//   AI_MODEL    = gemini-3.6-flash   (or gemini-3.7-flash / gemini-3.8-flash)
 //
 // Groq example:
 //   AI_API_KEY  = <key from https://console.groq.com/keys>
@@ -200,7 +200,7 @@ serve(async (req) => {
           : 'AI API key was rejected. Update AI_API_KEY in Supabase secrets.'
       } else if (res.status === 404) {
         hintMsg = isGemini
-          ? 'Gemini model or URL not found. Set AI_MODEL to a valid id (e.g. gemini-2.5-flash) and AI_BASE_URL to https://generativelanguage.googleapis.com/v1beta/openai'
+          ? 'Gemini model or URL not found. Set AI_MODEL to a valid id (e.g. gemini-3.6-flash) and AI_BASE_URL to https://generativelanguage.googleapis.com/v1beta/openai'
           : 'AI model or endpoint not found. Check AI_MODEL and AI_BASE_URL secrets.'
       }
       // Always 200 + fallback so the client receives a body (no hard 502)
