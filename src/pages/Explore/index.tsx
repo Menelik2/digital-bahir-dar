@@ -13,7 +13,6 @@ import type { Place } from '@/types/place'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-/** Category chips shown on Explore (includes transport — missing from older CATEGORIES slice) */
 const EXPLORE_CATEGORIES: { slug: string; name: string; osm: OsmCategory[] }[] = [
   { slug: 'hotel', name: 'Hotels', osm: ['hotel'] },
   { slug: 'restaurant', name: 'Restaurants', osm: ['restaurant'] },
@@ -50,6 +49,12 @@ function matchesCategory(place: Place, slug: string | null): boolean {
   return s === slug
 }
 
+const chipBase =
+  'shrink-0 rounded-full px-3.5 py-2 text-[13px] font-semibold transition active:scale-[0.97]'
+const chipOn = 'bg-[#078930] text-white shadow-sm shadow-[#078930]/25'
+const chipOff =
+  'border border-black/[0.08] bg-white text-[#1c1c1e] dark:border-white/10 dark:bg-[#1c1c1e] dark:text-white'
+
 export default function ExplorePage() {
   const t = useT()
   const [params, setSearchParams] = useSearchParams()
@@ -58,7 +63,6 @@ export default function ExplorePage() {
   const [nearMe, setNearMe] = useState(params.get('near') === '1')
   const { request, loading: geoLoading, error: geoError, hasFix, location } = useGeolocation()
 
-  // Curated / Supabase base list (all categories — we filter client-side after OSM merge)
   const { places: dbPlaces, isLoading: dbLoading, refetch: refetchDb } = useFilteredPlaces({
     search: undefined,
     categorySlug: undefined,
@@ -86,7 +90,6 @@ export default function ExplorePage() {
     setNearMe(params.get('near') === '1')
   }, [params])
 
-  // Keep URL in sync for shareable filters
   useEffect(() => {
     const next = new URLSearchParams()
     if (search.trim()) next.set('q', search.trim())
@@ -112,22 +115,12 @@ export default function ExplorePage() {
 
   const places = useMemo(() => {
     const curated = filterRealPlaces(dbPlaces)
-    // Prefer live OSM when available, then curated landmarks (filter out demo hotels/restaurants)
-    let list =
-      osmPlaces.length > 0 ? mergeByName(osmPlaces, curated) : curated
-
+    let list = osmPlaces.length > 0 ? mergeByName(osmPlaces, curated) : curated
     list = list.filter((p) => matchesCategory(p, category))
-
-    if (search.trim()) {
-      list = searchPlaces(list, search)
-    }
-
-    // Near me: only rank when we have a fix — otherwise keep full list (avoid empty flash)
+    if (search.trim()) list = searchPlaces(list, search)
     if (nearMe && hasFix && location.latitude != null && location.longitude != null) {
       return rankNearby(list, location.latitude, location.longitude, 25_000)
     }
-
-    // Default: featured first, then verified, then name
     return [...list].sort(
       (a, b) =>
         Number(b.featured) - Number(a.featured) ||
@@ -148,17 +141,19 @@ export default function ExplorePage() {
   const isLoading = dbLoading && places.length === 0 && osmLoading
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+    <div className="mx-auto max-w-6xl px-4 py-5 sm:py-8">
+      {/* Large title */}
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3 sm:mb-6">
         <div>
-          <h1 className="mb-2 text-2xl font-bold text-slate-900 sm:text-3xl dark:text-slate-50">
+          <h1 className="text-[28px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-3xl">
             {t.explore.title}
           </h1>
-          <p className="text-slate-500 dark:text-slate-400">{t.explore.subtitle}</p>
+          <p className="mt-0.5 text-[14px] text-[#8e8e93] sm:text-[15px]">{t.explore.subtitle}</p>
         </div>
         <Button
           variant="outline"
           size="sm"
+          className="min-h-[40px] rounded-full"
           disabled={osmFetching}
           onClick={() => {
             void refetchDb()
@@ -174,32 +169,33 @@ export default function ExplorePage() {
         </Button>
       </div>
 
+      {/* Search + near me */}
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="flex flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-700 dark:bg-slate-900">
-          <Search className="h-5 w-5 shrink-0 text-slate-400" />
+        <div className="flex min-h-[48px] flex-1 items-center gap-2 rounded-[1rem] border border-black/[0.06] bg-white px-3.5 dark:border-white/[0.08] dark:bg-[#1c1c1e]">
+          <Search className="h-5 w-5 shrink-0 text-[#8e8e93]" />
           <input
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t.search.placeholder}
-            className="flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400 dark:text-slate-100"
+            className="flex-1 bg-transparent text-[16px] text-[#1c1c1e] outline-none placeholder:text-[#8e8e93] dark:text-white"
             aria-label={t.common.search}
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch('')}
-              className="rounded p-0.5 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="flex h-9 w-9 items-center justify-center rounded-full active:bg-black/5"
               aria-label={t.common.close}
             >
-              <X className="h-4 w-4 text-slate-400" />
+              <X className="h-4 w-4 text-[#8e8e93]" />
             </button>
           )}
         </div>
         <Button
           type="button"
           variant={nearMe ? 'default' : 'outline'}
-          className={cn('shrink-0', nearMe && 'bg-teal-600 hover:bg-teal-700')}
+          className={cn('min-h-[48px] shrink-0 rounded-full', nearMe && 'bg-[#078930] hover:bg-[#056b24]')}
           onClick={toggleNearMe}
         >
           {geoLoading ? (
@@ -212,50 +208,45 @@ export default function ExplorePage() {
       </div>
 
       {nearMe && geoLoading && (
-        <p className="mb-3 text-sm text-slate-500">{t.explore.locating}</p>
+        <p className="mb-2 text-[13px] text-[#8e8e93]">{t.explore.locating}</p>
       )}
       {nearMe && location.permission === 'denied' && (
-        <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+        <p className="mb-2 rounded-xl bg-amber-50 px-3 py-2 text-[13px] text-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
           {t.explore.locationDenied}
         </p>
       )}
       {nearMe && location.permission === 'unsupported' && (
-        <p className="mb-3 text-sm text-rose-600">{t.explore.locationUnsupported}</p>
+        <p className="mb-2 text-[13px] text-rose-600">{t.explore.locationUnsupported}</p>
       )}
       {nearMe && hasFix && (
-        <p className="mb-3 text-xs text-teal-700 dark:text-teal-400">
-          GPS ±{Math.round(location.accuracy ?? 0)} m · sorted by{' '}
-          {t.explore.distance.toLowerCase()} (25 km)
+        <p className="mb-2 text-[12px] text-[#078930]">
+          GPS ±{Math.round(location.accuracy ?? 0)} m · {t.explore.distance.toLowerCase()} (25 km)
         </p>
       )}
       {nearMe && !hasFix && !geoLoading && location.permission === 'granted' && geoError && (
-        <p className="mb-3 text-sm text-slate-500">{geoError}</p>
+        <p className="mb-2 text-[13px] text-[#8e8e93]">{geoError}</p>
       )}
 
       <div className="mb-2 flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-sky-600 px-2.5 py-0.5 text-[11px] font-semibold text-white">
-          {places.length} places
+        <span className="rounded-full bg-[#078930] px-2.5 py-0.5 text-[11px] font-bold text-white">
+          {places.length}
         </span>
         {osmPlaces.length > 0 && (
-          <span className="text-xs text-slate-500">{osmPlaces.length} from OpenStreetMap</span>
+          <span className="text-[12px] text-[#8e8e93]">{osmPlaces.length} OpenStreetMap</span>
         )}
         {osmFetching && (
-          <span className="flex items-center gap-1 text-xs text-slate-500">
-            <Loader2 className="h-3 w-3 animate-spin" /> Updating map data…
+          <span className="flex items-center gap-1 text-[12px] text-[#8e8e93]">
+            <Loader2 className="h-3 w-3 animate-spin" /> Updating…
           </span>
         )}
       </div>
 
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-1">
+      {/* Filter chips — horizontal scroll */}
+      <div className="mobile-chips mb-5 gap-2">
         <button
           type="button"
           onClick={() => setCategory(null)}
-          className={cn(
-            'shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium',
-            !category
-              ? 'border-sky-500 bg-sky-500 text-white'
-              : 'border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200'
-          )}
+          className={cn(chipBase, !category ? chipOn : chipOff)}
         >
           {t.explore.all}
         </button>
@@ -264,12 +255,7 @@ export default function ExplorePage() {
             key={c.slug}
             type="button"
             onClick={() => setCategory(category === c.slug ? null : c.slug)}
-            className={cn(
-              'shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium',
-              category === c.slug
-                ? 'border-sky-500 bg-sky-500 text-white'
-                : 'border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200'
-            )}
+            className={cn(chipBase, category === c.slug ? chipOn : chipOff)}
           >
             {c.name}
           </button>
@@ -277,25 +263,25 @@ export default function ExplorePage() {
       </div>
 
       {isLoading && (
-        <p className="flex items-center justify-center gap-2 py-12 text-slate-500">
-          <Loader2 className="h-5 w-5 animate-spin text-sky-500" />
+        <p className="flex items-center justify-center gap-2 py-12 text-[#8e8e93]">
+          <Loader2 className="h-5 w-5 animate-spin text-[#078930]" />
           {t.explore.loading}
         </p>
       )}
 
       {!isLoading && places.length === 0 && (
-        <p className="py-12 text-center text-slate-500">
+        <p className="py-12 text-center text-[15px] text-[#8e8e93]">
           {nearMe && hasFix ? t.explore.nearbyEmpty : t.explore.empty}
         </p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
         {places.map((p) => (
           <PlaceCard key={p.id} place={p} />
         ))}
       </div>
 
-      <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mt-8 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
         {[
           { to: '/hotels', label: t.nav.hotels },
           { to: '/restaurants', label: t.nav.restaurants },
@@ -309,7 +295,7 @@ export default function ExplorePage() {
           <Link
             key={l.to}
             to={l.to}
-            className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-medium text-slate-800 transition hover:border-sky-300 hover:bg-sky-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-sky-700 dark:hover:bg-sky-950/40"
+            className="flex min-h-[48px] items-center justify-center rounded-[1rem] border border-black/[0.06] bg-white px-3 text-center text-[14px] font-semibold text-[#1c1c1e] active:bg-black/[0.03] dark:border-white/[0.08] dark:bg-[#1c1c1e] dark:text-white"
           >
             {l.label}
           </Link>
