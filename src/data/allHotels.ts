@@ -17,6 +17,7 @@ export type HotelSeed = {
 export const ALL_HOTELS: HotelSeed[] = [
   {
     name: 'Nile View Hotel',
+    nameAm: 'ናይል ቪው ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/V3ag5LDJQVMrqGcQ6?g_st=atm',
     lat: 11.6048,
     lng: 37.4012,
@@ -26,6 +27,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Sky Resort',
+    nameAm: 'ስካይ ሪዞርት',
     mapsUrl: 'https://maps.app.goo.gl/P4J7Wy2hqMBxUQbi6?g_st=atm',
     lat: 11.6012,
     lng: 37.3785,
@@ -35,6 +37,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Winn Hotel',
+    nameAm: 'ዊን ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/pm2EatMqp3gR8W4u9?g_st=atm',
     lat: 11.5935,
     lng: 37.3905,
@@ -43,6 +46,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Jacaranda Hotel',
+    nameAm: 'ጃካራንዳ ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/cBAp95uc2zTfiNhF8?g_st=atm',
     lat: 11.5908,
     lng: 37.3862,
@@ -52,6 +56,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Unison Hotel',
+    nameAm: 'ዩኒሰን ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/EwcqTPcpqi43GMjMA?g_st=atm',
     lat: 11.5922,
     lng: 37.3918,
@@ -61,6 +66,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Tana Hotel',
+    nameAm: 'ጣና ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/tAha7FiX9i4aMNT98?g_st=atm',
     lat: 11.5975,
     lng: 37.3812,
@@ -70,6 +76,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Rahnile Hotel',
+    nameAm: 'ራህናይል ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/aquxgrHFKyrauekEA?g_st=atm',
     lat: 11.5948,
     lng: 37.3888,
@@ -78,6 +85,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Blue Nile Hotel',
+    nameAm: 'ብሉ ናይል ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/dJvNq85T26RjxoRu6?g_st=atm',
     lat: 11.5927,
     lng: 37.3921,
@@ -87,6 +95,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Lake Avenue Hotel',
+    nameAm: 'ሌክ አቬኑ ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/xY37ev5P2tvmULnL9?g_st=atm',
     lat: 11.5962,
     lng: 37.3835,
@@ -104,6 +113,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Palm Palace Hotel',
+    nameAm: 'ፓልም ፓሌስ ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/xbPVgpE7AoCvPhzv7?g_st=atm',
     lat: 11.5915,
     lng: 37.3942,
@@ -112,6 +122,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Nova Hotel',
+    nameAm: 'ኖቫ ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/1RyqiVhuYB9e6Rjq6?g_st=atm',
     lat: 11.5955,
     lng: 37.3895,
@@ -120,6 +131,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Lakemark Hotel',
+    nameAm: 'ሌክማርክ ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/1TCiNj1xrRGqgawK7?g_st=atm',
     lat: 11.5992,
     lng: 37.3808,
@@ -128,6 +140,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Naky Hotel',
+    nameAm: 'ናኪ ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/VF6oEcZPvHxsCgDY9?g_st=atm',
     lat: 11.5898,
     lng: 37.3912,
@@ -136,6 +149,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Felege Ghion Eco-Resort',
+    nameAm: 'ፍለገ ጽዮን ኢኮ-ሪዞርት',
     mapsUrl: 'https://maps.app.goo.gl/o6gobfmvcDfVHJca6?g_st=atm',
     lat: 11.6085,
     lng: 37.3725,
@@ -154,6 +168,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Yiganda Hotel',
+    nameAm: 'ይጋንዳ ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/qm1cT2Lx2j67H9uq7?g_st=atm',
     lat: 11.5902,
     lng: 37.3935,
@@ -162,6 +177,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Blue Nile Resort Hotel',
+    nameAm: 'ብሉ ናይል ሪዞርት ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/7v6Kt7HwLTpDDqdu6?g_st=atm',
     lat: 11.6038,
     lng: 37.3796,
@@ -171,7 +187,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Yamen Hotel',
-    nameAm: 'የአሜን ሆቴል',
+    nameAm: 'ያመን ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/nyrYhkiN2bRApmBX7?g_st=atm',
     lat: 11.5865,
     lng: 37.3898,
@@ -180,6 +196,7 @@ export const ALL_HOTELS: HotelSeed[] = [
   },
   {
     name: 'Olive Hotel and Spa',
+    nameAm: 'ኦሊቭ ሆቴል እና ስፓ',
     mapsUrl: 'https://maps.app.goo.gl/r1axCoK8tzAugrkU8?g_st=atm',
     lat: 11.5988,
     lng: 37.3865,
