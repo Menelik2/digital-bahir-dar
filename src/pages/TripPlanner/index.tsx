@@ -26,13 +26,14 @@ import {
   type PlannerPace,
   type PlannerResult,
 } from '@/services/tripPlanner'
-import { useT } from '@/hooks/useT'
+import { useT, useLang } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
 
 const DAY_OPTIONS = [1, 2, 3, 4, 5] as const
 
 export default function TripPlannerPage() {
   const t = useT()
+  const { language } = useLang()
   const [days, setDays] = useState(2)
   const [travelers, setTravelers] = useState(2)
   const [budget, setBudget] = useState<PlannerBudget>('mid')
@@ -87,7 +88,7 @@ export default function TripPlannerPage() {
     if (!plan) return
     setStoryLoading(true)
     try {
-      const res = await narrateTripPlan(plan)
+      const res = await narrateTripPlan(plan, language)
       setStory(res.text)
     } finally {
       setStoryLoading(false)
@@ -157,9 +158,13 @@ export default function TripPlannerPage() {
                 <Users className="h-4 w-4 text-[#0b6e99]" /> {t.planner.travelers}
               </label>
               <div className="flex items-center gap-3">
-                <Button type="button" variant="outline" size="icon" className="h-12 w-12 rounded-full" onClick={() => setTravelers((n) => Math.max(1, n - 1))}>−</Button>
+                <Button type="button" variant="outline" size="icon" className="h-12 w-12 rounded-full" onClick={() => setTravelers((n) => Math.max(1, n - 1))}>
+                  −
+                </Button>
                 <span className="w-8 text-center text-lg font-bold">{travelers}</span>
-                <Button type="button" variant="outline" size="icon" className="h-12 w-12 rounded-full" onClick={() => setTravelers((n) => Math.min(12, n + 1))}>+</Button>
+                <Button type="button" variant="outline" size="icon" className="h-12 w-12 rounded-full" onClick={() => setTravelers((n) => Math.min(12, n + 1))}>
+                  +
+                </Button>
               </div>
             </section>
 
@@ -238,16 +243,30 @@ export default function TripPlannerPage() {
 
             <section className="flex flex-col gap-3 sm:flex-row sm:gap-6">
               <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5 text-[15px]">
-                <input type="checkbox" checked={includeBoat} onChange={(e) => setIncludeBoat(e.target.checked)} className="h-5 w-5 rounded border-slate-300 text-[#078930]" />
+                <input
+                  type="checkbox"
+                  checked={includeBoat}
+                  onChange={(e) => setIncludeBoat(e.target.checked)}
+                  className="h-5 w-5 rounded border-slate-300 text-[#078930]"
+                />
                 {t.planner.includeBoat}
               </label>
               <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5 text-[15px]">
-                <input type="checkbox" checked={includeFalls} onChange={(e) => setIncludeFalls(e.target.checked)} className="h-5 w-5 rounded border-slate-300 text-[#078930]" />
+                <input
+                  type="checkbox"
+                  checked={includeFalls}
+                  onChange={(e) => setIncludeFalls(e.target.checked)}
+                  className="h-5 w-5 rounded border-slate-300 text-[#078930]"
+                />
                 {t.planner.includeFalls}
               </label>
             </section>
 
-            <Button size="lg" className="mobile-cta min-h-[52px] w-full rounded-full text-[16px] shadow-md shadow-[#078930]/25" onClick={generate}>
+            <Button
+              size="lg"
+              className="mobile-cta min-h-[52px] w-full rounded-full text-[16px] shadow-md shadow-[#078930]/25"
+              onClick={generate}
+            >
               <Sparkles className="h-5 w-5" /> {t.planner.buildPlan}
             </Button>
             <p className="text-xs text-slate-400">{t.planner.offlineNote}</p>
@@ -278,12 +297,15 @@ export default function TripPlannerPage() {
 
           <Card className="border-[#078930]/20 bg-gradient-to-br from-[#078930]/08 to-[#0b6e99]/08 dark:border-[#078930]/30 dark:from-[#078930]/15 dark:to-[#0b6e99]/15">
             <CardContent className="p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-[#056b24] dark:text-[#30d158]">{t.planner.estimatedTotal}</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-[#056b24] dark:text-[#30d158]">
+                {t.planner.estimatedTotal}
+              </p>
               <p className="text-2xl font-bold text-slate-900 dark:text-white">
                 {plan.budget.total.toLocaleString()} {plan.budget.currency}
               </p>
               <p className="text-sm text-slate-600 dark:text-slate-300">
-                ~{plan.budget.perPerson.toLocaleString()} {t.planner.perPerson} · ~{plan.budget.perDay.toLocaleString()} / {t.planner.day.toLowerCase()}
+                ~{plan.budget.perPerson.toLocaleString()} {t.planner.perPerson} · ~
+                {plan.budget.perDay.toLocaleString()} / {t.planner.day.toLowerCase()}
               </p>
             </CardContent>
           </Card>
@@ -291,13 +313,18 @@ export default function TripPlannerPage() {
           {plan.days.map((d) => (
             <Card key={d.dayNumber} className="overflow-hidden border-black/[0.06] dark:border-white/[0.08]">
               <div className="border-b border-black/[0.05] bg-[#f2f2f7]/80 px-4 py-3 dark:border-white/[0.08] dark:bg-[#1c1c1e]/60">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#078930]">{t.planner.day} {d.dayNumber}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#078930]">
+                  {t.planner.day} {d.dayNumber}
+                </p>
                 <h3 className="text-[17px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white">{d.title}</h3>
                 <p className="mt-1 text-[13px] text-[#8e8e93]">{d.summary}</p>
               </div>
               <CardContent className="space-y-0 p-0">
                 {d.stops.map((s, i) => (
-                  <div key={i} className="flex gap-3 border-t border-black/[0.04] px-4 py-3 first:border-t-0 dark:border-white/[0.06]">
+                  <div
+                    key={i}
+                    className="flex gap-3 border-t border-black/[0.04] px-4 py-3 first:border-t-0 dark:border-white/[0.06]"
+                  >
                     <span className="w-12 shrink-0 text-[11px] font-semibold text-[#8e8e93]">{s.time || '—'}</span>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-[#1c1c1e] dark:text-white">{s.name}</p>
@@ -308,6 +335,24 @@ export default function TripPlannerPage() {
               </CardContent>
             </Card>
           ))}
+
+          {plan.tips?.length > 0 && (
+            <Card className="border-amber-200/80 bg-amber-50/50 dark:border-amber-900/40 dark:bg-amber-950/20">
+              <CardContent className="p-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-200">
+                  {t.planner.tips}
+                </p>
+                <ul className="space-y-1.5 text-sm text-slate-700 dark:text-slate-300">
+                  {plan.tips.map((tip, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="text-amber-600">•</span>
+                      <span>{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={loadStory} disabled={storyLoading}>
