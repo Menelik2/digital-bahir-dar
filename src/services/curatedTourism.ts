@@ -8,6 +8,7 @@ const CAT = {
   icon: 'Landmark',
   description: null as string | null,
   sort_order: 4,
+  name_am: 'መስህቦች',
 }
 
 function slugify(name: string): string {
@@ -23,7 +24,6 @@ const now = () => new Date().toISOString()
 /** Local tourism sites as Place rows for lists, map, and detail */
 export const CURATED_TOURISM_PLACES: Place[] = LOCAL_TOURISM_SITES.map((s, i) => {
   const id = `curated-tourism-${s.id}`
-  const display = s.nameAm ? `${s.name} · ${s.nameAm}` : s.name
   const slug = slugify(s.name) || `tourism-${i}`
 
   const historyParts = [
@@ -36,12 +36,16 @@ export const CURATED_TOURISM_PLACES: Place[] = LOCAL_TOURISM_SITES.map((s, i) =>
 
   return {
     id,
-    name: display,
+    name: s.name,
+    name_am: s.nameAm ?? null,
     slug,
     category_id: CAT.id,
     description: s.description,
+    description_am: s.descriptionAm ?? null,
     short_description: s.short,
+    short_description_am: s.shortAm ?? null,
     address: s.address,
+    address_am: null,
     latitude: s.lat,
     longitude: s.lng,
     phone: null,
@@ -77,8 +81,8 @@ export function findCuratedTourismBySlug(slug: string): Place | null {
 }
 
 export function similarTourismPlaces(slug: string, limit = 4): Place[] {
-  const current = findCuratedTourismBySlug(slug)
-  if (!current) return CURATED_TOURISM_PLACES.filter((p) => p.featured).slice(0, limit)
+  const current = CURATED_TOURISM_PLACES.find((p) => p.slug === slug)
+  if (!current) return CURATED_TOURISM_PLACES.slice(0, limit)
   const type = current.attraction?.attraction_type
   const same = CURATED_TOURISM_PLACES.filter(
     (p) => p.slug !== slug && p.attraction?.attraction_type === type
