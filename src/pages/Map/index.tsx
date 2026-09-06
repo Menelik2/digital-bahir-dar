@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Search, X, AlertCircle, Layers } from 'lucide-react'
 import { MapView } from '@/components/map/MapView'
@@ -18,6 +18,7 @@ import { filterRealPlaces } from '@/utils/realPlaces'
 import { CURATED_HOTELS } from '@/services/curatedHotels'
 import { CURATED_TOURISM_PLACES } from '@/services/curatedTourism'
 import { fetchRoute, type TravelMode } from '@/services/routing'
+import { rankNearby } from '@/services/places'
 import type { Place } from '@/types/place'
 import type { OsmCategory } from '@/services/osmPlaces'
 import { Button } from '@/components/ui/button'
@@ -83,6 +84,7 @@ export default function MapPage() {
   const [routeLoading, setRouteLoading] = useState(false)
   const [routeError, setRouteError] = useState(false)
   const [routeDurationSec, setRouteDurationSec] = useState<number | null>(null)
+  const openedDeepLink = useRef<string | null>(null)
 
   useEffect(() => {
     try {
@@ -97,8 +99,11 @@ export default function MapPage() {
     if (to) setMapCenter(to)
   }, [searchParams, setMapCenter])
 
-  const categorySlug =
-    filter && !['near_me', 'verified'].includes(filter) ? filter : null
+  const categorySlug = (() => {
+    if (!filter || filter === 'near_me' || filter === 'verified') return null
+    if (filter === 'taxi') return 'transport'
+    return filter
+  })()
   const nearMe = filter === 'near_me'
   const verifiedOnly = filter === 'verified'
 
@@ -135,6 +140,7 @@ export default function MapPage() {
       list = mergePlaces(list, CURATED_TOURISM_PLACES as Place[])
     }
     list = filterRealPlaces(list)
+    if (verifiedOnly) list = list.filter((p) => p.verified)
     if (search.trim()) {
       const qq = search.toLowerCase()
       list = list.filter(
@@ -144,8 +150,21 @@ export default function MapPage() {
           p.category?.name?.toLowerCase().includes(qq)
       )
     }
+    if (nearMe && location.latitude != null && location.longitude != null) {
+      list = rankNearby(list, location.latitude, location.longitude, 15_000)
+    }
     return list
-  }, [dbPlaces, osmPlaces, includeOsm, categorySlug, search])
+  }, [
+    dbPlaces,
+    osmPlaces,
+    includeOsm,
+    categorySlug,
+    search,
+    verifiedOnly,
+    nearMe,
+    location.latitude,
+    location.longitude,
+  ])
 
   const selectedPlace = useMemo(
     () => places.find((p) => p.id === selectedPlaceId) ?? null,
@@ -227,6 +246,28 @@ export default function MapPage() {
   }, [])
 
   useEffect(() => {
+    if (!nearMe) return
+    if (location.latitude != null && location.longitude != null) return
+    void ensureLocationForRoute()
+  }, [nearMe, location.latitude, location.longitude, ensureLocationForRoute])
+
+  useEffect(() => {
+    const placeId = searchParams.get('placeId')
+    const modeParam = searchParams.get('mode')
+    if (modeParam === 'driving' || modeParam === 'walking') {
+      setTravelMode(modeParam)
+    }
+    if (!placeId || openedDeepLink.current === placeId) return
+    const found = places.find((p) => p.id === placeId)
+    if (found) {
+      openedDeepLink.current = placeId
+      setDirectionsPlace(found)
+      setSelectedPlaceId(null)
+      void ensureLocationForRoute()
+    }
+  }, [searchParams, places, ensureLocationForRoute, setSelectedPlaceId])
+
+  useEffect(() => {
     if (!directionsPlace || !userPos) {
       setRouteCoords(null)
       return
@@ -262,8 +303,6 @@ export default function MapPage() {
       cancelled = true
     }
   }, [directionsPlace, userPos, travelMode])
-
-  const mapboxOn = !!getMapboxToken()
 
   return (
     <div className="relative h-[calc(100dvh-3.5rem)] w-full overflow-hidden lg:h-[calc(100dvh-4rem)]">
