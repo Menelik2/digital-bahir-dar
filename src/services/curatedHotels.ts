@@ -16,6 +16,7 @@ const HOTEL_CAT = {
   icon: 'Hotel',
   description: null as string | null,
   sort_order: 1,
+  name_am: 'ሆቴሎች',
 }
 
 const now = () => new Date().toISOString()
@@ -24,17 +25,22 @@ const now = () => new Date().toISOString()
 export const CURATED_HOTELS: Place[] = ALL_HOTELS.map((h, i) => {
   const id = `curated-hotel-${i + 1}`
   const slug = `${slugify(h.name)}-${i + 1}`
-  const displayName = h.nameAm ? `${h.name} · ${h.nameAm}` : h.name
   return {
     id,
-    name: displayName,
+    name: h.name,
+    name_am: h.nameAm ?? null,
     slug,
     category_id: HOTEL_CAT.id,
     description:
       `${h.name} in Bahir Dar. Open Google Maps for the exact pin and directions. ` +
       `Coordinates in the app are approximate — confirm on the linked map before travel.`,
+    description_am: h.nameAm
+      ? `${h.nameAm} በባሕር ዳር። ትክክለኛ አካባቢ ለማግኘት Google Maps ይክፈቱ።`
+      : null,
     short_description: h.nameAm ? `${h.nameAm} · Hotel` : 'Hotel · Bahir Dar',
+    short_description_am: h.nameAm ? `${h.nameAm} · ሆቴል` : 'ሆቴል · ባሕር ዳር',
     address: h.address ?? 'Bahir Dar, Ethiopia',
+    address_am: 'ባሕር ዳር፣ ኢትዮጵያ',
     latitude: h.lat,
     longitude: h.lng,
     phone: null,
