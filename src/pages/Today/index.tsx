@@ -13,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { TODAY_CLASSIC, type TodayStep } from '@/data/todayInBahirDar'
-import { useT } from '@/hooks/useT'
+import { useT, useLang } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
 
 const PERIOD_COLOR: Record<TodayStep['period'], string> = {
@@ -25,6 +25,7 @@ const PERIOD_COLOR: Record<TodayStep['period'], string> = {
 
 export default function TodayPage() {
   const t = useT()
+  const { isAm } = useLang()
   const plan = TODAY_CLASSIC
 
   const periodLabel: Record<TodayStep['period'], string> = {
@@ -34,13 +35,38 @@ export default function TodayPage() {
     evening: t.today.evening,
   }
 
+  function stepTitle(step: TodayStep) {
+    return isAm ? step.titleAm : step.title
+  }
+
+  function stepDescription(step: TodayStep) {
+    return isAm ? step.descriptionAm : step.description
+  }
+
+  function stepDuration(step: TodayStep) {
+    if (!step.duration) return null
+    return isAm && step.durationAm ? step.durationAm : step.duration
+  }
+
+  function stepCostNote(step: TodayStep) {
+    if (!step.costNote) return null
+    return isAm && step.costNoteAm ? step.costNoteAm : step.costNote
+  }
+
   function formatCost(step: TodayStep) {
     if (!step.costEtb) return null
     const { min, typical, max } = step.costEtb
     if (min === 0 && typical === 0) return t.today.free
-    if (min === typical && typical === max) return `~${typical} ETB`
-    return `~${typical} ETB (${min}–${max})`
+    if (min === typical && typical === max) return `~${typical} ብር`
+    // Keep ETB symbol readable in both languages
+    const unit = isAm ? 'ብር' : 'ETB'
+    if (min === typical && typical === max) return `~${typical} ${unit}`
+    return `~${typical} ${unit} (${min}–${max})`
   }
+
+  const tips = isAm ? plan.tipsAm : plan.tips
+  const extraTitle = isAm ? plan.optionalExtra.titleAm : plan.optionalExtra.title
+  const extraBody = isAm ? plan.optionalExtra.bodyAm : plan.optionalExtra.body
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
@@ -58,66 +84,70 @@ export default function TodayPage() {
             <p className="text-xs font-medium uppercase tracking-wide text-teal-700 dark:text-teal-300">
               {t.today.dayCost}
             </p>
-            <p className="text-2xl font-bold">~{plan.totalEtbTypical.toLocaleString()} ETB</p>
+            <p className="text-2xl font-bold">
+              ~{plan.totalEtbTypical.toLocaleString()} {isAm ? 'ብር' : 'ETB'}
+            </p>
             <p className="text-xs text-slate-500">{t.today.dayCostHint}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link to="/map">
-              <Button size="sm" variant="outline">
-                <MapPin className="h-3.5 w-3.5" /> {t.today.map}
+              <Button variant="outline" size="sm" className="rounded-full">
+                <MapPin className="h-4 w-4" /> {t.today.map}
               </Button>
             </Link>
             <Link to="/trip-planner">
-              <Button size="sm">
-                <Sparkles className="h-3.5 w-3.5" /> {t.today.multiDay}
+              <Button size="sm" className="rounded-full">
+                <Sparkles className="h-4 w-4" /> {t.today.multiDay}
               </Button>
             </Link>
           </div>
         </CardContent>
       </Card>
 
-      <ol className="relative space-y-0 border-l-2 border-sky-200 pl-6 dark:border-sky-900">
+      <ol className="relative mb-8 border-s border-slate-200 ps-6 dark:border-slate-700">
         {plan.steps.map((step, i) => (
           <li key={step.id} className={cn('relative pb-8', i === plan.steps.length - 1 && 'pb-2')}>
-            <span className="absolute -left-[1.9rem] flex h-6 w-6 items-center justify-center rounded-full border-2 border-sky-500 bg-white text-[10px] font-bold text-sky-700 dark:bg-slate-950">
-              {i + 1}
-            </span>
-            <Card className="overflow-hidden">
+            <span className="absolute -start-[25px] flex h-4 w-4 items-center justify-center rounded-full border border-white bg-[#078930] ring-4 ring-white dark:border-slate-900 dark:ring-black" />
+            <Card className="border-black/[0.04] shadow-sm dark:border-white/[0.08]">
               <CardContent className="p-4">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   <span
                     className={cn(
-                      'rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+                      'rounded-full px-2.5 py-0.5 text-[11px] font-semibold',
                       PERIOD_COLOR[step.period]
                     )}
                   >
                     {periodLabel[step.period]}
                   </span>
-                  <span className="flex items-center gap-1 text-xs text-slate-400">
+                  <span className="flex items-center gap-1 text-xs text-slate-500">
                     <Clock className="h-3 w-3" /> {step.time}
                   </span>
-                  {step.duration && <span className="text-xs text-slate-400">{step.duration}</span>}
+                  {stepDuration(step) && (
+                    <span className="text-xs text-slate-400">{stepDuration(step)}</span>
+                  )}
                 </div>
-                <h2 className="text-lg font-semibold">{step.title}</h2>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{step.description}</p>
+                <h2 className="text-lg font-semibold">{stepTitle(step)}</h2>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{stepDescription(step)}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   {step.costEtb && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-800 dark:bg-teal-950 dark:text-teal-200">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">
                       <Wallet className="h-3 w-3" /> {formatCost(step)}
                     </span>
                   )}
-                  {step.costNote && <span className="text-[11px] text-slate-400">{step.costNote}</span>}
+                  {stepCostNote(step) && (
+                    <span className="text-[11px] text-slate-400">{stepCostNote(step)}</span>
+                  )}
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {step.placeSlug && (
                     <Link to={`/places/${step.placeSlug}`}>
-                      <Button size="sm" variant="outline">
+                      <Button variant="outline" size="sm" className="rounded-full">
                         <MapPin className="h-3.5 w-3.5" /> {t.today.placeDetails}
                       </Button>
                     </Link>
                   )}
                   <Link to="/map">
-                    <Button size="sm" variant="ghost">
+                    <Button variant="ghost" size="sm" className="rounded-full">
                       <Navigation className="h-3.5 w-3.5" /> {t.today.openMap}
                     </Button>
                   </Link>
@@ -129,14 +159,17 @@ export default function TodayPage() {
       </ol>
 
       <Link to={plan.optionalExtra.href} className="mb-6 block">
-        <Card className="border-dashed border-sky-300 transition hover:border-sky-500 dark:border-sky-800">
+        <Card className="border-dashed border-sky-200 bg-sky-50/80 transition hover:border-sky-300 dark:border-sky-900 dark:bg-sky-950/30">
           <CardContent className="flex items-start gap-3 p-4">
             <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-sky-600" />
-            <div>
-              <p className="font-semibold">{t.today.secondDayTitle}</p>
-              <p className="text-sm text-slate-500">{t.today.secondDayBody}</p>
-              <p className="mt-1 text-sm font-medium text-sky-600">{t.today.openPlanner}</p>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-sky-900 dark:text-sky-100">{extraTitle}</p>
+              <p className="mt-0.5 text-sm text-sky-800/80 dark:text-sky-200/80">{extraBody}</p>
+              <p className="mt-2 text-sm font-semibold text-sky-700 dark:text-sky-300">
+                {t.today.openPlanner}
+              </p>
             </div>
+            <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-sky-500" />
           </CardContent>
         </Card>
       </Link>
@@ -145,7 +178,7 @@ export default function TodayPage() {
         <CardContent className="p-4">
           <p className="mb-2 text-sm font-semibold">{t.today.quickTips}</p>
           <ul className="space-y-1.5 text-sm text-slate-600 dark:text-slate-300">
-            {plan.tips.map((tip) => (
+            {tips.map((tip) => (
               <li key={tip} className="flex gap-2">
                 <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-sky-500" />
                 {tip}
