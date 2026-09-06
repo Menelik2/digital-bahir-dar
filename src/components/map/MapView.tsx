@@ -6,7 +6,6 @@ import {
   Popup,
   useMap,
   CircleMarker,
-  LayersControl,
   ScaleControl,
   ZoomControl,
   useMapEvents,
@@ -32,7 +31,6 @@ import type { MapViewProps } from './MapViewGl'
 import { MapErrorBoundary } from './MapErrorBoundary'
 import 'leaflet/dist/leaflet.css'
 
-// Lazy: do not load mapbox-gl unless token is present (avoids blank crash if GL fails)
 const MapViewGlLazy = lazy(() =>
   import('./MapViewGl').then((m) => ({ default: m.MapViewGl }))
 )
@@ -74,19 +72,7 @@ function pinIcon(selected: boolean, featured: boolean, categorySlug?: string | n
   const size = 28 * scale
   return L.divIcon({
     className: 'dbd-pin',
-    html: `<div style="
-      width:${size}px;height:${size}px;
-      background:${color};
-      border:2.5px solid #fff;
-      border-radius:50% 50% 50% 0;
-      transform:rotate(-45deg);
-      box-shadow:0 2px 10px rgba(0,0,0,.45);
-      display:flex;align-items:center;justify-content:center;
-    "><span style="
-      transform:rotate(45deg);
-      width:8px;height:8px;
-      background:#fff;border-radius:50%;
-    "></span></div>`,
+    html: `<div style="width:${size}px;height:${size}px;background:${color};border:2.5px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 10px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);width:8px;height:8px;background:#fff;border-radius:50%;"></span></div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size],
     popupAnchor: [0, -size],
@@ -104,7 +90,6 @@ function isValidLatLng(lat: number, lng: number) {
   )
 }
 
-/** Programmatic pan only — does not feed back into React state */
 function MapCamera({ center }: { center: { lat: number; lng: number } }) {
   const map = useMap()
   useEffect(() => {
@@ -113,7 +98,6 @@ function MapCamera({ center }: { center: { lat: number; lng: number } }) {
     const target = L.latLng(center.lat, center.lng)
     if (!bounds.contains(target)) return
     const cur = map.getCenter()
-    // Skip tiny moves to avoid pan ↔ moveend loops
     if (Math.abs(cur.lat - center.lat) < 1e-5 && Math.abs(cur.lng - center.lng) < 1e-5) return
     map.panTo(target, { animate: true, duration: 0.35 })
   }, [map, center.lat, center.lng])
@@ -128,18 +112,13 @@ function FitRoute({ coords }: { coords: [number, number][] }) {
       const bounds = L.latLngBounds(coords.map(([lat, lng]) => [lat, lng] as [number, number]))
       map.fitBounds(bounds, { padding: [48, 48], maxZoom: 16, animate: true })
     } catch {
-      /* ignore bad coords */
+      /* ignore */
     }
   }, [map, coords])
   return null
 }
 
-/** Only report user-driven moves (not our own panTo) */
-function MapEvents({
-  onCenterChange,
-}: {
-  onCenterChange?: (c: { lat: number; lng: number }) => void
-}) {
+function MapEvents({ onCenterChange }: { onCenterChange?: (c: { lat: number; lng: number }) => void }) {
   const map = useMap()
   useMapEvents({
     dragend: () => {
@@ -194,20 +173,17 @@ function LeafletMapView({
   onPlaceSelect,
   onCenterChange,
   routeCoordinates,
+  basemap = 'streets',
 }: MapViewProps) {
   const token = getMapboxToken()
   const useMapboxTiles = !!token
+  const isSatellite = basemap === 'satellite'
   const markers = useMemo(
-    () =>
-      places
-        .filter((p) => isValidLatLng(p.latitude, p.longitude))
-        .slice(0, 500),
+    () => places.filter((p) => isValidLatLng(p.latitude, p.longitude)).slice(0, 500),
     [places]
   )
 
-  const safeCenter = isValidLatLng(center.lat, center.lng)
-    ? center
-    : BAHIR_DAR_CENTER
+  const safeCenter = isValidLatLng(center.lat, center.lng) ? center : BAHIR_DAR_CENTER
 
   return (
     <MapContainer
@@ -244,65 +220,53 @@ function LeafletMapView({
         </>
       )}
 
-      <LayersControl position="topright">
-        {useMapboxTiles && token ? (
-          <>
-            <LayersControl.BaseLayer checked name="Streets">
-              <TileLayer
-                attribution={mapboxAttribution()}
-                url={mapboxTileUrl(MAPBOX_RASTER_STYLES.streets, token)}
-                tileSize={512}
-                zoomOffset={-1}
-                maxZoom={BAHIR_DAR_MAX_ZOOM}
-              />
-            </LayersControl.BaseLayer>
-            <LayersControl.BaseLayer name="Outdoors">
-              <TileLayer
-                attribution={mapboxAttribution()}
-                url={mapboxTileUrl(MAPBOX_RASTER_STYLES.outdoors, token)}
-                tileSize={512}
-                zoomOffset={-1}
-                maxZoom={BAHIR_DAR_MAX_ZOOM}
-              />
-            </LayersControl.BaseLayer>
-            <LayersControl.BaseLayer name="Satellite">
-              <TileLayer
-                attribution={mapboxAttribution()}
-                url={mapboxTileUrl(MAPBOX_RASTER_STYLES.satellite, token)}
-                tileSize={512}
-                zoomOffset={-1}
-                maxZoom={BAHIR_DAR_MAX_ZOOM}
-              />
-            </LayersControl.BaseLayer>
-          </>
+      {isSatellite ? (
+        useMapboxTiles && token ? (
+          <TileLayer
+            key="mb-sat"
+            attribution={mapboxAttribution()}
+            url={mapboxTileUrl(MAPBOX_RASTER_STYLES.satellite, token)}
+            tileSize={512}
+            zoomOffset={-1}
+            maxZoom={BAHIR_DAR_MAX_ZOOM}
+          />
         ) : (
           <>
-            <LayersControl.BaseLayer checked name="Streets">
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                maxZoom={BAHIR_DAR_MAX_ZOOM}
-                crossOrigin
-              />
-            </LayersControl.BaseLayer>
-            <LayersControl.BaseLayer name="Light">
-              <TileLayer
-                attribution='&copy; OSM &copy; CARTO'
-                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                subdomains="abcd"
-                maxZoom={BAHIR_DAR_MAX_ZOOM}
-              />
-            </LayersControl.BaseLayer>
-            <LayersControl.BaseLayer name="Satellite">
-              <TileLayer
-                attribution="Tiles &copy; Esri"
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                maxZoom={BAHIR_DAR_MAX_ZOOM}
-              />
-            </LayersControl.BaseLayer>
+            <TileLayer
+              key="esri-sat"
+              attribution="Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics"
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              maxZoom={BAHIR_DAR_MAX_ZOOM}
+            />
+            <TileLayer
+              key="sat-labels"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CARTO'
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
+              subdomains="abcd"
+              maxZoom={BAHIR_DAR_MAX_ZOOM}
+              opacity={0.95}
+              pane="overlayPane"
+            />
           </>
-        )}
-      </LayersControl>
+        )
+      ) : useMapboxTiles && token ? (
+        <TileLayer
+          key="mb-streets"
+          attribution={mapboxAttribution()}
+          url={mapboxTileUrl(MAPBOX_RASTER_STYLES.streets, token)}
+          tileSize={512}
+          zoomOffset={-1}
+          maxZoom={BAHIR_DAR_MAX_ZOOM}
+        />
+      ) : (
+        <TileLayer
+          key="osm-streets"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maxZoom={BAHIR_DAR_MAX_ZOOM}
+          crossOrigin
+        />
+      )}
 
       {markers.map((place) => {
         const selected = place.id === selectedPlaceId
@@ -385,7 +349,6 @@ function LeafletMapView({
   )
 }
 
-/** Prefers Mapbox GL when token is set; otherwise Leaflet + OSM */
 export function MapView(props: MapViewProps) {
   const token = getMapboxToken()
 
