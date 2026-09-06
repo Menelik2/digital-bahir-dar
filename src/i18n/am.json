@@ -1,39 +1,127 @@
 {
-  "app": {
-    "name": "ዲጂታል ባሕር ዳር",
-    "tagline": "ባሕር ዳርን ያስሱ። የት እንደሚሄዱ ይወቁ። ምን እንደሚያስከፍል ይወቁ።"
-  },
+  "appName": "ዲጂታል ባሕር ዳር",
+  "tagline": "ባሕር ዳርን ያስሱ። የት እንደሚሄዱ ይወቁ። ምን እንደሚያስከፍል ይወቁ።",
   "nav": {
     "home": "መነሻ",
     "explore": "አስስ",
+    "discover": "አግኝ",
     "map": "ካርታ",
-    "trips": "ጉዞዎች",
-    "profile": "መገለጫ",
-    "aiGuide": "AI መመሪያ",
     "hotels": "ሆቴሎች",
     "restaurants": "ምግብ ቤቶች",
-    "discover": "አግኝ",
+    "attractions": "መስህቦች",
+    "events": "ዝግጅቶች",
+    "guides": "መመሪያዎች",
+    "trips": "ጉዞዎች",
+    "aiGuide": "AI መመሪያ",
+    "directory": "ማውጫ",
+    "transport": "ትራንስፖርት",
+    "login": "ግባ",
+    "profile": "መገለጫ",
+    "todo": "ለማድረግ",
+    "city": "ከተማ",
+    "banks": "ባንኮች",
+    "budget": "በጀት",
     "today": "ዛሬ",
-    "budget": "በጀት"
+    "planner": "እቅድ"
   },
   "common": {
-    "search": "ቦታዎችን ይፈልጉ...",
-    "loading": "በመጫን ላይ...",
-    "error": "ስህተት ተከስቷል",
+    "language": "ቋንቋ",
+    "close": "ዝጋ",
+    "loading": "በመጫን ላይ…",
     "retry": "እንደገና ይሞክሩ",
+    "error": "ስህተት ተከስቷል",
     "save": "አስቀምጥ",
     "directions": "አቅጣጫ",
-    "language": "ቋንቋ",
-    "close": "ዝጋ"
+    "refresh": "አድስ",
+    "search": "ፈልግ",
+    "all": "ሁሉም",
+    "open": "ክፈት",
+    "skipToContent": "ወደ ይዘት ዝለል",
+    "places": "ቦታዎች",
+    "fromOsm": "ከ ቀጥታ OSM",
+    "liveMap": "ቀጥታ ካርታ · OpenStreetMap",
+    "youAreHere": "እርስዎ እዚህ ነዎት",
+    "verified": "ተረጋግጧል",
+    "featured": "ተለይቶ",
+    "nearest": "ቅርብ",
+    "name": "ስም",
+    "maps": "ካርታዎች",
+    "cancel": "ሰርዝ",
+    "delete": "ሰርዝ",
+    "create": "ፍጠር",
+    "showAll": "ሁሉን አሳይ",
+    "openMap": "ካርታ ክፈት",
+    "estimateNote": "ግምቶች ብቻ — በቦታው ያረጋግጡ"
   },
-  "food": {
-    "moodTitle": "ምን ይፈልጋሉ?",
-    "modeTraditional": "ባህላዊ",
-    "modeFish": "የሐይቅ አሳ",
-    "modeCoffee": "ቡና እና ቀላል"
+  "search": {
+    "placeholder": "ቦታዎች፣ ሆቴሎች፣ ምግብ…",
+    "globalPlaceholder": "ባሕር ዳርን ፈልግ…",
+    "noResults": "ውጤት የለም",
+    "viewAll": "ሁሉን አሳይ",
+    "recent": "ፈጣን አገናኞች"
   },
-  "theme": {
-    "light": "ብርሃን",
-    "dark": "ጨለማ"
+  "explore": {
+    "title": "ባሕር ዳርን አስስ",
+    "subtitle": "ቦታዎችን ይፈልጉ ወይም በአቅራቢያ ያግኙ",
+    "all": "ሁሉም",
+    "nearMe": "በአቅራቢያዬ",
+    "locating": "አካባቢ በማግኘት ላይ…",
+    "locationDenied": "የአካባቢ ፈቃድ ተከልክሏል።",
+    "locationUnsupported": "በዚህ መሣሪያ ላይ አካባቢ አይደገፍም።",
+    "nearbyEmpty": "በክልሉ ውስጥ ቦታ የለም።",
+    "loading": "በመጫን ላይ…",
+    "empty": "ምንም አልተገኘም።",
+    "distance": "ርቀት"
+  },
+  "theme": { "light": "ብርሃን", "dark": "ጨለማ", "system": "ሥርዓት" },
+  "map": {
+    "searchPlaceholder": "ቦታዎችን ፈልግ…",
+    "liveMap": "ቀጥታ ካርታ · OpenStreetMap",
+    "mapboxTiles": "Mapbox",
+    "osmOn": "OSM በርቷል",
+    "osmOff": "OSM ጠፍቷል",
+    "places": "ቦታዎች",
+    "osmSlow": "ቀጥታ ቦታዎች ቀስ ብለዋል",
+    "osmSlowBody": "ምልክቶች እያሳየ ነው። እንደገና ይሞክሩ።",
+    "retryOsm": "OSM እንደገና",
+    "loadFail": "ቦታዎችን መጫን አልተቻለም",
+    "loading": "ካርታ በመጫን ላይ…",
+    "footer": "ከ OpenStreetMap ትክክለኛ ቦታዎች"
+  },
+  "ai": {
+    "title": "AI መመሪያ",
+    "demoMode": "የአካባቢ እውቀት · ከመስመር ውጭ",
+    "liveMode": "ቀጥታ ሞዴል",
+    "thinking": "በማሰብ ላይ…",
+    "placeholder": "ስለ ባሕር ዳር ይጠይቁ…",
+    "welcome": "ሰላም! እኔ የዲጂታል ባሕር ዳር AI መመሪያ ነኝ።\n\nስለ ሐይቅ ጣና፣ አባይ ፏፏቴ፣ ምግብ፣ ሆቴል፣ ትራንስፖርት ወይም የጉዞ እቅድ ይጠይቁ።",
+    "error": "ስህተት ተከስቷል። እንደገና ይሞክሩ።",
+    "reset": "ውይይት አድስ"
+  },
+  "list": {
+    "includesOsm": "የ OpenStreetMap መረጃን ያካትታል",
+    "discoverLive": "ቀጥታ ካርታ አግኝ",
+    "refreshMaps": "ካርታዎችን አድስ",
+    "searchPrefix": "ፈልግ",
+    "loadingPlaces": "ቦታዎች በመጫን ላይ…",
+    "loadFail": "መረጃን መጫን አልተቻለም።",
+    "tryDiscover": "Discover ይሞክሩ →",
+    "fromOsmCount": "ከ OpenStreetMap",
+    "budget": "በጀት",
+    "midRange": "መካከለኛ",
+    "luxury": "ላቅ",
+    "traditional": "ባህላዊ ኢትዮጵያዊ",
+    "vegetarian": "አትክልት"
+  },
+  "notFound": {
+    "title": "ገጹ አልተገኘም",
+    "body": "ይህ መንገድ በዲጂታል ባሕር ዳር ውስጥ የለም።"
+  },
+  "pwa": {
+    "offline": "ከመስመር ውጭ ነዎት — የተቀመጡ ገጾች ይሰራሉ።",
+    "installTitle": "ዲጂታል ባሕር ዳርን ጫን",
+    "installBody": "ለፈጣን መዳረሻ ወደ መነሻ ማያ ጨምሩ።",
+    "install": "ጫን",
+    "dismiss": "አሁን አይደለም"
   }
 }
