@@ -19,6 +19,9 @@ interface Props {
   routeLoading?: boolean
   routeError?: string | null
   routeDurationSec?: number | null
+  /** Request browser geolocation so route can start from the user */
+  onEnableLocation?: () => void
+  locationLoading?: boolean
 }
 
 export function DirectionsPanel({
@@ -31,6 +34,8 @@ export function DirectionsPanel({
   routeLoading,
   routeError,
   routeDurationSec,
+  onEnableLocation,
+  locationLoading,
 }: Props) {
   const t = useT()
   const { language } = useLang()
@@ -48,46 +53,24 @@ export function DirectionsPanel({
         : null
 
   return (
-    <div
-      className={cn(
-        'absolute left-0 right-0 z-[1100] flex max-h-[70vh] flex-col border border-black/[0.06] bg-white/95 shadow-[0_-8px_40px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-[#1c1c1e]/95',
-        'bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] rounded-t-[1.25rem]',
-        'lg:bottom-6 lg:left-4 lg:right-auto lg:w-[22rem] lg:rounded-2xl'
-      )}
-      style={{ WebkitBackdropFilter: 'saturate(180%) blur(20px)' }}
-      role="dialog"
-      aria-label={t.map.directions}
-    >
-      <div className="flex justify-center pt-2.5 lg:hidden" aria-hidden>
-        <div className="h-1 w-10 rounded-full bg-black/15 dark:bg-white/25" />
-      </div>
-
-      <div className="flex items-start justify-between px-4 pb-1 pt-2">
-        <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#078930]">
-            {t.map.directions}
-          </p>
-          <h3 className="truncate text-[17px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white">
-            {name}
-          </h3>
+    <div className="absolute bottom-0 left-0 right-0 z-[1100] flex max-h-[min(70vh,520px)] flex-col overflow-hidden rounded-t-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:left-auto sm:right-4 sm:bottom-4 sm:max-w-md sm:rounded-2xl">
+      <div className="shrink-0 border-b border-slate-100 px-4 pb-3 pt-3 dark:border-slate-800">
+        <div className="mb-3 flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{t.map.directions}</p>
+            <h2 className="truncate text-lg font-semibold text-slate-900 dark:text-white">{name}</h2>
+          </div>
+          <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0" onClick={onClose} aria-label={t.common.close}>
+            <X className="h-5 w-5" />
+          </Button>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/[0.05] transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#078930]/45 dark:bg-white/10"
-          aria-label={t.map.close}
-        >
-          <X className="h-5 w-5 text-[#8e8e93]" />
-        </button>
-      </div>
 
-      <div className="px-4 pb-3">
-        <div className="mb-3 grid grid-cols-2 gap-2">
+        <div className="mb-3 flex gap-2">
           <button
             type="button"
             onClick={() => onModeChange('walking')}
             className={cn(
-              'flex min-h-[44px] items-center justify-center gap-1.5 rounded-full border py-2.5 text-sm font-medium transition active:scale-[0.97]',
+              'flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm font-medium transition',
               mode === 'walking'
                 ? 'border-[#078930] bg-[#078930]/10 text-[#056b24]'
                 : 'border-slate-200 text-slate-600 dark:border-slate-700'
@@ -99,7 +82,7 @@ export function DirectionsPanel({
             type="button"
             onClick={() => onModeChange('driving')}
             className={cn(
-              'flex min-h-[44px] items-center justify-center gap-1.5 rounded-full border py-2.5 text-sm font-medium transition active:scale-[0.97]',
+              'flex flex-1 items-center justify-center gap-1.5 rounded-xl border py-2.5 text-sm font-medium transition',
               mode === 'driving'
                 ? 'border-[#078930] bg-[#078930]/10 text-[#056b24]'
                 : 'border-slate-200 text-slate-600 dark:border-slate-700'
@@ -127,7 +110,28 @@ export function DirectionsPanel({
                 <p className="mt-1 text-xs text-amber-600">{t.map.approxDistance}</p>
               )}
               {!origin && (
-                <p className="mt-1 text-xs text-amber-600">{t.map.enableLocation}</p>
+                <div className="mt-2 space-y-2">
+                  <p className="text-xs text-amber-700 dark:text-amber-400">{t.map.enableLocation}</p>
+                  {onEnableLocation && (
+                    <Button
+                      size="sm"
+                      className="w-full min-h-[44px] rounded-full bg-[#078930] hover:bg-[#056b24]"
+                      onClick={() => onEnableLocation()}
+                      disabled={locationLoading}
+                    >
+                      {locationLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> {t.common.loading}
+                        </>
+                      ) : (
+                        <>
+                          <Navigation className="h-4 w-4" />{' '}
+                          {t.map.useMyLocation || t.map.myLocation || t.map.enableLocation}
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
               )}
             </>
           )}
