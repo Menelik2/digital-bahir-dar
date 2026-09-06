@@ -19,7 +19,6 @@ interface Props {
   routeLoading?: boolean
   routeError?: string | null
   routeDurationSec?: number | null
-  /** Request browser geolocation so route can start from the user */
   onEnableLocation?: () => void
   locationLoading?: boolean
 }
@@ -93,7 +92,7 @@ export function DirectionsPanel({
         </div>
 
         <div className="mb-3 rounded-xl bg-slate-50 p-3 text-center dark:bg-slate-800/80">
-          {routeLoading ? (
+          {routeLoading || (locationLoading && !origin) ? (
             <p className="flex items-center justify-center gap-2 text-sm text-slate-500">
               <Loader2 className="h-4 w-4 animate-spin" /> {t.map.loadingRoute}
             </p>
