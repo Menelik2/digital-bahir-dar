@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Search, X, AlertCircle, Layers } from 'lucide-react'
 import { MapView } from '@/components/map/MapView'
@@ -19,6 +19,7 @@ import { CURATED_HOTELS } from '@/services/curatedHotels'
 import { CURATED_TOURISM_PLACES } from '@/services/curatedTourism'
 import { fetchRoute, type TravelMode } from '@/services/routing'
 import type { Place } from '@/types/place'
+import type { OsmCategory } from '@/services/osmPlaces'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/hooks/useT'
 
@@ -57,9 +58,9 @@ function isValidPlace(p: Place | null | undefined): p is Place {
 
 export default function MapPage() {
   const t = useT()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
   const { location, setMapCenter, mapCenter, selectedPlaceId, setSelectedPlaceId } = useAppStore()
-  const { request: requestLocation, hasFix } = useGeolocation(false)
+  useGeolocation(false)
 
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<string | null>(null)
@@ -86,34 +87,40 @@ export default function MapPage() {
     }
   }, [basemap])
 
+  // Deep link: ?to=lat,lng centers the map once
+  useEffect(() => {
+    const to = parseToParam(searchParams.get('to'))
+    if (to) setMapCenter(to)
+  }, [searchParams, setMapCenter])
+
   const categorySlug =
     filter && !['near_me', 'verified'].includes(filter) ? filter : null
   const nearMe = filter === 'near_me'
   const verifiedOnly = filter === 'verified'
 
-  const { places: dbPlaces, isLoading, isError, error, refetch } = useFilteredPlaces({
+  const { places: dbPlaces, isLoading, isError, refetch } = useFilteredPlaces({
     search: undefined,
     categorySlug,
     nearMe,
     verifiedOnly,
   })
 
-  const osmCategories = useMemo(() => {
-    if (categorySlug === 'hotel') return ['hotel'] as const
-    if (categorySlug === 'restaurant' || categorySlug === 'cafe') return ['restaurant', 'cafe'] as const
-    if (categorySlug === 'attraction') return ['attraction'] as const
-    if (categorySlug === 'transport') return ['transport'] as const
-    if (categorySlug === 'bank' || categorySlug === 'atm') return ['bank', 'atm'] as const
-    if (categorySlug === 'hospital' || categorySlug === 'pharmacy') return ['hospital', 'pharmacy'] as const
-    return undefined
+  const osmCategories = useMemo((): OsmCategory[] => {
+    if (categorySlug === 'hotel') return ['hotel']
+    if (categorySlug === 'restaurant' || categorySlug === 'cafe') return ['restaurant', 'cafe']
+    if (categorySlug === 'attraction') return ['attraction']
+    if (categorySlug === 'transport' || categorySlug === 'taxi') return ['transport']
+    if (categorySlug === 'bank' || categorySlug === 'atm') return ['bank', 'atm']
+    if (categorySlug === 'hospital' || categorySlug === 'pharmacy') return ['hospital', 'pharmacy']
+    return ['all']
   }, [categorySlug])
 
   const {
-    places: osmPlaces,
+    data: osmPlaces = [],
     isFetching: osmFetching,
     isError: osmError,
     refetch: refetchOsm,
-  } = useOsmPlaces({ enabled: includeOsm, categories: osmCategories as any })
+  } = useOsmPlaces(osmCategories, includeOsm)
 
   const places = useMemo(() => {
     let list = mergePlaces(dbPlaces, includeOsm ? osmPlaces : [])
@@ -180,10 +187,13 @@ export default function MapPage() {
     [setMapCenter]
   )
 
-  const handleDirections = useCallback((place: Place) => {
-    setDirectionsPlace(place)
-    setSelectedPlaceId(null)
-  }, [setSelectedPlaceId])
+  const handleDirections = useCallback(
+    (place: Place) => {
+      setDirectionsPlace(place)
+      setSelectedPlaceId(null)
+    },
+    [setSelectedPlaceId]
+  )
 
   const handleCloseDirections = useCallback(() => {
     setDirectionsPlace(null)
@@ -199,7 +209,11 @@ export default function MapPage() {
     let cancelled = false
     setRouteLoading(true)
     setRouteError(false)
-    void fetchRoute(userPos, { lat: directionsPlace.latitude, lng: directionsPlace.longitude }, travelMode)
+    void fetchRoute(
+      userPos,
+      { lat: directionsPlace.latitude, lng: directionsPlace.longitude },
+      travelMode
+    )
       .then((r) => {
         if (cancelled) return
         if (r?.coordinates?.length) {
@@ -242,7 +256,12 @@ export default function MapPage() {
             className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
           />
           {search && (
-            <button type="button" onClick={() => setSearch('')} className="rounded-full p-1 hover:bg-black/5" aria-label="Clear">
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="rounded-full p-1 hover:bg-black/5"
+              aria-label="Clear"
+            >
               <X className="h-4 w-4 text-slate-400" />
             </button>
           )}
@@ -331,7 +350,15 @@ export default function MapPage() {
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
           <div>
             <p className="font-medium text-red-700">{t.map.loadFail}</p>
-            <Button size="sm" variant="outline" className="mt-2" onClick={() => { void refetch(); void refetchOsm() }}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="mt-2"
+              onClick={() => {
+                void refetch()
+                void refetchOsm()
+              }}
+            >
               {t.common.retry}
             </Button>
           </div>
