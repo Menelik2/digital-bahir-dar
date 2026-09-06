@@ -1,22 +1,18 @@
-import type { Place, PlaceWithDistance } from '@/types/place'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
+import type { Place, Category, PlaceWithDistance } from '@/types/place'
 import { distanceMeters } from '@/utils/geo'
-import { isSupabaseConfigured, supabase } from '@/lib/supabase'
 import { DEMO_PLACES, demoPlacesByCategory, CURATED_PLACES } from './demoPlaces'
-import { CURATED_HOTELS } from './curatedHotels'
-import { CURATED_TOURISM_PLACES } from './curatedTourism'
+import { findCuratedHotelBySlug } from './curatedHotels'
+import { findCuratedTourismBySlug } from './curatedTourism'
+import { findCachedOsmPlace } from './osmPlaces'
 
 export { DEMO_PLACES, CURATED_PLACES }
 
-function mergeByName(primary: Place[], secondary: Place[]): Place[] {
-  const seen = new Set(primary.map((p) => (p.name || '').toLowerCase().trim()))
-  const out = [...primary]
-  for (const p of secondary) {
-    const key = (p.name || '').toLowerCase().trim()
-    if (!key || seen.has(key)) continue
-    seen.add(key)
-    out.push(p)
+export class PlacesFetchError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'PlacesFetchError'
   }
-  return out
 }
 
 export function getCuratedPlaces(categorySlug?: string): Place[] {
@@ -24,58 +20,120 @@ export function getCuratedPlaces(categorySlug?: string): Place[] {
   return CURATED_PLACES
 }
 
-export async function fetchPlaces(opts?: { categorySlug?: string }): Promise<Place[]> {
-  if (!isSupabaseConfigured || !supabase) {
-    return getCuratedPlaces(opts?.categorySlug)
-  }
-  try {
-    let q = supabase.from('places').select('*, category:categories(*)').eq('is_active', true)
-    if (opts?.categorySlug) {
-      q = q.eq('category.slug', opts.categorySlug)
+export async function fetchPlaces(opts?: {
+  categorySlug?: string
+  verifiedOnly?: boolean
+  limit?: number
+}): Promise<Place[]> {
+  if (isSupabaseConfigured) {
+    try {
+      const rows = await Promise.race([
+        fetchFromSupabase(opts),
+        sleepReject(4000, 'Supabase timeout'),
+      ])
+      if (rows.length > 0) {
+        if (!opts?.categorySlug || opts.categorySlug === 'hotel' || opts.categorySlug === 'attraction') {
+          return mergeByName(getCuratedPlaces(opts?.categorySlug), rows)
+        }
+        return rows
+      }
+    } catch (e) {
+      console.warn('places supabase:', e)
     }
-    const { data, error } = await q.limit(500)
-    if (error) throw error
-    const rows = (data as Place[]) || []
-    if (rows.length > 0) {
-      if (opts?.categorySlug === 'hotel') return mergeByName(CURATED_HOTELS, rows)
-      if (opts?.categorySlug === 'attraction') return mergeByName(CURATED_TOURISM_PLACES, rows)
-      return mergeByName(getCuratedPlaces(opts?.categorySlug), rows)
-    }
-  } catch {
-    /* fall through */
   }
+
   return getCuratedPlaces(opts?.categorySlug)
+}
+
+function mergeByName(primary: Place[], secondary: Place[]): Place[] {
+  const seen = new Set(
+    primary.map((p) => p.name.toLowerCase().replace(/\s+/g, ' ').trim().split(' · ')[0])
+  )
+  const out = [...primary]
+  for (const p of secondary) {
+    const base = p.name.toLowerCase().replace(/\s+/g, ' ').trim().split(' · ')[0]
+    if (seen.has(base)) continue
+    seen.add(base)
+    out.push(p)
+  }
+  return out
+}
+
+async function fetchFromSupabase(opts?: {
+  categorySlug?: string
+  verifiedOnly?: boolean
+  limit?: number
+}): Promise<Place[]> {
+  let query = supabase
+    .from('places')
+    .select(
+      `
+        *,
+        category:categories(*),
+        hotel:hotels(*),
+        restaurant:restaurants(*),
+        attraction:attractions(*),
+        bank:banks(*)
+      `
+    )
+    .eq('status', 'published')
+    .is('deleted_at', null)
+    .order('featured', { ascending: false })
+    .order('name')
+
+  if (opts?.verifiedOnly) query = query.eq('verified', true)
+  if (opts?.limit) query = query.limit(opts.limit)
+
+  if (opts?.categorySlug) {
+    const { data: cat, error: catErr } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('slug', opts.categorySlug)
+      .maybeSingle()
+    if (catErr) throw new PlacesFetchError(catErr.message)
+    if (cat) query = query.eq('category_id', cat.id)
+  }
+
+  const { data, error } = await query
+  if (error) throw new PlacesFetchError(error.message)
+  return (data ?? []).map(normalizePlace) as Place[]
+}
+
+function normalizePlace(row: Record<string, unknown>): Place {
+  return row as unknown as Place
+}
+
+function sleepReject(ms: number, message: string): Promise<never> {
+  return new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
 }
 
 export async function fetchPlaceBySlug(slug: string): Promise<Place | null> {
   if (!slug) return null
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured) {
     try {
       const { data, error } = await supabase
         .from('places')
-        .select('*, category:categories(*)')
+        .select(
+          `*, category:categories(*), hotel:hotels(*), restaurant:restaurants(*), attraction:attractions(*), bank:banks(*)`
+        )
         .eq('slug', slug)
         .maybeSingle()
-      if (!error && data) return data as Place
-    } catch {
-      /* fall through */
+      if (!error && data) return normalizePlace(data as Record<string, unknown>)
+    } catch (e) {
+      console.warn('place by slug:', e)
     }
   }
   const curated = CURATED_PLACES.find((p) => p.slug === slug)
   if (curated) return curated
-  return (
-    CURATED_TOURISM_PLACES.find((p) => p.slug === slug) ??
-    CURATED_HOTELS.find((p) => p.slug === slug) ??
-    null
-  )
+  return findCuratedTourismBySlug(slug) ?? findCuratedHotelBySlug(slug) ?? findCachedOsmPlace(slug)
 }
 
-export async function fetchCategories() {
-  if (!isSupabaseConfigured || !supabase) return []
+export async function fetchCategories(): Promise<Category[]> {
+  if (!isSupabaseConfigured) return []
   try {
     const { data, error } = await supabase.from('categories').select('*').order('name')
-    if (error) throw error
-    return data || []
+    if (error) throw new PlacesFetchError(error.message)
+    return (data ?? []) as Category[]
   } catch {
     return []
   }
@@ -136,7 +194,6 @@ export type SimilarPlace = Place & { distance_m: number }
 /**
  * Rank real similar places for a detail page.
  * Priority: same/related category + geographic closeness + verified/featured.
- * Works offline against any candidate pool (API + curated + OSM cache).
  */
 export function findSimilarPlaces(
   place: Place,
@@ -150,9 +207,7 @@ export function findSimilarPlaces(
   const lat = place.latitude
   const lng = place.longitude
 
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-    return []
-  }
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return []
 
   const scored: Array<SimilarPlace & { _score: number }> = []
 
@@ -162,7 +217,6 @@ export function findSimilarPlaces(
     if (!Number.isFinite(p.latitude) || !Number.isFinite(p.longitude)) continue
 
     const dist = distanceMeters(lat, lng, p.latitude, p.longitude)
-    // Skip far-away noise outside Bahir Dar metro (~25 km)
     if (dist > 25_000) continue
 
     const pCat = (p.category?.slug || '').toLowerCase()
@@ -184,7 +238,6 @@ export function findSimilarPlaces(
     if (p.featured) score += 6
     if (p.name && !p.name.includes('(DEMO)')) score += 5
 
-    // Light name-token overlap (e.g. "Lake Tana" sites)
     const tokens = (place.name || '')
       .toLowerCase()
       .replace(/[^a-z0-9\u1200-\u137f\s]/gi, ' ')
