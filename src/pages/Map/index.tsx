@@ -67,51 +67,76 @@ export default function MapPage() {
   } = useGeolocation(false)
   const [locationHint, setLocationHint] = useState<string | null>(null)
 
-  const [q, setQ] = useState('')
+  const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<string | null>(null)
-  const [includeOsm, setIncludeOsm] = useState(true)
+  const [basemap, setBasemap] = useState<'streets' | 'satellite'>(() => {
+    try {
+      return localStorage.getItem('dbd-map-basemap') === 'satellite' ? 'satellite' : 'streets'
+    } catch {
+      return 'streets'
+    }
+  })
   const [directionsPlace, setDirectionsPlace] = useState<Place | null>(null)
   const [travelMode, setTravelMode] = useState<TravelMode>('walking')
+  const [includeOsm, setIncludeOsm] = useState(true)
   const [routeCoords, setRouteCoords] = useState<[number, number][] | null>(null)
   const [routeLoading, setRouteLoading] = useState(false)
   const [routeError, setRouteError] = useState(false)
   const [routeDurationSec, setRouteDurationSec] = useState<number | null>(null)
-  const [basemap, setBasemap] = useState<'streets' | 'satellite'>('streets')
 
-  const categories = useMemo(() => {
-    if (!filter) return undefined
-    const map: Record<string, OsmCategory[]> = {
-      hotel: ['hotel'],
-      food: ['restaurant', 'cafe'],
-      attraction: ['attraction'],
-      bank: ['bank', 'atm'],
-      transport: ['taxi'],
-      health: ['hospital'],
+  useEffect(() => {
+    try {
+      localStorage.setItem('dbd-map-basemap', basemap)
+    } catch {
+      /* ignore */
     }
-    return map[filter]
-  }, [filter])
-
-  const { data: curated = [], isLoading: curatedLoading } = useFilteredPlaces({
-    search: q || undefined,
-    category: filter || undefined,
-  })
-  const { data: osmPlaces = [], isLoading: osmLoading, isError: osmError } = useOsmPlaces(
-    categories,
-    includeOsm
-  )
+  }, [basemap])
 
   useEffect(() => {
     const to = parseToParam(searchParams.get('to'))
     if (to) setMapCenter(to)
   }, [searchParams, setMapCenter])
 
+  const categorySlug =
+    filter && !['near_me', 'verified'].includes(filter) ? filter : null
+  const nearMe = filter === 'near_me'
+  const verifiedOnly = filter === 'verified'
+
+  const { places: dbPlaces, isLoading, isError, refetch } = useFilteredPlaces({
+    search: undefined,
+    categorySlug,
+    nearMe,
+    verifiedOnly,
+  })
+
+  const osmCategories = useMemo((): OsmCategory[] => {
+    if (categorySlug === 'hotel') return ['hotel']
+    if (categorySlug === 'restaurant' || categorySlug === 'cafe') return ['restaurant', 'cafe']
+    if (categorySlug === 'attraction') return ['attraction']
+    if (categorySlug === 'transport' || categorySlug === 'taxi') return ['transport']
+    if (categorySlug === 'bank' || categorySlug === 'atm') return ['bank', 'atm']
+    if (categorySlug === 'hospital' || categorySlug === 'pharmacy') return ['hospital', 'pharmacy']
+    return ['all']
+  }, [categorySlug])
+
+  const {
+    data: osmPlaces = [],
+    isLoading: osmLoading,
+    isError: osmError,
+    refetch: refetchOsm,
+  } = useOsmPlaces(osmCategories, includeOsm)
+
   const places = useMemo(() => {
-    let list = mergePlaces(curated, includeOsm ? osmPlaces : [])
-    list = mergePlaces(list, CURATED_HOTELS as Place[])
-    list = mergePlaces(list, CURATED_TOURISM_PLACES as Place[])
+    let list = mergePlaces(dbPlaces, includeOsm ? osmPlaces : [])
+    if (!categorySlug || categorySlug === 'hotel') {
+      list = mergePlaces(list, CURATED_HOTELS as Place[])
+    }
+    if (!categorySlug || categorySlug === 'attraction') {
+      list = mergePlaces(list, CURATED_TOURISM_PLACES as Place[])
+    }
     list = filterRealPlaces(list)
-    if (q.trim()) {
-      const qq = q.toLowerCase()
+    if (search.trim()) {
+      const qq = search.toLowerCase()
       list = list.filter(
         (p) =>
           p.name?.toLowerCase().includes(qq) ||
@@ -119,19 +144,8 @@ export default function MapPage() {
           p.category?.name?.toLowerCase().includes(qq)
       )
     }
-    if (filter) {
-      const slug = filter
-      list = list.filter((p) => {
-        const s = p.category?.slug || ''
-        if (slug === 'food') return s === 'restaurant' || s === 'cafe'
-        if (slug === 'bank') return s === 'bank' || s === 'atm'
-        if (slug === 'transport') return s === 'taxi' || s === 'transport'
-        if (slug === 'health') return s === 'hospital' || s === 'pharmacy' || s === 'emergency'
-        return s === slug || s.includes(slug)
-      })
-    }
     return list
-  }, [curated, osmPlaces, includeOsm, q, filter])
+  }, [dbPlaces, osmPlaces, includeOsm, categorySlug, search])
 
   const selectedPlace = useMemo(
     () => places.find((p) => p.id === selectedPlaceId) ?? null,
@@ -185,10 +199,17 @@ export default function MapPage() {
       setLocationHint(null)
       return true
     }
-    setLocationHint(getLastError?.() || t.map.enableLocation)
+    setLocationHint((getLastError && getLastError()) || t.map.enableLocation)
     window.setTimeout(() => setLocationHint(null), 5000)
     return false
-  }, [location.latitude, location.longitude, requestLocation, setMapCenter, getLastError, t.map.enableLocation])
+  }, [
+    location.latitude,
+    location.longitude,
+    requestLocation,
+    setMapCenter,
+    getLastError,
+    t.map.enableLocation,
+  ])
 
   const handleDirections = useCallback(
     (place: Place) => {
@@ -243,7 +264,6 @@ export default function MapPage() {
   }, [directionsPlace, userPos, travelMode])
 
   const mapboxOn = !!getMapboxToken()
-  const curatedHotelCount = places.filter((p) => p.id.startsWith('curated-hotel-')).length
 
   return (
     <div className="relative h-[calc(100dvh-3.5rem)] w-full overflow-hidden lg:h-[calc(100dvh-4rem)]">
@@ -265,16 +285,16 @@ export default function MapPage() {
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder={t.map.searchPlaceholder}
               className="h-11 w-full rounded-xl border border-black/[0.08] bg-white/95 pl-10 pr-10 text-sm shadow-lg outline-none backdrop-blur focus:border-[#078930] dark:border-white/12 dark:bg-[#1c1c1e]/95"
             />
-            {q && (
+            {search && (
               <button
                 type="button"
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400"
-                onClick={() => setQ('')}
+                onClick={() => setSearch('')}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -285,21 +305,28 @@ export default function MapPage() {
             variant="outline"
             className="h-11 w-11 shrink-0 rounded-xl bg-white shadow-lg dark:bg-[#1c1c1e]"
             onClick={() => setBasemap((b) => (b === 'streets' ? 'satellite' : 'streets'))}
-            title={t.map.basemap}
+            title={basemap === 'streets' ? t.map.layerSatellite : t.map.layerStreets}
           >
             <Layers className="h-5 w-5" />
           </Button>
           <LocationButton onLocated={(lat, lng) => handleLocate(lat, lng)} />
         </div>
-        {(curatedLoading || osmLoading) && (
+        {(isLoading || osmLoading) && (
           <p className="pointer-events-none mt-2 text-center text-[11px] text-slate-600">{t.common.loading}</p>
         )}
-        {osmError && includeOsm && (
+        {(isError || (osmError && includeOsm)) && (
           <div className="pointer-events-auto mx-auto mt-2 flex max-w-md items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-100">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span className="flex-1">{t.map.osmSlowBody}</span>
-            <button type="button" className="font-medium underline" onClick={() => setIncludeOsm(false)}>
-              {t.map.osmOff}
+            <button
+              type="button"
+              className="font-medium underline"
+              onClick={() => {
+                void refetch()
+                void refetchOsm()
+              }}
+            >
+              {t.common.retry}
             </button>
           </div>
         )}
@@ -341,7 +368,6 @@ export default function MapPage() {
         <MapFilter active={filter} onChange={setFilter} />
         <p className="mt-2 text-center text-[10px] text-slate-700 drop-shadow-sm dark:text-slate-200">
           {t.map.footer}
-          {mapboxOn ? '' : ''} {curatedHotelCount > 0 ? '' : ''}
         </p>
       </div>
     </div>
