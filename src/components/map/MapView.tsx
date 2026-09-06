@@ -94,12 +94,16 @@ function MapCamera({ center }: { center: { lat: number; lng: number } }) {
   const map = useMap()
   useEffect(() => {
     if (!isValidLatLng(center.lat, center.lng)) return
-    const bounds = L.latLngBounds(BAHIR_DAR_MAX_BOUNDS)
-    const target = L.latLng(center.lat, center.lng)
-    if (!bounds.contains(target)) return
+    const [[s, w], [n, e]] = BAHIR_DAR_MAX_BOUNDS
+    const lat = Math.min(Math.max(center.lat, s), n)
+    const lng = Math.min(Math.max(center.lng, w), e)
+    const target = L.latLng(lat, lng)
     const cur = map.getCenter()
-    if (Math.abs(cur.lat - center.lat) < 1e-5 && Math.abs(cur.lng - center.lng) < 1e-5) return
-    map.panTo(target, { animate: true, duration: 0.35 })
+    if (Math.abs(cur.lat - lat) < 1e-5 && Math.abs(cur.lng - lng) < 1e-5) {
+      if (map.getZoom() < 14) map.setZoom(15, { animate: true })
+      return
+    }
+    map.setView(target, Math.max(map.getZoom(), 15), { animate: true })
   }, [map, center.lat, center.lng])
   return null
 }
