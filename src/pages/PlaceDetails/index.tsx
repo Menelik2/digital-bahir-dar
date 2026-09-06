@@ -31,6 +31,8 @@ import { ReviewCard } from '@/components/reviews/ReviewCard'
 import { ReviewForm } from '@/components/reviews/ReviewForm'
 import { useReviews, useMyReview, useRatingSummary } from '@/hooks/useReviews'
 import { placeCoverImage, placeImageAlt } from '@/utils/placeImage'
+import { placeName, placeNameSecondary, placeDescription, categoryLabel } from '@/utils/placeLocale'
+import { useLang } from '@/hooks/useT'
 import { PlaceGoogleEmbed } from '@/components/map/PlaceGoogleEmbed'
 import { similarTourismPlaces } from '@/services/curatedTourism'
 import { useMemo, useState } from 'react'
@@ -58,6 +60,7 @@ function parseInfoBlocks(text: string | null | undefined) {
 export default function PlaceDetailsPage() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
+  const { language, isAm } = useLang()
   const { data: place, isLoading, error, refetch } = usePlace(slug)
   const { location } = useAppStore()
   useGeolocation(true)
@@ -124,7 +127,10 @@ export default function PlaceDetailsPage() {
 
   const isDemo = place.name.includes('(DEMO)') || place.id.startsWith('demo-')
   const isOsm = isOsmPlaceId(place.id)
-  const name = place.name.replace(' (DEMO)', '').split(' · ')[0]
+  const name = placeName(place, language)
+  const nameSecondary = placeNameSecondary(place, language)
+  const description = placeDescription(place, language)
+  const catLabel = categoryLabel(place.category, language)
   const cover = placeCoverImage(place)
 
   const share = async () => {
@@ -166,7 +172,7 @@ export default function PlaceDetailsPage() {
           <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-2">
             {place.category && (
               <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium text-white backdrop-blur">
-                {place.category.name}
+                {catLabel || place.category.name}
               </span>
             )}
             {place.verified && (
@@ -186,8 +192,8 @@ export default function PlaceDetailsPage() {
             )}
           </div>
           <h1 className="mx-auto mt-2 max-w-3xl text-[26px] font-bold leading-tight tracking-tight text-white sm:text-3xl">{name}</h1>
-          {place.name.includes(' · ') && (
-            <p className="mx-auto mt-1 max-w-3xl text-sm text-white/80">{place.name.split(' · ')[1]}</p>
+          {nameSecondary && (
+            <p className="mx-auto mt-1 max-w-3xl text-sm text-white/80">{nameSecondary}</p>
           )}
         </div>
       </div>
@@ -203,10 +209,10 @@ export default function PlaceDetailsPage() {
           )}
           <div className="flex flex-wrap gap-2 sm:ml-auto">
             <Button className="min-h-[44px] flex-1 rounded-full sm:flex-none" onClick={() => goDirections('walking')}>
-              <Navigation className="h-4 w-4" /> Directions
+              <Navigation className="h-4 w-4" /> {isAm ? 'አቅጣጫ' : 'Directions'}
             </Button>
             <Button variant="outline" className="min-h-[44px] rounded-full" onClick={share}>
-              <Share2 className="h-4 w-4" /> Share
+              <Share2 className="h-4 w-4" /> {isAm ? 'አጋራ' : 'Share'}
             </Button>
             {canSocial && <FavoriteButton placeId={place.id} size="sm" />}
           </div>
@@ -218,11 +224,11 @@ export default function PlaceDetailsPage() {
           </div>
         )}
 
-        {(place.short_description || place.description) && (
+        {(description || place.short_description) && (
           <section className="mb-8">
-            <h2 className="mb-2 text-lg font-semibold">About</h2>
+            <h2 className="mb-2 text-lg font-semibold">{isAm ? 'ስለ' : 'About'}</h2>
             <p className="whitespace-pre-line leading-relaxed text-slate-600 dark:text-slate-300">
-              {place.description || place.short_description}
+              {description || place.short_description}
             </p>
           </section>
         )}
@@ -230,7 +236,7 @@ export default function PlaceDetailsPage() {
         {info.highlights && (
           <section className="mb-8">
             <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
-              <Landmark className="h-5 w-5 text-emerald-600" /> Highlights
+              <Landmark className="h-5 w-5 text-emerald-600" /> {isAm ? 'ዋና ዋና ነጥቦች' : 'Highlights'}
             </h2>
             <div className="flex flex-wrap gap-2">
               {info.highlights.split(' · ').map((h) => (
@@ -244,36 +250,36 @@ export default function PlaceDetailsPage() {
 
         {place.attraction && (
           <section className="mb-8">
-            <h2 className="mb-3 text-lg font-semibold">Attraction details</h2>
+            <h2 className="mb-3 text-lg font-semibold">{isAm ? 'የመስህብ ዝርዝር' : 'Attraction details'}</h2>
             <Card className="border-black/[0.04] shadow-sm dark:border-white/[0.08]">
               <CardContent className="grid gap-3 p-4 text-sm sm:grid-cols-2">
                 {place.attraction.attraction_type && (
                   <p>
-                    <span className="font-medium text-slate-500">Type:</span>{' '}
+                    <span className="font-medium text-slate-500">{isAm ? 'ዓይነት:' : 'Type:'}</span>{' '}
                     <span className="capitalize">{place.attraction.attraction_type}</span>
                   </p>
                 )}
                 {place.attraction.recommended_duration && (
                   <p>
-                    <span className="font-medium text-slate-500">Duration:</span>{' '}
+                    <span className="font-medium text-slate-500">{isAm ? 'ጊዜ:' : 'Duration:'}</span>{' '}
                     {place.attraction.recommended_duration}
                   </p>
                 )}
                 {place.attraction.best_time_to_visit && (
                   <p>
-                    <span className="font-medium text-slate-500">Best time:</span>{' '}
+                    <span className="font-medium text-slate-500">{isAm ? 'ምርጥ ጊዜ:' : 'Best time:'}</span>{' '}
                     {place.attraction.best_time_to_visit}
                   </p>
                 )}
                 {(place.attraction.entrance_fee != null || place.entrance_fee != null) && (
                   <p>
-                    <span className="font-medium text-slate-500">Entry (est.):</span>{' '}
+                    <span className="font-medium text-slate-500">{isAm ? 'መግቢያ (ግምት):' : 'Entry (est.):'}</span>{' '}
                     {place.attraction.entrance_fee ?? place.entrance_fee ?? 0} {place.currency}
                   </p>
                 )}
                 {place.attraction.safety_information && (
                   <p className="sm:col-span-2 rounded-lg bg-amber-50 p-3 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-                    <strong>Notes:</strong> {place.attraction.safety_information}
+                    <strong>{isAm ? 'ማስታወሻ:' : 'Notes:'}</strong> {place.attraction.safety_information}
                   </p>
                 )}
               </CardContent>
@@ -284,7 +290,7 @@ export default function PlaceDetailsPage() {
         {(info.howTo || place.attraction?.accessibility) && (
           <section className="mb-8">
             <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
-              <Footprints className="h-5 w-5 text-sky-600" /> How to get there
+              <Footprints className="h-5 w-5 text-sky-600" /> {isAm ? 'እንዴት መድረስ' : 'How to get there'}
             </h2>
             <Card className="border-black/[0.04] shadow-sm dark:border-white/[0.08]">
               <CardContent className="p-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
@@ -297,7 +303,7 @@ export default function PlaceDetailsPage() {
         {info.tips && (
           <section className="mb-8">
             <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
-              <Lightbulb className="h-5 w-5 text-amber-500" /> Visitor tips
+              <Lightbulb className="h-5 w-5 text-amber-500" /> {isAm ? 'የጎብኝ ምክሮች' : 'Visitor tips'}
             </h2>
             <ul className="space-y-2">
               {info.tips.split(' · ').map((tip) => (
@@ -313,7 +319,7 @@ export default function PlaceDetailsPage() {
         {info.bring && (
           <section className="mb-8">
             <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold">
-              <Backpack className="h-5 w-5 text-violet-600" /> What to bring
+              <Backpack className="h-5 w-5 text-violet-600" /> {isAm ? 'ምን ማምጣት' : 'What to bring'}
             </h2>
             <div className="flex flex-wrap gap-2">
               {info.bring.split(',').map((item) => (
@@ -327,7 +333,7 @@ export default function PlaceDetailsPage() {
 
         {place.hotel && (
           <section className="mb-8">
-            <h2 className="mb-3 text-lg font-semibold">Hotel details</h2>
+            <h2 className="mb-3 text-lg font-semibold">{isAm ? 'የሆቴል ዝርዝር' : 'Hotel details'}</h2>
             <Card>
               <CardContent className="grid gap-3 p-4 sm:grid-cols-2">
                 {place.hotel.star_rating && (
@@ -358,14 +364,14 @@ export default function PlaceDetailsPage() {
 
         {place.restaurant && (
           <section className="mb-8">
-            <h2 className="mb-3 text-lg font-semibold">Restaurant details</h2>
+            <h2 className="mb-3 text-lg font-semibold">{isAm ? 'የምግብ ቤት ዝርዝር' : 'Restaurant details'}</h2>
             <Card>
               <CardContent className="flex flex-wrap gap-2 p-4">
                 {place.restaurant.cuisine_type && (
                   <span className="rounded-full bg-orange-50 px-3 py-1 text-sm text-orange-800">{place.restaurant.cuisine_type}</span>
                 )}
                 {place.restaurant.traditional_food && (
-                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm text-emerald-800">Traditional Ethiopian</span>
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm text-emerald-800">{isAm ? 'ባህላዊ ኢትዮጵያዊ' : 'Traditional Ethiopian'}</span>
                 )}
               </CardContent>
             </Card>
@@ -376,7 +382,7 @@ export default function PlaceDetailsPage() {
           <section className="mb-8">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-lg font-semibold">
-                Reviews
+                {isAm ? 'ግምገማዎች' : 'Reviews'}
                 {ratingSummary && ratingSummary.count > 0 && (
                   <span className="ml-2 text-sm font-normal text-slate-500">{ratingSummary.avg}★ · {ratingSummary.count}</span>
                 )}
@@ -387,18 +393,18 @@ export default function PlaceDetailsPage() {
             </div>
             {!showReviewForm && (
               <Button variant="outline" size="sm" className="mb-4 min-h-[40px] rounded-full" onClick={() => setShowReviewForm(true)}>
-                {myReview ? 'Edit your review' : 'Write a review'}
+                {myReview ? (isAm ? 'ግምገማዎን ያርትዑ' : 'Edit your review') : (isAm ? 'ግምገማ ጻፍ' : 'Write a review')}
               </Button>
             )}
             {showReviewForm && (
               <div className="mb-4">
                 <ReviewForm placeId={place.id} existing={myReview} onDone={() => setShowReviewForm(false)} />
-                <Button variant="ghost" size="sm" className="mt-2" onClick={() => setShowReviewForm(false)}>Cancel</Button>
+                <Button variant="ghost" size="sm" className="mt-2" onClick={() => setShowReviewForm(false)}>{isAm ? 'ሰርዝ' : 'Cancel'}</Button>
               </div>
             )}
-            {reviewsLoading && <p className="text-sm text-slate-500">Loading reviews…</p>}
+            {reviewsLoading && <p className="text-sm text-slate-500">{isAm ? 'ግምገማዎች በመጫን…' : 'Loading reviews…'}</p>}
             {!reviewsLoading && reviews.length === 0 && !showReviewForm && (
-              <p className="text-sm text-slate-500">No reviews yet. Be the first to share your experience.</p>
+              <p className="text-sm text-slate-500">{isAm ? 'እስካሁን ግምገማ የለም።' : 'No reviews yet. Be the first to share your experience.'}</p>
             )}
             <div className="space-y-3">
               {reviews.map((r) => (
@@ -409,7 +415,7 @@ export default function PlaceDetailsPage() {
         )}
 
         <section className="mb-8">
-          <h2 className="mb-3 text-lg font-semibold">Location & contact</h2>
+          <h2 className="mb-3 text-lg font-semibold">{isAm ? 'አካባቢ እና አድራሻ' : 'Location & contact'}</h2>
           <Card className="border-black/[0.04] shadow-sm dark:border-white/[0.08]">
             <CardContent className="space-y-3 p-4">
               {place.address && (
@@ -430,7 +436,7 @@ export default function PlaceDetailsPage() {
               {place.website && (
                 <a href={place.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-sky-600 hover:underline">
                   <Globe className="h-4 w-4" />
-                  Website
+                  {isAm ? 'ድረ-ገጽ' : 'Website'}
                 </a>
               )}
               <div className="pt-2">
@@ -442,11 +448,11 @@ export default function PlaceDetailsPage() {
 
         {similar.length > 0 && (
           <section className="mb-8">
-            <h2 className="mb-3 text-lg font-semibold">Similar places</h2>
+            <h2 className="mb-3 text-lg font-semibold">{isAm ? 'ተመሳሳይ ቦታዎች' : 'Similar places'}</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {similar.map((p) => (
                 <Link key={p.id} to={`/places/${p.slug}`} className="rounded-xl border border-black/[0.06] bg-white p-3 active:bg-black/[0.02] dark:border-white/[0.08] dark:bg-[#1c1c1e]">
-                  <p className="font-medium text-[#1c1c1e] dark:text-white">{p.name}</p>
+                  <p className="font-medium text-[#1c1c1e] dark:text-white">{placeName(p, language)}</p>
                   {p.short_description && (
                     <p className="mt-0.5 line-clamp-2 text-[13px] text-[#8e8e93]">{p.short_description}</p>
                   )}
@@ -454,7 +460,7 @@ export default function PlaceDetailsPage() {
               ))}
             </div>
             <Link to="/attractions" className="mt-4 inline-block text-sm font-semibold text-[#078930] hover:underline dark:text-[#30d158]">
-              See all attractions →
+              {isAm ? 'ሁሉንም መስህቦች ይመልከቱ →' : 'See all attractions →'}
             </Link>
           </section>
         )}
