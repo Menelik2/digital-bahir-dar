@@ -38,8 +38,8 @@ export class GeoServiceError extends Error {
 
 const DEFAULT_OPTIONS: PositionOptions = {
   enableHighAccuracy: true,
-  timeout: 15_000,
-  maximumAge: 30_000,
+  timeout: 12_000,
+  maximumAge: 20_000,
 }
 
 export function isGeolocationSupported(): boolean {
@@ -106,6 +106,28 @@ export function getCurrentPosition(options?: PositionOptions): Promise<GeoPositi
   })
 }
 
+/**
+ * Prefer a fresh high-accuracy fix; if it times out (common indoors / weak GPS),
+ * fall back to a network-based fix so "Location on" still works.
+ */
+export async function getCurrentPositionRobust(): Promise<GeoPosition> {
+  try {
+    return await getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 12_000,
+      maximumAge: 15_000,
+    })
+  } catch (e) {
+    const code = e instanceof GeoServiceError ? e.code : 'unknown'
+    if (code === 'permission_denied' || code === 'unsupported') throw e
+    return getCurrentPosition({
+      enableHighAccuracy: false,
+      timeout: 20_000,
+      maximumAge: 60_000,
+    })
+  }
+}
+
 export function watchPosition(
   onUpdate: (pos: GeoPosition) => void,
   onError?: (err: GeoServiceError) => void,
@@ -118,18 +140,13 @@ export function watchPosition(
   return navigator.geolocation.watchPosition(
     (pos) => onUpdate(toGeoPosition(pos)),
     (err) => onError?.(mapPositionError(err)),
-    {
-      enableHighAccuracy: true,
-      timeout: 20_000,
-      maximumAge: 10_000,
-      ...options,
-    }
+    { ...DEFAULT_OPTIONS, ...options }
   )
 }
 
-export function clearWatch(watchId: number) {
-  if (watchId >= 0 && isGeolocationSupported()) {
-    navigator.geolocation.clearWatch(watchId)
+export function clearWatch(id: number) {
+  if (id >= 0 && isGeolocationSupported()) {
+    navigator.geolocation.clearWatch(id)
   }
 }
 
@@ -137,7 +154,7 @@ export function distanceToBahirDarCenter(lat: number, lng: number): number {
   return distanceMeters(lat, lng, BAHIR_DAR_CENTER.lat, BAHIR_DAR_CENTER.lng)
 }
 
-/** Pure bbox check — no Leaflet dependency */
+/** City lock — no Leaflet dependency */
 export function isInsideBahirDar(lat: number, lng: number): boolean {
   const [[s, w], [n, e]] = BAHIR_DAR_MAX_BOUNDS
   return lat >= s && lat <= n && lng >= w && lng <= e
