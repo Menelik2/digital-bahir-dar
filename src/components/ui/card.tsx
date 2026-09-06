@@ -48,3 +48,12 @@ export const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes
   )
 )
 CardContent.displayName = 'CardContent'
+
+/** Card with hover lift — use on directory grids / clickable tiles */
+export const CardInteractive = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <Card ref={ref} className={cn('card-interactive cursor-pointer', className)} {...props} />
+))
+CardInteractive.displayName = 'CardInteractive'
