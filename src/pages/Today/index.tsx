@@ -56,10 +56,8 @@ export default function TodayPage() {
   function formatCost(step: TodayStep) {
     if (!step.costEtb) return null
     const { min, typical, max } = step.costEtb
-    if (min === 0 && typical === 0) return t.today.free
-    if (min === typical && typical === max) return `~${typical} ብር`
-    // Keep ETB symbol readable in both languages
     const unit = isAm ? 'ብር' : 'ETB'
+    if (min === 0 && typical === 0) return t.today.free
     if (min === typical && typical === max) return `~${typical} ${unit}`
     return `~${typical} ${unit} (${min}–${max})`
   }
