@@ -212,8 +212,12 @@ export function MapViewGl({
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
+    const [[w, s], [e, n]] = BAHIR_DAR_MAX_BOUNDS_GL
+    const lng = Math.min(Math.max(center.lng, w), e)
+    const lat = Math.min(Math.max(center.lat, s), n)
     map.easeTo({
-      center: [center.lng, center.lat],
+      center: [lng, lat],
+      zoom: Math.max(map.getZoom(), 15),
       duration: 450,
     })
   }, [center.lat, center.lng])
