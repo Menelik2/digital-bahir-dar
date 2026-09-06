@@ -2,12 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAppStore } from '@/store'
 import {
   clearWatch,
-  getCurrentPosition,
+  getCurrentPositionRobust,
   geoErrorUserMessage,
   isGeolocationSupported,
   isInsideBahirDar,
   isNearBahirDar,
-  queryGeoPermission,
   watchPosition,
   type GeoPosition,
   type GeoServiceError,
@@ -37,6 +36,7 @@ export function useGeolocation(autoRequestOrOpts: boolean | UseGeolocationOption
   const [watching, setWatching] = useState(false)
   const watchIdRef = useRef<number>(-1)
   const mounted = useRef(true)
+  const lastErrorRef = useRef<string | null>(null)
 
   useEffect(() => {
     mounted.current = true
@@ -76,34 +76,38 @@ export function useGeolocation(autoRequestOrOpts: boolean | UseGeolocationOption
     [setLocation]
   )
 
-  /** One-shot location request */
-  const request = useCallback(async () => {
+  /**
+   * One-shot location request.
+   * Returns position on success, or null on failure.
+   */
+  const request = useCallback(async (): Promise<GeoPosition | null> => {
     if (!isGeolocationSupported()) {
+      const msg = geoErrorUserMessage('unsupported')
       setLocation({ permission: 'unsupported' })
       setErrorCode('unsupported')
-      setError(geoErrorUserMessage('unsupported'))
+      setError(msg)
+      lastErrorRef.current = msg
       return null
     }
 
     setLoading(true)
     setError(null)
     setErrorCode(null)
+    lastErrorRef.current = null
 
     try {
-      const perm = await queryGeoPermission()
-      if (perm === 'denied') {
-        setLocation({ permission: 'denied' })
-        setErrorCode('permission_denied')
-        setError(geoErrorUserMessage('permission_denied'))
-        return null
-      }
-
-      const pos = await getCurrentPosition()
+      // Always call the browser API so the user gets the native prompt.
+      // Permissions API alone is unreliable across Safari / embedded browsers.
+      const pos = await getCurrentPositionRobust()
       if (!mounted.current) return pos
       applyPosition(pos)
+      lastErrorRef.current = null
       return pos
     } catch (e) {
-      if (mounted.current) applyError(e as GeoServiceError)
+      const err = e as GeoServiceError
+      const msg = err?.message || geoErrorUserMessage(err?.code)
+      lastErrorRef.current = msg
+      if (mounted.current) applyError(err)
       return null
     } finally {
       if (mounted.current) setLoading(false)
@@ -176,6 +180,8 @@ export function useGeolocation(autoRequestOrOpts: boolean | UseGeolocationOption
   return {
     location,
     request,
+    /** Synchronous last error message from the most recent request() call */
+    getLastError: () => lastErrorRef.current,
     startWatch,
     stopWatch,
     loading,
