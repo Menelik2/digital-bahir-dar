@@ -798,6 +798,126 @@ button.ios-group-row:active,
   pointer-events: auto;
 }
 
+/* ─── Design system utilities (uiuxdesign skill) ─── */
+.page-enter {
+  animation: page-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-interactive {
+  transition:
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.04),
+    0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+.card-interactive:active {
+  transform: translateY(0);
+}
+
+.dark .card-interactive:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+/* Semantic surface helpers */
+.surface-app {
+  background-color: var(--color-ios-bg);
+}
+.dark .surface-app {
+  background-color: #000000;
+}
+
+.surface-card {
+  background-color: var(--color-ios-card);
+}
+.dark .surface-card {
+  background-color: #1c1c1e;
+}
+
+.text-label {
+  color: var(--color-ios-label);
+}
+.dark .text-label {
+  color: #f5f5f7;
+}
+
+.text-secondary {
+  color: var(--color-ios-secondary);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.chip-green {
+  background: color-mix(in srgb, var(--color-ethio-green) 12%, transparent);
+  color: var(--color-ethio-green-dark);
+}
+.dark .chip-green {
+  background: color-mix(in srgb, #30d158 18%, transparent);
+  color: #30d158;
+}
+
+.chip-gold {
+  background: color-mix(in srgb, var(--color-ethio-gold) 22%, transparent);
+  color: #8a6d0b;
+}
+.dark .chip-gold {
+  background: color-mix(in srgb, var(--color-ethio-gold) 18%, transparent);
+  color: #f5d76e;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(60, 60, 67, 0.08) 0%,
+    rgba(60, 60, 67, 0.14) 50%,
+    rgba(60, 60, 67, 0.08) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.2s ease-in-out infinite;
+  border-radius: 0.75rem;
+}
+
+.dark .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .splash-flash-flare,
   .splash-flag-sweep,
@@ -814,9 +934,20 @@ button.ios-group-row:active,
   .app-reveal,
   .ios-press,
   .ios-card,
-  .ios-tile {
+  .ios-tile,
+  .page-enter,
+  .card-interactive,
+  .skeleton {
     animation: none !important;
     transition: none !important;
+  }
+  .page-enter {
+    opacity: 1;
+    transform: none;
+  }
+  .card-interactive:hover,
+  .card-interactive:active {
+    transform: none;
   }
   .splash-logo-wrap,
   .splash-title,
