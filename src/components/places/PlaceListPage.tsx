@@ -16,6 +16,7 @@ import { rankNearby } from '@/services/places'
 import type { OsmCategory } from '@/services/osmPlaces'
 import type { Place, SortOption } from '@/types/place'
 import { cn } from '@/lib/utils'
+import { placeSearchText } from '@/utils/placeLocale'
 import { useT } from '@/hooks/useT'
 import { StateMessage } from '@/components/feedback/StateMessage'
 
@@ -116,12 +117,7 @@ export function PlaceListPage({
     let list = mergeOsm && osmPlaces.length > 0 ? mergePlaces(dbPlaces, osmPlaces) : dbPlaces
     if (search.trim()) {
       const q = search.toLowerCase()
-      list = list.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          (p.description || '').toLowerCase().includes(q) ||
-          (p.address || '').toLowerCase().includes(q)
-      )
+      list = list.filter((p) => placeSearchText(p).includes(q))
     }
     if (filterId) {
       if (['budget', 'mid', 'luxury'].includes(filterId)) {
