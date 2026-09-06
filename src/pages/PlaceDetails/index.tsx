@@ -4,16 +4,12 @@ import {
   Phone,
   Globe,
   Navigation,
-  BadgeCheck,
   Star,
-  Clock,
   ArrowLeft,
   Loader2,
   AlertCircle,
-  Share2,
   Lightbulb,
   Footprints,
-  Backpack,
   Landmark,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -21,12 +17,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { usePlace, usePlaces } from '@/hooks/usePlaces'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useAppStore } from '@/store'
-import { distanceMeters, formatDistance, walkingMinutes, drivingMinutes } from '@/utils/geo'
+import { distanceMeters, formatDistance, walkingMinutes } from '@/utils/geo'
 import { inAppDirectionsPath } from '@/services/routing'
 import { FavoriteButton } from '@/components/places/FavoriteButton'
-import { isOsmPlaceId } from '@/services/osmPlaces'
 import { isPersistedPlaceId } from '@/utils/placeId'
-import { StarRating } from '@/components/reviews/StarRating'
 import { ReviewCard } from '@/components/reviews/ReviewCard'
 import { ReviewForm } from '@/components/reviews/ReviewForm'
 import { useReviews, useMyReview, useRatingSummary } from '@/hooks/useReviews'
@@ -37,7 +31,7 @@ import { PlaceGoogleEmbed } from '@/components/map/PlaceGoogleEmbed'
 import { CURATED_TOURISM_PLACES } from '@/services/curatedTourism'
 import { CURATED_HOTELS } from '@/services/curatedHotels'
 import { findSimilarPlaces, getCuratedPlaces } from '@/services/places'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 
 function parseInfoBlocks(text: string | null | undefined) {
   if (!text) return { highlights: '', tips: '', howTo: '', bring: '', nearby: '', rest: text || '' }
@@ -63,7 +57,7 @@ export default function PlaceDetailsPage() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const { language, isAm } = useLang()
-  const { data: place, isLoading, error, refetch } = usePlace(slug)
+  const { data: place, isLoading, error } = usePlace(slug)
   const { location } = useAppStore()
   useGeolocation(true)
   const canSocial = isPersistedPlaceId(place?.id)
@@ -308,14 +302,14 @@ export default function PlaceDetailsPage() {
             {ratingSummary && (
               <p className="mb-3 text-sm text-slate-500">
                 <Star className="mr-1 inline h-4 w-4 text-amber-400" />
-                {ratingSummary.average?.toFixed?.(1) ?? '—'} · {ratingSummary.count ?? 0}
+                {ratingSummary.avg?.toFixed?.(1) ?? '—'} · {ratingSummary.count ?? 0}
               </p>
             )}
             <ReviewForm placeId={place.id} existing={myReview} />
             <div className="mt-4 space-y-3">
               {reviewsLoading && <p className="text-sm text-slate-400">…</p>}
               {reviews.map((r) => (
-                <ReviewCard key={r.id} review={r} />
+                <ReviewCard key={r.id} review={r} placeId={place.id} />
               ))}
             </div>
           </section>
