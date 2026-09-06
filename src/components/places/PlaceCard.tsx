@@ -8,6 +8,13 @@ import { formatDistance } from '@/utils/geo'
 import { isOsmPlaceId, cacheOsmPlaceForDetail } from '@/services/osmPlaces'
 import { placeGuideLinks } from '@/constants/guideSites'
 import { placeCoverImage, placeImageAlt } from '@/utils/placeImage'
+import {
+  placeName,
+  placeNameSecondary,
+  placeShortDescription,
+  categoryLabel,
+} from '@/utils/placeLocale'
+import { useLang } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
 
 interface PlaceCardProps {
@@ -62,9 +69,13 @@ export function PlaceCard({
   onDirections,
   className,
 }: PlaceCardProps) {
+  const { language, isAm } = useLang()
   const isDemo = place.name.includes('(DEMO)')
   const isOsm = isOsmPlaceId(place.id) || place.slug.startsWith('osm-')
-  const name = place.name.replace(' (DEMO)', '')
+  const name = placeName(place, language)
+  const secondary = placeNameSecondary(place, language)
+  const shortDesc = placeShortDescription(place, language)
+  const cat = categoryLabel(place.category, language)
   const guides = placeGuideLinks(place)
   const detailTo = `/places/${place.slug}`
 
@@ -91,7 +102,7 @@ export function PlaceCard({
                 )}
               </div>
               <p className="truncate text-[13px] text-[#8e8e93]">
-                {place.category?.name}
+                {cat}
                 {place.distance_m != null && ` · ${formatDistance(place.distance_m)}`}
               </p>
             </div>
@@ -109,30 +120,30 @@ export function PlaceCard({
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-black/5 to-transparent" />
           {place.featured && (
             <span className="absolute left-2.5 top-2.5 rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-bold text-amber-950 shadow-sm">
-              Featured
+              {isAm ? 'ተለይቶ' : 'Featured'}
             </span>
           )}
           {isDemo && (
-            <span className="absolute right-2.5 top-2.5 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-medium text-amber-800">
+            <span className="absolute right-2.5 top-2.5 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-slate-700">
               DEMO
             </span>
           )}
-          {isOsm && !isDemo && (
-            <span className="absolute right-2.5 top-2.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-medium text-slate-700 shadow-sm">
-              OpenStreetMap
-            </span>
-          )}
         </div>
-        <CardContent className="p-4 sm:p-4">
+        <CardContent className="p-3.5 sm:p-4">
           <div className="mb-1 flex items-start justify-between gap-2">
-            <h3 className="text-[16px] font-semibold leading-snug tracking-tight sm:text-[15px]">{name}</h3>
+            <div className="min-w-0">
+              <h3 className="text-[16px] font-semibold leading-snug tracking-tight text-[#1c1c1e] dark:text-white">
+                {name}
+              </h3>
+              {secondary && (
+                <p className="mt-0.5 text-[12px] text-[#8e8e93]">{secondary}</p>
+              )}
+            </div>
             {place.verified && <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />}
           </div>
-          <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[#0b6e99] dark:text-sky-400">
-            {place.category?.name}
-          </p>
-          {place.short_description && (
-            <p className="mb-3 line-clamp-2 text-[14px] leading-relaxed text-[#8e8e93]">{place.short_description}</p>
+          <p className="mb-1.5 text-[13px] font-medium text-sky-700 dark:text-sky-400">{cat}</p>
+          {shortDesc && (
+            <p className="mb-3 line-clamp-2 text-[14px] leading-relaxed text-[#8e8e93]">{shortDesc}</p>
           )}
           <div className="flex flex-wrap items-center gap-2 text-[12px] text-[#8e8e93]">
             {place.distance_m != null && (
@@ -158,7 +169,7 @@ export function PlaceCard({
         <div className="flex flex-wrap gap-2 border-t border-black/[0.06] px-3 py-2.5 dark:border-white/[0.08]">
           {showDirections && onDirections && (
             <Button variant="ghost" size="sm" className="min-h-[40px] flex-1" onClick={() => onDirections(place)}>
-              <Navigation className="h-4 w-4" /> Directions
+              <Navigation className="h-4 w-4" /> {isAm ? 'አቅጣጫ' : 'Directions'}
             </Button>
           )}
           {isOsm && (
@@ -169,7 +180,7 @@ export function PlaceCard({
                 rel="noopener noreferrer"
                 className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-1 rounded-full px-2 text-[13px] font-semibold text-sky-700 active:bg-sky-50 dark:text-sky-300 dark:active:bg-sky-950"
               >
-                <ExternalLink className="h-3.5 w-3.5" /> Maps
+                <ExternalLink className="h-3.5 w-3.5" /> {isAm ? 'ካርታ' : 'Maps'}
               </a>
               <a
                 href={guides.googleDirections}
@@ -177,7 +188,7 @@ export function PlaceCard({
                 rel="noopener noreferrer"
                 className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-1 rounded-full px-2 text-[13px] font-semibold text-teal-700 active:bg-teal-50 dark:text-teal-300 dark:active:bg-teal-950"
               >
-                <Navigation className="h-3.5 w-3.5" /> Go
+                <Navigation className="h-3.5 w-3.5" /> {isAm ? 'ሂድ' : 'Go'}
               </a>
             </>
           )}
