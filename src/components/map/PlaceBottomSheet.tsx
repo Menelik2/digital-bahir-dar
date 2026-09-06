@@ -5,6 +5,8 @@ import type { Place } from '@/types/place'
 import { formatDistance, walkingMinutes, drivingMinutes } from '@/utils/geo'
 import { placeGuideLinks } from '@/constants/guideSites'
 import { cn } from '@/lib/utils'
+import { useT, useLang } from '@/hooks/useT'
+import { placeName, placeNameSecondary, placeShortDescription, categoryLabel } from '@/utils/placeLocale'
 
 interface Props {
   place: Place | null
@@ -16,29 +18,37 @@ interface Props {
 
 /** Mobile: iPhone-style sheet above tab bar. Desktop: floating card. */
 export function PlaceBottomSheet({ place, distanceM, onClose, onDirections, className }: Props) {
+  const t = useT()
+  const { language } = useLang()
+
   if (!place) return null
 
-  const name = (place.name || 'Place').replace(' (DEMO)', '')
+  const name = placeName(place, language)
+  const secondary = placeNameSecondary(place, language)
+  const short = placeShortDescription(place, language)
+  const category = categoryLabel(place.category, language)
   const slug = place.slug || place.id
   const links = placeGuideLinks({
-    name,
+    name: place.name || name,
     latitude: place.latitude,
     longitude: place.longitude,
   })
+
+  const walkMin = distanceM != null && Number.isFinite(distanceM) ? walkingMinutes(distanceM) : null
+  const driveMin = distanceM != null && Number.isFinite(distanceM) ? drivingMinutes(distanceM) : null
 
   return (
     <div
       className={cn(
         'absolute left-0 right-0 z-[1100] border border-black/[0.06] bg-white/95 shadow-[0_-8px_40px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:border-white/[0.1] dark:bg-[#1c1c1e]/95',
-        // Mobile: sit above tab bar + FAB; iOS continuous corners
         'bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] rounded-t-[1.25rem]',
-        // Desktop card
         'lg:bottom-6 lg:left-4 lg:right-auto lg:w-[22rem] lg:rounded-2xl lg:border-black/[0.06]',
         className
       )}
       style={{ WebkitBackdropFilter: 'saturate(180%) blur(20px)' }}
+      role="dialog"
+      aria-label={name}
     >
-      {/* Drag handle — mobile only */}
       <div className="flex justify-center pt-2.5 lg:hidden" aria-hidden>
         <div className="h-1 w-10 rounded-full bg-black/15 dark:bg-white/25" />
       </div>
@@ -46,36 +56,37 @@ export function PlaceBottomSheet({ place, distanceM, onClose, onDirections, clas
       <div className="flex items-start justify-between px-4 pb-1 pt-2 lg:p-4 lg:pb-2">
         <div className="min-w-0 flex-1">
           <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-            {place.category?.name && (
+            {category && (
               <span className="rounded-full bg-[#0b6e99]/12 px-2.5 py-0.5 text-[11px] font-semibold text-[#0a5a7e] dark:bg-sky-950 dark:text-sky-300">
-                {place.category.name}
+                {category}
               </span>
             )}
             {place.verified && (
               <span className="rounded-full bg-[#078930]/12 px-2.5 py-0.5 text-[11px] font-semibold text-[#056b24] dark:text-[#30d158]">
-                Verified
+                {t.map.verified}
               </span>
             )}
             {place.name?.includes('(DEMO)') && (
-              <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800">
-                DEMO
+              <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                {t.map.demo}
               </span>
             )}
           </div>
           <h3 className="truncate text-[17px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white">
             {name}
           </h3>
-          {place.short_description && (
-            <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-[#8e8e93]">
-              {place.short_description}
-            </p>
+          {secondary && (
+            <p className="truncate text-[12px] text-[#8e8e93]">{secondary}</p>
+          )}
+          {short && (
+            <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-[#8e8e93]">{short}</p>
           )}
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/[0.05] active:bg-black/10 dark:bg-white/10 dark:active:bg-white/15"
-          aria-label="Close"
+          className="ml-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/[0.05] transition active:scale-95 active:bg-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#078930]/45 dark:bg-white/10 dark:active:bg-white/15"
+          aria-label={t.map.close}
         >
           <X className="h-5 w-5 text-[#8e8e93]" />
         </button>
@@ -88,9 +99,10 @@ export function PlaceBottomSheet({ place, distanceM, onClose, onDirections, clas
             {formatDistance(distanceM)}
           </span>
         )}
-        {distanceM != null && Number.isFinite(distanceM) && (
+        {walkMin != null && driveMin != null && (
           <span>
-            🚶 {walkingMinutes(distanceM)} min · 🚗 {drivingMinutes(distanceM)} min
+            🚶 {walkMin} {language === 'am' ? 'ደቂቃ' : 'min'} · 🚗 {driveMin}{' '}
+            {language === 'am' ? 'ደቂቃ' : 'min'}
           </span>
         )}
         {place.address && <span className="w-full truncate sm:w-auto">{place.address}</span>}
@@ -100,19 +112,19 @@ export function PlaceBottomSheet({ place, distanceM, onClose, onDirections, clas
         <div className="flex gap-2.5">
           <Button className="min-h-[48px] flex-1 text-[15px]" onClick={() => onDirections(place)}>
             <Navigation className="h-4 w-4" />
-            Directions
+            {t.map.directions}
           </Button>
           <Link to={`/places/${encodeURIComponent(slug)}`} className="flex-1">
             <Button variant="outline" className="min-h-[48px] w-full text-[15px]">
               <ExternalLink className="h-4 w-4" />
-              Details
+              {t.map.details}
             </Button>
           </Link>
         </div>
         <a href={links.mapcarta} target="_blank" rel="noopener noreferrer" className="w-full">
           <Button variant="secondary" className="min-h-[44px] w-full" size="sm">
             <ExternalLink className="h-3.5 w-3.5" />
-            View on Mapcarta
+            {t.map.viewMapcarta}
           </Button>
         </a>
       </div>
