@@ -3,20 +3,18 @@ import { useAppStore } from '@/store'
 import { strings, type Strings, type Lang } from '@/i18n/strings'
 
 /**
- * Nested proxy: missing keys return another safe object / empty string
- * so `t.common.skipToContent` never throws when packs are incomplete.
- * React receives strings (or '') for leaf access patterns used in JSX.
+ * Safe i18n access: never throw on missing keys.
+ * - Existing objects are wrapped
+ * - Missing sections return a branch proxy so `t.common.skipToContent` works
+ * - Missing leaves return '' (safe as React children)
  */
 function safeStrings(input: unknown): unknown {
-  if (input === null || input === undefined) {
-    return emptyBranch()
-  }
+  if (input === null || input === undefined) return missingSection()
   if (typeof input === 'string' || typeof input === 'number' || typeof input === 'boolean') {
     return input
   }
-  if (typeof input !== 'object') {
-    return ''
-  }
+  if (typeof input !== 'object') return ''
+
   return new Proxy(input as Record<string, unknown>, {
     get(target, prop) {
       if (prop === Symbol.toPrimitive) return () => ''
@@ -24,54 +22,43 @@ function safeStrings(input: unknown): unknown {
       if (typeof prop === 'symbol') return undefined
       const key = String(prop)
       if (key === '$$typeof' || key === 'constructor' || key === 'prototype') return undefined
+
       if (Object.prototype.hasOwnProperty.call(target, key)) {
-        return safeStrings(target[key])
+        const val = target[key]
+        if (val !== null && typeof val === 'object') return safeStrings(val)
+        return val ?? ''
       }
-      return emptyBranch()
-    },
-  })
-}
 
-function emptyBranch(): unknown {
-  return new Proxy(
-    {},
-    {
-      get(_t, prop) {
-        if (prop === Symbol.toPrimitive) return () => ''
-        if (prop === 'toString' || prop === 'valueOf') return () => ''
-        if (typeof prop === 'symbol') return undefined
-        const key = String(prop)
-        if (key === '$$typeof' || key === 'constructor' || key === 'prototype') return undefined
-        // Intermediate missing sections stay objects; leaf reads become ''
-        // Distinguish leaf vs branch by returning a string-capable proxy
-        return leafOrBranch()
-      },
-    }
-  )
-}
-
-/** Further access returns ''; string coercion returns '' */
-function leafOrBranch(): unknown {
-  const fn = () => ''
-  return new Proxy(fn, {
-    get(_t, prop) {
-      if (prop === Symbol.toPrimitive) return () => ''
-      if (prop === 'toString' || prop === 'valueOf') return () => ''
-      if (typeof prop === 'symbol') return undefined
-      const key = String(prop)
-      if (key === '$$typeof' || key === 'constructor' || key === 'prototype') return undefined
-      // Keep nesting safe for t.a.b.c patterns
-      return leafOrBranch()
-    },
-    apply() {
+      // Missing key under a real object → treat as leaf
       return ''
     },
   })
 }
 
+/** Missing top-level section (e.g. t.common when common is absent) */
+function missingSection(): unknown {
+  return new Proxy(
+    {},
+    {
+      get(_target, prop) {
+        if (prop === Symbol.toPrimitive) return () => ''
+        if (prop === 'toString' || prop === 'valueOf') return () => ''
+        if (typeof prop === 'symbol') return undefined
+        const key = String(prop)
+        if (key === '$$typeof' || key === 'constructor' || key === 'prototype') return undefined
+        return ''
+      },
+    }
+  )
+}
+
 export function useT(): Strings {
   const language = useAppStore((s) => s.language)
   const pack = strings[language] ?? strings.en
+  // If pack is empty {}, still wrap so t.common.skipToContent → ''
+  if (!pack || (typeof pack === 'object' && Object.keys(pack as object).length === 0)) {
+    return safeStrings({}) as Strings
+  }
   return safeStrings(pack) as Strings
 }
 
