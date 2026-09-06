@@ -7,6 +7,8 @@ export interface Category {
   icon: string | null
   description: string | null
   sort_order: number
+  /** Optional Amharic label when provided by CMS */
+  name_am?: string | null
 }
 
 export interface Place {
@@ -34,6 +36,14 @@ export interface Place {
   tags?: string[] | null
   /** Aggregate rating when available (reviews / OSM) */
   rating?: number | null
+  /** Amharic display name when available */
+  name_am?: string | null
+  /** Amharic long description */
+  description_am?: string | null
+  /** Amharic short description */
+  short_description_am?: string | null
+  /** Amharic address line */
+  address_am?: string | null
   category?: Category
   distance_m?: number
   hotel?: HotelDetails | null
