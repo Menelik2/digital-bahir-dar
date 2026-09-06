@@ -12,7 +12,6 @@ import { useOsmPlaces } from '@/hooks/useOsmPlaces'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useAppStore } from '@/store'
 import { BAHIR_DAR_CENTER } from '@/constants'
-import { getMapboxToken } from '@/constants/map'
 import { distanceMeters } from '@/utils/geo'
 import { filterRealPlaces } from '@/utils/realPlaces'
 import { CURATED_HOTELS } from '@/services/curatedHotels'
@@ -79,7 +78,7 @@ export default function MapPage() {
   })
   const [directionsPlace, setDirectionsPlace] = useState<Place | null>(null)
   const [travelMode, setTravelMode] = useState<TravelMode>('walking')
-  const [includeOsm, setIncludeOsm] = useState(true)
+  const includeOsm = true
   const [routeCoords, setRouteCoords] = useState<[number, number][] | null>(null)
   const [routeLoading, setRouteLoading] = useState(false)
   const [routeError, setRouteError] = useState(false)
