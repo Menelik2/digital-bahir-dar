@@ -250,8 +250,8 @@ export default function HomePage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/20" aria-hidden />
                 <div className="relative z-10">
-                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[0.85rem] bg-white/20 text-white shadow-inner backdrop-blur-md ring-1 ring-white/30 transition group-hover:scale-105">
-                    <item.icon className="h-5 w-5" strokeWidth={2.25} />
+                  <div className="mb-2.5 flex h-7 w-7 items-center justify-center rounded-lg bg-white/20 text-white shadow-inner backdrop-blur-md ring-1 ring-white/30 transition group-hover:scale-105">
+                    <item.icon className="h-3.5 w-3.5" strokeWidth={2.25} />
                   </div>
                   <p className="text-[15px] font-semibold tracking-tight">{item.title}</p>
                   <p className="mt-0.5 line-clamp-2 text-[12px] text-white/85">{item.body}</p>
@@ -302,8 +302,8 @@ export default function HomePage() {
                 <div className={cn('absolute inset-0 bg-gradient-to-t', item.gradient)} aria-hidden />
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.22)_0%,_transparent_55%)]" aria-hidden />
                 <div className="relative z-10 flex flex-col p-3.5 sm:p-4">
-                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/20 shadow-[0_8px_16px_rgba(0,0,0,0.25)] backdrop-blur-md ring-1 ring-white/40">
-                    <item.icon className="h-5 w-5 drop-shadow-sm" strokeWidth={2.25} />
+                  <div className="mb-1.5 flex h-7 w-7 items-center justify-center rounded-lg bg-white/20 shadow-[0_4px_10px_rgba(0,0,0,0.25)] backdrop-blur-md ring-1 ring-white/40">
+                    <item.icon className="h-3.5 w-3.5 drop-shadow-sm" strokeWidth={2.25} />
                   </div>
                   <p className="text-[16px] font-bold leading-tight tracking-tight drop-shadow-sm sm:text-[17px]">{item.title}</p>
                   <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white/90 sm:text-[12px]">{item.body}</p>
@@ -346,8 +346,8 @@ export default function HomePage() {
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.18)_0%,_transparent_50%)]" aria-hidden />
                 <div className="relative z-10 mt-auto flex flex-col p-5">
                   <div className="mb-3 flex items-center justify-between">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-[1.05rem] bg-white/20 shadow-[0_10px_24px_rgba(0,0,0,0.3)] backdrop-blur-md ring-1 ring-white/45">
-                      <item.icon className="h-6 w-6 drop-shadow" strokeWidth={2.1} />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/20 shadow-[0_6px_14px_rgba(0,0,0,0.28)] backdrop-blur-md ring-1 ring-white/45">
+                      <item.icon className="h-4 w-4 drop-shadow" strokeWidth={2.25} />
                     </div>
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/25 backdrop-blur-sm ring-1 ring-white/25">
                       <ChevronRight className="h-4 w-4 text-white/90 transition group-hover:translate-x-0.5" />
