@@ -40,6 +40,24 @@ const FALLS_FALLBACK =
 const CITY_FALLBACK =
   'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/The_city_of_Bahir_Dar%2C_Ethiopia.jpg/800px-The_city_of_Bahir_Dar%2C_Ethiopia.jpg'
 
+/** Path cards — photography + soft 3D depth (Unsplash / Wikimedia with fallbacks) */
+const PATH_STAY_IMG =
+  'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80'
+const PATH_EAT_IMG =
+  'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80'
+const PATH_GO_IMG =
+  'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1000&q=80'
+const PATH_SEE_IMG =
+  'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1000&q=80'
+const PATH_STAY_FB =
+  'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1000&q=80'
+const PATH_EAT_FB =
+  'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1000&q=80'
+const PATH_GO_FB =
+  'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1000&q=80'
+const PATH_SEE_FB =
+  'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Blue_Nile_Falls-03%2C_by_CT_Snow.jpg/960px-Blue_Nile_Falls-03%2C_by_CT_Snow.jpg'
+
 function CoverImg({
   src,
   fallback,
@@ -80,44 +98,44 @@ export default function HomePage() {
       title: t.home.stay,
       body: t.home.stayBody,
       icon: Hotel,
-      gradient: 'from-[#1a8bb8] via-[#0b6e99] to-[#0a4d6e]',
-      tint: 'bg-[#0b6e99]/12 text-[#0a5a7e] dark:bg-[#0b6e99]/25 dark:text-[#7dd3fc]',
-      tintHover: 'group-hover:bg-[#0b6e99]/18 dark:group-hover:bg-[#0b6e99]/35',
+      image: PATH_STAY_IMG,
+      imageFb: PATH_STAY_FB,
+      gradient: 'from-[#0a4d6e]/95 via-[#0b6e99]/55 to-transparent',
       accent: 'bg-[#0b6e99]',
-      glow: 'shadow-[0_8px_28px_-6px_rgba(11,110,153,0.45)]',
+      ring: 'ring-[#0b6e99]/30',
     },
     {
       to: '/restaurants',
       title: t.home.eat,
       body: t.home.eatBody,
       icon: UtensilsCrossed,
-      gradient: 'from-[#d4b896] via-[#c4a574] to-[#6f4e37]',
-      tint: 'bg-[#c4a574]/20 text-[#6f4e37] dark:bg-[#c4a574]/20 dark:text-[#e8d5b5]',
-      tintHover: 'group-hover:bg-[#c4a574]/30 dark:group-hover:bg-[#c4a574]/30',
+      image: PATH_EAT_IMG,
+      imageFb: PATH_EAT_FB,
+      gradient: 'from-[#4a2c1a]/95 via-[#6f4e37]/55 to-transparent',
       accent: 'bg-[#c4a574]',
-      glow: 'shadow-[0_8px_28px_-6px_rgba(196,165,116,0.5)]',
+      ring: 'ring-[#c4a574]/35',
     },
     {
       to: '/transport',
       title: t.home.go,
       body: t.home.goBody,
       icon: Car,
-      gradient: 'from-[#1db954] via-[#078930] to-[#045a1e]',
-      tint: 'bg-[#078930]/12 text-[#056b24] dark:bg-[#078930]/25 dark:text-[#86efac]',
-      tintHover: 'group-hover:bg-[#078930]/18 dark:group-hover:bg-[#078930]/35',
+      image: PATH_GO_IMG,
+      imageFb: PATH_GO_FB,
+      gradient: 'from-[#034a18]/95 via-[#078930]/55 to-transparent',
       accent: 'bg-[#078930]',
-      glow: 'shadow-[0_8px_28px_-6px_rgba(7,137,48,0.45)]',
+      ring: 'ring-[#078930]/30',
     },
     {
       to: '/attractions',
       title: t.home.see,
       body: t.home.seeBody,
       icon: Sun,
-      gradient: 'from-[#f5c518] via-[#e6a817] to-[#c4890a]',
-      tint: 'bg-[#f5c518]/20 text-[#8a6d0b] dark:bg-[#f5c518]/20 dark:text-[#fde68a]',
-      tintHover: 'group-hover:bg-[#f5c518]/30 dark:group-hover:bg-[#f5c518]/30',
+      image: PATH_SEE_IMG,
+      imageFb: PATH_SEE_FB,
+      gradient: 'from-[#5c4508]/95 via-[#b8860b]/50 to-transparent',
       accent: 'bg-[#f5c518]',
-      glow: 'shadow-[0_8px_28px_-6px_rgba(212,160,23,0.45)]',
+      ring: 'ring-[#f5c518]/35',
     },
   ] as const
 
@@ -213,19 +231,32 @@ export default function HomePage() {
               <Link
                 key={item.to}
                 to={item.to}
-                className="group relative overflow-hidden rounded-[1.25rem] bg-white/12 p-4 shadow-lg ring-1 ring-white/25 backdrop-blur-xl transition duration-200 hover:-translate-y-1 hover:bg-white/20 hover:shadow-xl hover:ring-white/40 active:translate-y-0 active:scale-[0.98] active:bg-white/14"
+                className="group relative overflow-hidden rounded-[1.25rem] p-4 shadow-lg ring-1 ring-white/25 transition duration-200 hover:-translate-y-1 hover:shadow-xl hover:ring-white/40 active:translate-y-0 active:scale-[0.98]"
               >
-                <div
-                  className={cn(
-                    'mb-3 flex h-10 w-10 items-center justify-center rounded-[0.85rem] bg-gradient-to-br text-white shadow-inner transition group-hover:scale-105 group-active:scale-95',
-                    item.gradient
-                  )}
-                >
-                  <item.icon className="h-5 w-5" strokeWidth={2.25} />
+                <img
+                  src={item.image}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const el = e.currentTarget
+                    if (el.dataset.fb !== '1') {
+                      el.dataset.fb = '1'
+                      el.src = item.imageFb
+                    }
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/20" aria-hidden />
+                <div className="relative z-10">
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[0.85rem] bg-white/20 text-white shadow-inner backdrop-blur-md ring-1 ring-white/30 transition group-hover:scale-105">
+                    <item.icon className="h-5 w-5" strokeWidth={2.25} />
+                  </div>
+                  <p className="text-[15px] font-semibold tracking-tight">{item.title}</p>
+                  <p className="mt-0.5 line-clamp-2 text-[12px] text-white/85">{item.body}</p>
                 </div>
-                <p className="text-[15px] font-semibold tracking-tight">{item.title}</p>
-                <p className="mt-0.5 line-clamp-2 text-[12px] text-white/80">{item.body}</p>
-                <ArrowRight className="absolute bottom-4 right-4 h-4 w-4 opacity-0 transition group-hover:opacity-90" />
+                <ArrowRight className="absolute bottom-4 right-4 z-10 h-4 w-4 opacity-0 transition group-hover:opacity-90" />
               </Link>
             ))}
           </div>
@@ -240,68 +271,92 @@ export default function HomePage() {
           <p className="mt-1 text-[13px] text-[#8e8e93] sm:text-sm lg:text-[15px]">{t.home.whatNeedSub}</p>
         </div>
 
-        {/* Mobile + tablet: iOS widget-style tiles */}
+        {/* Mobile + tablet: photo + 3D depth tiles */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:hidden">
           {desk.map((item) => (
-            <Link key={item.to} to={item.to} className="ios-press group block">
+            <Link key={item.to} to={item.to} className="ios-press group block [perspective:900px]">
               <div
                 className={cn(
-                  'relative flex min-h-[112px] flex-col justify-between overflow-hidden rounded-[1.35rem] bg-gradient-to-br p-3.5 text-white sm:min-h-[132px] sm:p-4',
-                  'ring-1 ring-white/25 transition duration-200',
-                  'group-active:scale-[0.97] group-hover:brightness-105',
-                  item.gradient,
-                  item.glow
+                  'relative flex min-h-[140px] flex-col justify-end overflow-hidden rounded-[1.4rem] text-white sm:min-h-[160px]',
+                  'shadow-[0_10px_28px_-8px_rgba(0,0,0,0.45),0_2px_6px_rgba(0,0,0,0.2)]',
+                  'ring-1 ring-black/10 transition duration-300',
+                  'group-hover:[transform:rotateX(2deg)_translateY(-2px)] group-active:scale-[0.97]',
+                  item.ring
                 )}
               >
-                <div
-                  className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/25 via-white/5 to-transparent opacity-90"
-                  aria-hidden
+                <img
+                  src={item.image}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                  loading="lazy"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const el = e.currentTarget
+                    if (el.dataset.fb !== '1') {
+                      el.dataset.fb = '1'
+                      el.src = item.imageFb
+                    }
+                  }}
                 />
-                <div className="relative flex items-start justify-between">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-[0.85rem] bg-white/20 shadow-inner backdrop-blur-sm sm:h-10 sm:w-10">
-                    <item.icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={2.25} />
+                <div className={cn('absolute inset-0 bg-gradient-to-t', item.gradient)} aria-hidden />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.22)_0%,_transparent_55%)]" aria-hidden />
+                <div className="relative z-10 flex flex-col p-3.5 sm:p-4">
+                  <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-white/20 shadow-[0_8px_16px_rgba(0,0,0,0.25)] backdrop-blur-md ring-1 ring-white/40">
+                    <item.icon className="h-5 w-5 drop-shadow-sm" strokeWidth={2.25} />
                   </div>
-                  <ChevronRight className="h-4 w-4 text-white/70 opacity-80" />
-                </div>
-                <div className="relative mt-3">
-                  <p className="text-[15px] font-semibold leading-tight tracking-tight sm:text-[16px]">{item.title}</p>
-                  <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white/85 sm:text-[12px]">{item.body}</p>
+                  <p className="text-[16px] font-bold leading-tight tracking-tight drop-shadow-sm sm:text-[17px]">{item.title}</p>
+                  <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white/90 sm:text-[12px]">{item.body}</p>
                 </div>
               </div>
             </Link>
           ))}
         </div>
 
-        {/* Desktop: iOS Settings / Apple Card style */}
+        {/* Desktop: large photo cards with 3D hover */}
         <div className="hidden lg:grid lg:grid-cols-4 lg:gap-4 xl:gap-5">
           {desk.map((item) => (
-            <Link key={item.to} to={item.to} className="ios-press group block">
+            <Link key={item.to} to={item.to} className="ios-press group block [perspective:1200px]">
               <div
                 className={cn(
-                  'relative flex h-full min-h-[180px] flex-col overflow-hidden rounded-[1.5rem]',
-                  'border border-black/[0.04] bg-white/95 p-5',
-                  'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_10px_28px_rgba(0,0,0,0.06)]',
-                  'backdrop-blur-xl transition duration-200',
-                  'group-hover:-translate-y-1 group-hover:shadow-[0_12px_36px_rgba(0,0,0,0.1)]',
-                  'dark:border-white/[0.08] dark:bg-[#1c1c1e]/95'
+                  'relative flex h-full min-h-[220px] flex-col overflow-hidden rounded-[1.6rem] text-white',
+                  'shadow-[0_14px_40px_-12px_rgba(0,0,0,0.4),0_4px_12px_rgba(0,0,0,0.15)]',
+                  'ring-1 ring-black/10 transition duration-300 ease-out',
+                  'group-hover:-translate-y-1.5 group-hover:shadow-[0_22px_50px_-14px_rgba(0,0,0,0.5)]',
+                  'group-hover:[transform:translateY(-6px)_rotateX(3deg)]',
+                  item.ring
                 )}
               >
-                <div className="mb-5 flex items-start justify-between">
-                  <div
-                    className={cn(
-                      'flex h-14 w-14 items-center justify-center rounded-[1.1rem] bg-gradient-to-br text-white shadow-md transition duration-200 group-hover:scale-105',
-                      item.gradient
-                    )}
-                  >
-                    <item.icon className="h-7 w-7" strokeWidth={2} />
+                <img
+                  src={item.image}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-110"
+                  loading="lazy"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const el = e.currentTarget
+                    if (el.dataset.fb !== '1') {
+                      el.dataset.fb = '1'
+                      el.src = item.imageFb
+                    }
+                  }}
+                />
+                <div className={cn('absolute inset-0 bg-gradient-to-t', item.gradient)} aria-hidden />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.18)_0%,_transparent_50%)]" aria-hidden />
+                <div className="relative z-10 mt-auto flex flex-col p-5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-[1.05rem] bg-white/20 shadow-[0_10px_24px_rgba(0,0,0,0.3)] backdrop-blur-md ring-1 ring-white/45">
+                      <item.icon className="h-6 w-6 drop-shadow" strokeWidth={2.1} />
+                    </div>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/25 backdrop-blur-sm ring-1 ring-white/25">
+                      <ChevronRight className="h-4 w-4 text-white/90 transition group-hover:translate-x-0.5" />
+                    </div>
                   </div>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.04] dark:bg-white/[0.08]">
-                    <ChevronRight className="h-4 w-4 text-[#8e8e93] transition group-hover:translate-x-0.5" />
-                  </div>
+                  <p className="text-[22px] font-bold tracking-tight drop-shadow-sm">{item.title}</p>
+                  <p className="mt-1 line-clamp-2 text-[14px] leading-relaxed text-white/90">{item.body}</p>
+                  <div className={cn('mt-4 h-1 w-12 rounded-full opacity-95 transition-all duration-300 group-hover:w-20', item.accent)} />
                 </div>
-                <p className="text-[20px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white">{item.title}</p>
-                <p className="mt-1.5 line-clamp-2 flex-1 text-[14px] leading-relaxed text-[#8e8e93]">{item.body}</p>
-                <div className={cn('mt-5 h-1 w-11 rounded-full opacity-90 transition-all duration-200 group-hover:w-16', item.accent)} />
               </div>
             </Link>
           ))}
