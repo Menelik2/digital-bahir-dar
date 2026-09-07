@@ -8,11 +8,15 @@ export type CityEvent = {
   title: string
   titleAm?: string
   dateLabel: string
+  dateLabelAm?: string
   timeLabel?: string
   venue: string
+  venueAm?: string
   category: 'culture' | 'music' | 'market' | 'sports' | 'community' | 'seasonal'
   description: string
+  descriptionAm?: string
   priceLabel: string
+  priceLabelAm?: string
   featured?: boolean
 }
 
@@ -65,66 +69,101 @@ export const CITY_EVENTS: CityEvent[] = [
     title: 'Lake Tana Cultural Evening',
     titleAm: 'የጣና ሐይቅ ባህላዊ ምሽት',
     dateLabel: 'Often Saturdays (seasonal)',
+    dateLabelAm: 'ብዙ ጊዜ ቅዳሜ (በወቅት)',
     timeLabel: '18:00 – 21:00',
     venue: 'Lakeside hotels & cultural venues',
+    venueAm: 'በሐይቅ ዳር ሆቴሎች እና የባህል ቦታዎች',
     category: 'culture',
     description:
       'Music, coffee ceremony, and traditional dance evenings are common by the lake. Ask your hotel for this week’s venue — schedules change by season and holidays.',
+    descriptionAm:
+      'በሐይቁ አጠገብ ሙዚቃ፣ የቡና ስነ-ስርዓት እና ባህላዊ ዳንስ ምሽቶች የተለመዱ ናቸው። የዚህ ሳምንት ቦታ ለማወቅ ሆቴልዎን ይጠይቁ — መርሃ ግብር በወቅት እና በበዓላት ይለዋወጣል።',
     priceLabel: 'Often free entry · food/drink extra',
+    priceLabelAm: 'ብዙ ጊዜ ነጻ መግቢያ · ምግብ/መጠጥ ተጨማሪ',
     featured: true,
   },
   {
     id: 'ev-2',
     title: 'Central Market mornings',
+    titleAm: 'የማዕከላዊ ገበያ ጠዋታት',
     dateLabel: 'Daily · busiest morning',
+    dateLabelAm: 'ዕለታዊ · በጠዋት በጣም ተጨናንቋል',
     timeLabel: '07:00 – 14:00',
     venue: 'Bahir Dar central market area',
+    venueAm: 'የባሕር ዳር ማዕከላዊ ገበያ አካባቢ',
     category: 'market',
     description:
       'Produce, spices, coffee, textiles, and household goods. Go early for selection. Keep bags closed; agree prices calmly before paying.',
+    descriptionAm:
+      'አትክልት፣ ቅመማ ቅመም፣ ቡና፣ ጨርቃ ጨርቅ እና የቤት እቃዎች። ለምርጫ ጠዋት ይሂዱ። ቦርሳዎን ይዝጉ፤ ከመክፈልዎ በፊት ዋጋውን በጸጥታ ይስማሙ።',
     priceLabel: 'Free to browse',
+    priceLabelAm: 'ለመመልከት ነጻ',
     featured: true,
   },
   {
     id: 'ev-3',
     title: 'Timket (Epiphany)',
+    titleAm: 'ጥምቀት',
     dateLabel: 'January (Ethiopian calendar · ~19 Jan Gregorian often)',
+    dateLabelAm: 'ጥር (በኢትዮጵያ ዘመን አቆጣጠር · ብዙ ጊዜ ጥር 11/19 በጎርጎሮሳዊ)',
     venue: 'City-wide · churches & processions',
+    venueAm: 'ከተማ በሙሉ · ቤተክርስቲያኖች እና ሰልፎች',
     category: 'seasonal',
     description:
       'Major religious festival with processions and crowded streets. Book lodging early; dress modestly near churches; expect transport delays.',
+    descriptionAm:
+      'ትልቅ የሃይማኖት በዓል ከሰልፍ እና ከተጨናነቀ ጎዳና ጋር። ማረፊያ አስቀድመው ያስይዙ፤ በቤተክርስቲያን አቅራቢያ በመጠኑ ይልበሱ፤ የትራንስፖርት መዘግየት ይጠብቁ።',
     priceLabel: 'Public celebrations',
+    priceLabelAm: 'ሕዝባዊ አከባበር',
   },
   {
     id: 'ev-4',
     title: 'Meskel (Finding of the True Cross)',
+    titleAm: 'መስቀል',
     dateLabel: 'September (Ethiopian calendar)',
+    dateLabelAm: 'መስከረም (በኢትዮጵያ ዘመን አቆጣጠር)',
     venue: 'Public squares & church compounds',
+    venueAm: 'ሕዝባዊ አደባባዮች እና የቤተክርስቲያን ግቢዎች',
     category: 'seasonal',
     description:
       'Bonfires (demera) and community gatherings. Confirm exact public sites with locals or hotel staff each year.',
+    descriptionAm:
+      'ደመራ እና የማህበረሰብ ስብሰባዎች። ትክክለኛውን የሕዝብ ቦታ በየዓመቱ ከአካባቢው ወይም ከሆቴል ሰራተኞች ያረጋግጡ።',
     priceLabel: 'Public',
+    priceLabelAm: 'ሕዝባዊ',
   },
   {
     id: 'ev-5',
     title: 'Lakeside morning walks',
+    titleAm: 'በሐይቅ ዳር የጠዋት ጉዞ',
     dateLabel: 'Daily',
+    dateLabelAm: 'ዕለታዊ',
     timeLabel: 'Before 09:00 recommended',
     venue: 'Lake Tana shore / promenade areas',
+    venueAm: 'የጣና ሐይቅ ዳር / የእግር መንገድ አካባቢዎች',
     category: 'sports',
     description:
       'Locals and visitors walk or jog along the lake before heat builds. Stay alert where paths meet roads or boat traffic.',
+    descriptionAm:
+      'ከሙቀት በፊት ነዋሪዎች እና ጎብኚዎች በሐይቁ ዳር ይራመዳሉ ወይም ይሮጣሉ። መንገዶች ከመንገድ ወይም ከጀልባ ትራፊክ ጋር የሚገናኙበት ጥንቃቄ ያድርጉ።',
     priceLabel: 'Free',
+    priceLabelAm: 'ነጻ',
   },
   {
     id: 'ev-6',
     title: 'Weekend hotel live music',
+    titleAm: 'የሳምንት መጨረሻ የሆቴል ቀጥታ ሙዚቃ',
     dateLabel: 'Fri – Sat evenings',
+    dateLabelAm: 'አርብ – ቅዳሜ ማታ',
     venue: 'Selected hotels & restaurants',
+    venueAm: 'የተመረጡ ሆቴሎች እና ምግብ ቤቶች',
     category: 'music',
     description:
       'Some hotels host bands on weekends. Ask reception for the current schedule — not every venue performs every week.',
+    descriptionAm:
+      'አንዳንድ ሆቴሎች በሳምንት መጨረሻ ባንዶች ያስተናግዳሉ። የአሁኑን መርሃ ግብር በመቀበያ ይጠይቁ — ሁሉም ቦታ በየሳምንቱ አያቀርብም።',
     priceLabel: 'Entry often free · consume on-site',
+    priceLabelAm: 'መግቢያ ብዙ ጊዜ ነጻ · በቦታው ይጠጡ/ይብሉ',
   },
 ]
 
@@ -345,4 +384,20 @@ export const EVENT_CATEGORY_LABEL: Record<CityEvent['category'], string> = {
   sports: 'Sports',
   community: 'Community',
   seasonal: 'Seasonal',
+}
+
+export const EVENT_CATEGORY_LABEL_AM: Record<CityEvent['category'], string> = {
+  culture: 'ባህል',
+  music: 'ሙዚቃ',
+  market: 'ገበያ',
+  sports: 'ስፖርት',
+  community: 'ማህበረሰብ',
+  seasonal: 'ወቅታዊ',
+}
+
+export function eventCategoryLabel(
+  category: CityEvent['category'],
+  lang: 'en' | 'am' = 'en'
+): string {
+  return lang === 'am' ? EVENT_CATEGORY_LABEL_AM[category] : EVENT_CATEGORY_LABEL[category]
 }
