@@ -37,25 +37,27 @@ export function Header() {
   const exploreRef = useRef<HTMLDivElement>(null)
   const t = useT()
 
+  /* Plain labels so non-IT visitors know where to tap */
   const primaryNav = [
     { path: '/', label: t.nav.home },
     { path: '/map', label: t.nav.map, icon: Map },
-    { path: '/hotels', label: t.nav.hotels, icon: Hotel },
-    { path: '/attractions', label: t.nav.attractions, icon: Landmark },
+    { path: '/hotels', label: t.home.stay, icon: Hotel },
+    { path: '/restaurants', label: t.home.eat, icon: UtensilsCrossed },
+    { path: '/transport', label: t.home.go, icon: Car },
+    { path: '/attractions', label: t.home.see, icon: Landmark },
     { path: '/today', label: t.nav.today, icon: Sun },
-    { path: '/trip-planner', label: t.nav.planner, icon: Sparkles },
   ]
 
   const exploreNav = [
     { path: '/discover', label: t.nav.discover, icon: Compass },
-    { path: '/restaurants', label: t.nav.restaurants, icon: UtensilsCrossed },
-    { path: '/transport', label: t.nav.transport, icon: Car },
+    { path: '/trip-planner', label: t.nav.planner, icon: Sparkles },
     { path: '/todo', label: t.nav.todo, icon: ListTodo },
     { path: '/events', label: t.nav.events, icon: Calendar },
     { path: '/city', label: t.nav.city, icon: Building },
     { path: '/ai-guide', label: t.nav.aiGuide, icon: Bot },
     { path: '/budget', label: t.home.budget, icon: Wallet },
     { path: '/trips', label: t.nav.trips, icon: ListTodo },
+    { path: '/directory', label: t.nav.directory, icon: Building },
   ]
 
   const mobileNav = [
@@ -119,20 +121,23 @@ export function Header() {
           <span className="text-[17px] font-bold tracking-tight sm:hidden">Bahir Dar</span>
         </Link>
 
-        <nav className="hidden items-center gap-0.5 lg:flex" aria-label="Main">
+        <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">
           {primaryNav.map((item) => {
             const active = pathActive(location.pathname, item.path)
+            const Icon = 'icon' in item ? item.icon : null
             return (
               <Link
                 key={item.path}
                 to={item.path}
+                title={item.label}
                 className={cn(
-                  'rounded-full px-3 py-2 text-[13px] font-medium transition-colors xl:px-3.5 xl:text-[14px]',
+                  'inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-[13px] font-semibold transition-colors xl:px-3.5 xl:text-[14px]',
                   active
                     ? 'bg-[#078930]/12 text-[#056b24] dark:bg-[#30d158]/15 dark:text-[#30d158]'
-                    : 'text-[#3c3c43]/85 hover:bg-black/[0.05] dark:text-white/75 dark:hover:bg-white/10'
+                    : 'text-[#3c3c43] hover:bg-black/[0.05] dark:text-white/80 dark:hover:bg-white/10'
                 )}
               >
+                {Icon ? <Icon className="h-3.5 w-3.5 shrink-0 opacity-80" strokeWidth={2.25} /> : null}
                 {item.label}
               </Link>
             )
@@ -151,7 +156,7 @@ export function Header() {
                   : 'text-[#3c3c43]/85 hover:bg-black/[0.05] dark:text-white/75 dark:hover:bg-white/10'
               )}
             >
-              {t.nav.explore}
+              {t.nav.exploreMenu}
               <ChevronDown className={cn('h-3.5 w-3.5 transition', exploreOpen && 'rotate-180')} />
             </button>
 
@@ -216,27 +221,29 @@ export function Header() {
         </div>
       </div>
 
-      <div className="hidden border-t border-black/[0.04] bg-[#f8f8fa]/90 dark:border-white/[0.06] dark:bg-black/40 xl:block">
-        <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-6 py-1.5 xl:px-8">
-          <span className="mr-2 shrink-0 text-[11px] font-semibold uppercase tracking-wide text-[#8e8e93]">
-            Quick
+      {/* Desktop helper row — plain language shortcuts */}
+      <div className="hidden border-t border-black/[0.04] bg-[#f8f8fa]/95 dark:border-white/[0.06] dark:bg-black/40 lg:block">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-6 py-2 xl:px-8">
+          <span className="mr-1 shrink-0 text-[12px] font-semibold text-[#8e8e93]">
+            {t.nav.find}:
           </span>
           {[
-            { path: '/restaurants', label: t.nav.restaurants },
-            { path: '/transport', label: t.nav.transport },
+            { path: '/today', label: t.nav.today },
+            { path: '/trip-planner', label: t.nav.planner },
             { path: '/discover', label: t.nav.discover },
             { path: '/events', label: t.nav.events },
             { path: '/ai-guide', label: t.nav.aiGuide },
             { path: '/budget', label: t.home.budget },
+            { path: '/directory', label: t.nav.directory },
           ].map((item) => (
             <Link
               key={item.path}
               to={item.path}
               className={cn(
-                'shrink-0 rounded-full px-2.5 py-1 text-[12px] font-medium transition-colors',
+                'shrink-0 rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors',
                 pathActive(location.pathname, item.path)
                   ? 'bg-[#078930]/12 text-[#056b24] dark:bg-[#30d158]/15 dark:text-[#30d158]'
-                  : 'text-[#3c3c43]/75 hover:bg-black/[0.04] dark:text-white/65 dark:hover:bg-white/10'
+                  : 'bg-white text-[#3c3c43] shadow-sm ring-1 ring-black/[0.04] hover:bg-[#078930]/08 dark:bg-white/10 dark:text-white/80 dark:ring-white/10'
               )}
             >
               {item.label}
