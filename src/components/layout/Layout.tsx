@@ -26,6 +26,12 @@ export function Layout() {
       <main id="main-content" className="page-enter flex-1 pb-nav-safe lg:pb-0" tabIndex={-1}>
         <Outlet />
       </main>
+      <footer className="border-t border-black/[0.04] bg-white/80 px-4 py-4 text-center dark:border-white/[0.08] dark:bg-[#0c0c0e]/90 lg:py-5">
+        <p className="text-[11px] font-medium tracking-wide text-[#8e8e93] sm:text-[12px]">
+          {t.common.developedBy}{' '}
+          <span className="font-semibold text-[#3c3c43] dark:text-white/85">Menelik Admasu</span>
+        </p>
+      </footer>
       <MobileNav />
       <InstallPrompt />
     </div>
