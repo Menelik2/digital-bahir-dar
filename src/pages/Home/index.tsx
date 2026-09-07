@@ -80,40 +80,44 @@ export default function HomePage() {
       title: t.home.stay,
       body: t.home.stayBody,
       icon: Hotel,
-      gradient: 'from-[#0b6e99] to-[#0a4d6e]',
+      gradient: 'from-[#1a8bb8] via-[#0b6e99] to-[#0a4d6e]',
       tint: 'bg-[#0b6e99]/12 text-[#0a5a7e] dark:bg-[#0b6e99]/25 dark:text-[#7dd3fc]',
       tintHover: 'group-hover:bg-[#0b6e99]/18 dark:group-hover:bg-[#0b6e99]/35',
       accent: 'bg-[#0b6e99]',
+      glow: 'shadow-[0_8px_28px_-6px_rgba(11,110,153,0.45)]',
     },
     {
       to: '/restaurants',
       title: t.home.eat,
       body: t.home.eatBody,
       icon: UtensilsCrossed,
-      gradient: 'from-[#c4a574] to-[#6f4e37]',
+      gradient: 'from-[#d4b896] via-[#c4a574] to-[#6f4e37]',
       tint: 'bg-[#c4a574]/20 text-[#6f4e37] dark:bg-[#c4a574]/20 dark:text-[#e8d5b5]',
       tintHover: 'group-hover:bg-[#c4a574]/30 dark:group-hover:bg-[#c4a574]/30',
       accent: 'bg-[#c4a574]',
+      glow: 'shadow-[0_8px_28px_-6px_rgba(196,165,116,0.5)]',
     },
     {
       to: '/transport',
       title: t.home.go,
       body: t.home.goBody,
       icon: Car,
-      gradient: 'from-[#078930] to-[#056b24]',
+      gradient: 'from-[#1db954] via-[#078930] to-[#045a1e]',
       tint: 'bg-[#078930]/12 text-[#056b24] dark:bg-[#078930]/25 dark:text-[#86efac]',
       tintHover: 'group-hover:bg-[#078930]/18 dark:group-hover:bg-[#078930]/35',
       accent: 'bg-[#078930]',
+      glow: 'shadow-[0_8px_28px_-6px_rgba(7,137,48,0.45)]',
     },
     {
-      to: '/today',
+      to: '/attractions',
       title: t.home.see,
       body: t.home.seeBody,
       icon: Sun,
-      gradient: 'from-[#d4a017] to-[#b8860b]',
+      gradient: 'from-[#f5c518] via-[#e6a817] to-[#c4890a]',
       tint: 'bg-[#f5c518]/20 text-[#8a6d0b] dark:bg-[#f5c518]/20 dark:text-[#fde68a]',
       tintHover: 'group-hover:bg-[#f5c518]/30 dark:group-hover:bg-[#f5c518]/30',
       accent: 'bg-[#f5c518]',
+      glow: 'shadow-[0_8px_28px_-6px_rgba(212,160,23,0.45)]',
     },
   ] as const
 
@@ -153,7 +157,6 @@ export default function HomePage() {
               }
             }}
           />
-          {/* Soft cinematic overlays — keep the sun rays and falls visible */}
           <div
             className="absolute inset-0 bg-gradient-to-br from-black/55 via-[#0a4d6e]/35 to-[#056b24]/30"
             aria-hidden
@@ -237,43 +240,68 @@ export default function HomePage() {
           <p className="mt-1 text-[13px] text-[#8e8e93] sm:text-sm lg:text-[15px]">{t.home.whatNeedSub}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:hidden">
+        {/* Mobile + tablet: iOS widget-style tiles */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:hidden">
           {desk.map((item) => (
-            <Link key={item.to} to={item.to} className="group block">
+            <Link key={item.to} to={item.to} className="ios-press group block">
               <div
                 className={cn(
-                  'ios-tile relative flex min-h-[88px] flex-col justify-end overflow-hidden rounded-[1.15rem] bg-gradient-to-br px-3 py-3 text-white shadow-sm',
-                  'sm:min-h-[110px] sm:px-4 sm:py-4',
-                  item.gradient
+                  'relative flex min-h-[112px] flex-col justify-between overflow-hidden rounded-[1.35rem] bg-gradient-to-br p-3.5 text-white sm:min-h-[132px] sm:p-4',
+                  'ring-1 ring-white/25 transition duration-200',
+                  'group-active:scale-[0.97] group-hover:brightness-105',
+                  item.gradient,
+                  item.glow
                 )}
               >
-                <item.icon className="mb-1.5 h-5 w-5 opacity-95 sm:h-6 sm:w-6" strokeWidth={2.25} />
-                <p className="text-[14px] font-bold leading-tight tracking-tight sm:text-[15px]">{item.title}</p>
-                <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white/85">{item.body}</p>
+                <div
+                  className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/25 via-white/5 to-transparent opacity-90"
+                  aria-hidden
+                />
+                <div className="relative flex items-start justify-between">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-[0.85rem] bg-white/20 shadow-inner backdrop-blur-sm sm:h-10 sm:w-10">
+                    <item.icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={2.25} />
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-white/70 opacity-80" />
+                </div>
+                <div className="relative mt-3">
+                  <p className="text-[15px] font-semibold leading-tight tracking-tight sm:text-[16px]">{item.title}</p>
+                  <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white/85 sm:text-[12px]">{item.body}</p>
+                </div>
               </div>
             </Link>
           ))}
         </div>
 
+        {/* Desktop: iOS Settings / Apple Card style */}
         <div className="hidden lg:grid lg:grid-cols-4 lg:gap-4 xl:gap-5">
           {desk.map((item) => (
-            <Link key={item.to} to={item.to} className="group block">
+            <Link key={item.to} to={item.to} className="ios-press group block">
               <div
                 className={cn(
-                  'ios-card relative flex h-full min-h-[168px] flex-col rounded-[1.35rem] border border-black/[0.04]',
-                  'bg-white/90 p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]',
-                  'backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#1c1c1e]/90'
+                  'relative flex h-full min-h-[180px] flex-col overflow-hidden rounded-[1.5rem]',
+                  'border border-black/[0.04] bg-white/95 p-5',
+                  'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_10px_28px_rgba(0,0,0,0.06)]',
+                  'backdrop-blur-xl transition duration-200',
+                  'group-hover:-translate-y-1 group-hover:shadow-[0_12px_36px_rgba(0,0,0,0.1)]',
+                  'dark:border-white/[0.08] dark:bg-[#1c1c1e]/95'
                 )}
               >
-                <div className="mb-4 flex items-start justify-between">
-                  <div className={cn('flex h-12 w-12 items-center justify-center rounded-[0.95rem] transition group-hover:scale-110', item.tint, item.tintHover)}>
-                    <item.icon className="h-6 w-6" strokeWidth={2.1} />
+                <div className="mb-5 flex items-start justify-between">
+                  <div
+                    className={cn(
+                      'flex h-14 w-14 items-center justify-center rounded-[1.1rem] bg-gradient-to-br text-white shadow-md transition duration-200 group-hover:scale-105',
+                      item.gradient
+                    )}
+                  >
+                    <item.icon className="h-7 w-7" strokeWidth={2} />
                   </div>
-                  <ChevronRight className="h-4 w-4 text-[#c7c7cc] transition group-hover:translate-x-1" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.04] dark:bg-white/[0.08]">
+                    <ChevronRight className="h-4 w-4 text-[#8e8e93] transition group-hover:translate-x-0.5" />
+                  </div>
                 </div>
-                <p className="text-[18px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white">{item.title}</p>
-                <p className="mt-1.5 line-clamp-2 flex-1 text-[13px] leading-relaxed text-[#8e8e93]">{item.body}</p>
-                <div className={cn('mt-4 h-1 w-10 rounded-full opacity-80 transition group-hover:w-14', item.accent)} />
+                <p className="text-[20px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white">{item.title}</p>
+                <p className="mt-1.5 line-clamp-2 flex-1 text-[14px] leading-relaxed text-[#8e8e93]">{item.body}</p>
+                <div className={cn('mt-5 h-1 w-11 rounded-full opacity-90 transition-all duration-200 group-hover:w-16', item.accent)} />
               </div>
             </Link>
           ))}
@@ -369,11 +397,34 @@ export default function HomePage() {
                 </div>
                 <CardContent className="p-4 sm:p-5">
                   <h3 className="text-[16px] font-semibold">{t.home.checklist}</h3>
-                  <p className="mt-1 text-[13px] text-[#8e8e93]">{done} / {CITY_TODOS.length} {t.home.checklistDone}</p>
+                  <p className="mt-1 text-[13px] text-[#8e8e93]">
+                    {done} / {CITY_TODOS.length} {t.home.checklistDone}
+                  </p>
                 </CardContent>
               </Card>
             </Link>
           </div>
+        </div>
+      </section>
+
+      <section className="px-4 pb-12 pt-2 sm:px-6 sm:pb-16 xl:px-8">
+        <div className="mx-auto max-w-7xl">
+          <Card className="ios-card overflow-hidden border-black/[0.04] bg-gradient-to-br from-[#0b6e99]/10 via-white to-[#078930]/10 shadow-sm dark:border-white/[0.08] dark:from-[#0b6e99]/20 dark:via-[#1c1c1e] dark:to-[#078930]/15">
+            <CardContent className="flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+              <div>
+                <h2 className="text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-2xl">{t.home.ctaTitle}</h2>
+                <p className="mt-1 max-w-xl text-[14px] text-[#8e8e93]">{t.home.ctaBody}</p>
+              </div>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <Link to="/explore" className="w-full sm:w-auto">
+                  <Button className="h-11 w-full rounded-full bg-[#078930] px-6 hover:bg-[#056b24] sm:w-auto">{t.home.openExplore}</Button>
+                </Link>
+                <Link to="/map" className="w-full sm:w-auto">
+                  <Button variant="outline" className="h-11 w-full rounded-full sm:w-auto">{t.home.openMap}</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
     </div>
