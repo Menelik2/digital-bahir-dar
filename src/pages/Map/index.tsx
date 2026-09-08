@@ -97,6 +97,10 @@ export default function MapPage() {
   useEffect(() => {
     const to = parseToParam(searchParams.get('to'))
     if (to) setMapCenter(to)
+    const modeParam = searchParams.get('mode')
+    if (modeParam === 'driving' || modeParam === 'walking') {
+      setTravelMode(modeParam)
+    }
   }, [searchParams, setMapCenter])
 
   // ?locate=1 or ?near=1 — for visitors who open map from “Where am I?”
@@ -169,8 +173,11 @@ export default function MapPage() {
           p.category?.name?.toLowerCase().includes(qq)
       )
     }
-    if (nearMe && location.latitude != null && location.longitude != null) {
-      list = rankNearby(list, location.latitude, location.longitude, 15_000)
+    if (location.latitude != null && location.longitude != null) {
+      const radius = nearMe ? 15_000 : categorySlug ? 40_000 : 0
+      if (radius > 0) {
+        list = rankNearby(list, location.latitude, location.longitude, radius)
+      }
     }
     return list
   }, [
@@ -249,6 +256,59 @@ export default function MapPage() {
     void ensureLocationForRoute()
   }, [nearMe, location.latitude, location.longitude, ensureLocationForRoute])
 
+  // Open directions from /map?to=lat,lng&placeId=...&mode=walking
+  useEffect(() => {
+    const to = parseToParam(searchParams.get('to'))
+    if (!to) return
+    const placeId = searchParams.get('placeId')
+    const name = (searchParams.get('name') || 'Destination').trim()
+    const key = placeId ? `id:${placeId}` : `to:${to.lat},${to.lng}`
+    if (openedDeepLink.current === key) return
+
+    if (placeId) {
+      const found = places.find((p) => p.id === placeId)
+      if (!found) return
+      openedDeepLink.current = key
+      setDirectionsPlace(found)
+      setSelectedPlaceId(null)
+      void ensureLocationForRoute()
+      return
+    }
+
+    openedDeepLink.current = key
+    const synthetic = {
+      id: `deep-${to.lat}-${to.lng}`,
+      name,
+      name_am: null,
+      slug: 'deep-link',
+      category_id: 'deep',
+      description: null,
+      description_am: null,
+      short_description: null,
+      short_description_am: null,
+      address: null,
+      address_am: null,
+      latitude: to.lat,
+      longitude: to.lng,
+      phone: null,
+      email: null,
+      website: null,
+      price_level: null,
+      entrance_fee: null,
+      currency: 'ETB',
+      verified: false,
+      featured: false,
+      status: 'published' as const,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      category: undefined,
+    } as unknown as Place
+    setDirectionsPlace(synthetic)
+    setSelectedPlaceId(null)
+    void ensureLocationForRoute()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [places, searchParams])
+
   const handleDirections = useCallback(
     async (place: Place) => {
       setDirectionsPlace(place)
@@ -309,12 +369,16 @@ export default function MapPage() {
       <div className="absolute inset-0 z-0">
         <MapView
           places={places}
-          center={mapCenter.lat ? mapCenter : BAHIR_DAR_CENTER}
-          selectedId={selectedPlaceId}
-          onSelect={handlePlaceSelect}
+          center={
+            Number.isFinite(mapCenter?.lat) && Number.isFinite(mapCenter?.lng)
+              ? mapCenter
+              : BAHIR_DAR_CENTER
+          }
+          selectedPlaceId={selectedPlaceId}
+          onPlaceSelect={handlePlaceSelect}
           onCenterChange={handleCenterChange}
           userLocation={userPos}
-          routeCoords={routeCoords}
+          routeCoordinates={routeCoords}
           basemap={basemap}
         />
       </div>
