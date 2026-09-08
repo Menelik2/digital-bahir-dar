@@ -153,7 +153,7 @@ export default function PlaceDetailsPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-2xl px-4 py-6">
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
         <div className="mb-4 flex flex-wrap gap-2">
           <Button onClick={() => goDirections('walking')}>
             <Navigation className="h-4 w-4" /> {isAm ? 'አቅጣጫ' : 'Directions'}
@@ -231,11 +231,22 @@ export default function PlaceDetailsPage() {
                   {isAm ? 'ድረ-ገጽ' : 'Website'}
                 </a>
               )}
-              <div className="pt-2">
-                <PlaceGoogleEmbed lat={place.latitude} lng={place.longitude} name={name} />
-              </div>
             </CardContent>
           </Card>
+        </section>
+
+        <section className="mb-6">
+          <h2 className="mb-2 text-[17px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white">
+            {isAm ? 'ካርታ እና ርቀት' : 'Map & distance'}
+          </h2>
+          <PlaceGoogleEmbed
+            lat={place.latitude}
+            lng={place.longitude}
+            name={name}
+            origin={userPos}
+            distanceM={distM}
+            isAm={isAm}
+          />
         </section>
 
         {similar.length > 0 && (
