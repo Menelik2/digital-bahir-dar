@@ -5,16 +5,16 @@
  * Vercel → Settings → Environment Variables (Production):
  *   AI_API_KEY   = Gemini key from https://aistudio.google.com/apikey
  *   AI_BASE_URL  = https://generativelanguage.googleapis.com/v1beta/openai
- *   AI_MODEL     = gemini-3.6-flash
+ *   AI_MODEL     = gemini-2.0-flash
  *
  * Aliases: GEMINI_API_KEY, GROQ_API_KEY, OPENAI_API_KEY
  * Redeploy after adding env vars.
  */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ReqReq = any
+type EnvReq = any
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ReqRes = any
+type EnvRes = any
 
 const SYSTEM_PROMPT = `You are the Digital Bahir Dar AI travel guide for Bahir Dar, Ethiopia (Lake Tana, Blue Nile Falls, monasteries, local food, transport, safety).
 
@@ -27,13 +27,13 @@ Rules:
 - You are not a booking engine; direct users to the app's map, places, and trip planner for details.
 - Do not invent places that are not widely known public landmarks in Bahir Dar / Lake Tana.`
 
-function setCors(res: ReqRes) {
+function setCors(res: EnvRes) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 }
 
-export default async function handler(req: ReqReq, res: ReqRes) {
+export default async function handler(req: EnvReq, res: EnvRes) {
   setCors(res)
 
   if (req.method === 'OPTIONS') {
@@ -46,18 +46,15 @@ export default async function handler(req: ReqReq, res: ReqRes) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {}
-    const messages = body.messages
-    const locale = body.locale || 'en'
-
-    if (!Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ error: 'messages required', fallback: true })
-    }
+    const messages = Array.isArray(body.messages) ? body.messages : []
+    const locale = body.locale === 'am' ? 'am' : 'en'
 
     const apiKey =
       process.env.AI_API_KEY ||
       process.env.GEMINI_API_KEY ||
       process.env.GROQ_API_KEY ||
-      process.env.OPENAI_API_KEY
+      process.env.OPENAI_API_KEY ||
+      ''
 
     if (!apiKey) {
       return res.status(200).json({
@@ -76,7 +73,7 @@ export default async function handler(req: ReqReq, res: ReqRes) {
       'https://generativelanguage.googleapis.com/v1beta/openai'
     const baseUrl = String(rawBase).replace(/\/+$/, '')
     const model =
-      process.env.AI_MODEL || process.env.OPENAI_MODEL || 'gemini-3.6-flash'
+      process.env.AI_MODEL || process.env.OPENAI_MODEL || 'gemini-2.0-flash'
 
     const systemContent =
       locale === 'am'
@@ -109,7 +106,7 @@ export default async function handler(req: ReqReq, res: ReqRes) {
           upstream.status === 401 || upstream.status === 403
             ? 'AI API key was rejected. Update AI_API_KEY on Vercel (Gemini key from aistudio.google.com).'
             : upstream.status === 404
-              ? 'Model or endpoint not found. Check AI_MODEL (e.g. gemini-3.6-flash) and AI_BASE_URL.'
+              ? 'Model or endpoint not found. Check AI_MODEL (e.g. gemini-2.0-flash) and AI_BASE_URL.'
               : 'AI provider returned an error. Offline tips still work in the app.',
       })
     }
@@ -120,15 +117,16 @@ export default async function handler(req: ReqReq, res: ReqRes) {
 
     return res.status(200).json({
       reply,
-      model: data.model || model,
-      provider: /generativelanguage\.googleapis\.com/i.test(baseUrl) ? 'gemini' : 'openai-compat',
+      model,
+      grounded: true,
+      fallback: false,
     })
   } catch (e) {
-    console.error(e)
+    console.error('ai-guide handler', e)
     return res.status(200).json({
-      error: String(e),
+      error: e instanceof Error ? e.message : 'server error',
       fallback: true,
-      reply: 'Server error in AI guide. Please try again — offline tips still work.',
+      reply: 'AI service error. Offline tips still work in the app.',
     })
   }
 }
