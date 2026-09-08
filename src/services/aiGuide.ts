@@ -31,123 +31,187 @@ const DEMO_KNOWLEDGE: { keys: string[]; reply: string; priority?: number; action
     ],
   },
   {
-    keys: ['lake tana', 'tana', 'boat', 'island', 'monastery', 'zege', 'ura kidane', 'debre maryam'],
-    priority: 8,
+    keys: ['boat', 'lake tana', 'monastery', 'zege', 'ura kidane', 'island'],
+    priority: 6,
     reply:
-      "**Lake Tana & monasteries**\n• Ethiopia's largest lake; source of the Blue Nile.\n• Shared half-day boats often ~1,500–2,500 ETB/person (2025–26 range); private charters higher — negotiate at the pier or via hotel.\n• Popular stops: Zege peninsula monasteries (e.g. Ura Kidane Mehret) — modest dress, shoes off in churches.\n• Morning departures are usually calmer; bring sun protection, water, and cash.\n• Confirm which islands, return time, and whether monastery entry is included.\n\nUse **Map** → boat pier / Lake Tana, and **Trip Planner** for a full day that packs boat + falls.",
+      '**Lake Tana boat**\n\n• Go in the **morning** for calmer water and more time at monasteries.\n• Shared boats are cheaper; private costs more — **agree the price in ETB before boarding**.\n• Zege / Ura Kidane Mehret are classic short trips; ask which islands are included.\n• Bring water, sun protection, and small bills.\n• Schedules and prices change — confirm at the pier.',
+    actions: [
+      { label: 'Attractions', to: '/attractions' },
+      { label: 'Map', to: '/map' },
+    ],
+  },
+  {
+    keys: ['falls', 'blue nile', 'tis', 'tis abay', 'tis issat', 'waterfall'],
+    priority: 6,
+    reply:
+      '**Blue Nile Falls (Tis Issat)**\n\n• About **30 km** from Bahir Dar toward Tis Abay.\n• Plan a **half to full day**; start early.\n• Entry, guide, and transport are usually **separate** costs.\n• Stronger flow after rains; paths can be slippery — wear proper shoes.\n• Combine with a local driver or organized trip if you prefer not to negotiate bajaj/taxi yourself.',
     actions: [
       { label: 'Map', to: '/map' },
-      { label: 'Trip planner', to: '/trip-planner' },
-      { label: 'Attractions', to: '/attractions' },
-    ],
-  },
-  {
-    keys: ['blue nile', 'falls', 'tis', 'abay', 'tissisat', 'tis issat', 'waterfall'],
-    priority: 8,
-    reply:
-      '**Blue Nile Falls (Tis Issat)**\n• About 30 km from Bahir Dar toward Tis Abay.\n• Entry often ~150–300 ETB; local guide ~300–1,500 ETB/group; private car/taxi round trip ~1,500–3,500 ETB (estimates).\n• Flow is strongest after the rainy season; ask your hotel about current conditions.\n• Paths can be steep and slippery — proper shoes required.\n• Full day recommended if combining with sightseeing stops; on a **2-day** trip, classic order is boat Day 1 → falls Day 2.\n\nSee **Attractions**, **Transport**, and **Trip Planner**.',
-    actions: [
-      { label: 'Trip planner', to: '/trip-planner' },
       { label: 'Transport', to: '/transport' },
-      { label: 'Attractions', to: '/attractions' },
     ],
   },
   {
-    keys: ['food', 'eat', 'restaurant', 'injera', 'coffee', 'fish', 'dinner', 'lunch', 'breakfast', 'cafe', 'café'],
-    priority: 7,
+    keys: ['food', 'eat', 'restaurant', 'injera', 'fish', 'coffee', 'lunch', 'dinner'],
+    priority: 5,
     reply:
-      '**Food in Bahir Dar**\n• **Must try:** lake fish (tilapia), injera with wot/shiro, beyaynetu (veg combo), Ethiopian coffee.\n• **Rough prices:** local plate ~80–350 ETB; lakeside fish ~200–600 ETB; coffee ~40–100 ETB.\n• **Where:** lakeside for fish & views; city center for budget injera houses; hotels when you want English menus.\n• Eat with the right hand from shared platters. Busy kitchens are usually safer.\n\nOpen **Restaurants** in the app for local recommendations and listings.',
+      '**Food in Bahir Dar**\n\n• **Injera** with stews — everyday local meals.\n• **Lake fish** — lakeside restaurants are popular.\n• **Coffee ceremony** — cultural and social.\n• Rough per-meal range: light ~80–200 ETB; fuller meals ~150–500+ ETB (estimates).\n\nOpen **Restaurants** in the app for places and map links.',
     actions: [
       { label: 'Restaurants', to: '/restaurants' },
-      { label: 'Spend guide', to: '/spend-guide' },
+      { label: 'Map', to: '/map' },
     ],
   },
   {
-    keys: ['hotel', 'stay', 'sleep', 'lodge', 'accommodation', 'resort', 'guesthouse'],
-    priority: 7,
+    keys: ['hotel', 'hotels', 'lodge', 'stay', 'sleep', 'accommodation', 'room'],
+    priority: 5,
     reply:
-      '**Where to stay**\n• **Budget:** ~1,500–4,000 ETB/night (guesthouse / simple hotel)\n• **Mid:** ~4,000–9,000 ETB/night\n• **Comfort / lakeside:** ~8,000–25,000+ ETB/night\n• Stay near the lake if you plan boat trips; city center is fine for markets and bajaj access.\n• Always confirm current rates — seasonal and nationality pricing vary.\n\nBrowse **Hotels** + **Map**. Track costs under **Budget** and **Trip Planner**.',
+      '**Hotels & lodges**\n\n• **Lakeside** = views; **central** often cheaper and closer to services.\n• Budget / mid / comfort tiers exist; prices move with season.\n• Compare ranges in the app **Hotels** page and verify the night rate before paying.\n\nUse **Budget** tools for a rough trip total.',
     actions: [
       { label: 'Hotels', to: '/hotels' },
       { label: 'Budget', to: '/budget' },
-      { label: 'Map', to: '/map' },
     ],
   },
   {
-    keys: ['transport', 'taxi', 'bajaj', 'bus', 'airport', 'driver', 'car', 'how to get', 'getting around'],
-    priority: 7,
+    keys: ['bajaj', 'taxi', 'transport', 'bus', 'airport', 'how to get', 'get around'],
+    priority: 5,
     reply:
-      '**Getting around**\n• **Bajaj:** short hops often ~50–200 ETB — agree price before you start.\n• **Taxi:** across town ~150–500 ETB (est.).\n• **Minibus:** cheapest fixed routes.\n• **Airport (BJR) ↔ city:** ~300–1,500 ETB; 15–40 min.\n• **Falls day car:** ~1,500–3,500 ETB vehicle round trip (est.).\n• **Boats:** negotiate at the Lake Tana pier; hotel can arrange trusted operators.\n\nSee **Transport** and **Map** in the app.',
+      '**Getting around**\n\n• **Bajaj** is the main in-city option — **agree the fare before you sit**.\n• Boats for Lake Tana; car/taxi or tour for the Falls.\n• Airport is close to town relative to many cities.\n\nOpen **Transport** and **Map** (enable location) in the app.',
     actions: [
       { label: 'Transport', to: '/transport' },
-      { label: 'Map', to: '/map' },
+      { label: 'Map', to: '/map?locate=1' },
     ],
   },
   {
-    keys: ['budget', 'cost', 'price', 'money', 'etb', 'expensive', 'cheap', 'how much'],
-    priority: 7,
+    keys: ['budget', 'price', 'cost', 'money', 'etb', 'birr', 'expensive', 'cheap'],
+    priority: 5,
     reply:
-      '**Rough 2-night budget for 2 people (ETB estimates)**\n• Lodging: 5,000–12,000+\n• Food: 2,000–5,000\n• Boat / Falls / activities: 2,000–6,000\n• Local transport: 500–2,000\n• Buffer: 1,000–2,000\n\nCarry cash (ATMs can run dry). Open the **Budget** planner or **Trip Planner** to adjust days and tiers, then save under **My Trips**.',
+      '**Rough budget (per person, estimates)**\n\n• Hotel / night: budget ~1,500–4,500 · mid ~4,000–9,500 · comfort higher\n• Food / day: ~400–2,000+\n• Boat: shared cheaper · private higher\n• Short bajaj: tens to a few hundred ETB depending on distance\n\nUse **Budget** and **Trip Planner** for structured estimates. Always verify locally.',
     actions: [
       { label: 'Budget', to: '/budget' },
       { label: 'Trip planner', to: '/trip-planner' },
-      { label: 'Spend guide', to: '/spend-guide' },
     ],
   },
   {
-    keys: ['itinerary', 'day plan', '1-day', 'one day', '2-day', 'two day', '3-day', 'three day', 'weekend', 'schedule', 'trip plan', 'plan my'],
-    priority: 9,
+    keys: ['itinerary', 'plan', '2 day', '3 day', 'two day', 'three day', 'schedule'],
+    priority: 6,
     reply:
-      '**Sample plans (realistic sequencing)**\n\n**1 packed day:** Morning Lake Tana boat → fish lunch → afternoon Blue Nile Falls *only if you start very early and accept a long day*; otherwise keep falls for day 2.\n\n**2 classic days:**\n• **Day 1:** Boat + monasteries + lakeside evening\n• **Day 2:** Early Blue Nile Falls day trip → return for coffee\n\n**3+ days:** Add city/market morning, Bezawit sunset, second shorter boat, or a rest day.\n\nUse the in-app **Trip Planner** for day-by-day costs in ETB.',
+      '**1–3 day sketch**\n\n• **1 day:** morning boat + lakeside lunch + sunset walk\n• **2 days:** Day 1 boat/monasteries · Day 2 Blue Nile Falls\n• **3 days:** arrive + lakeside · full boat day · Falls or Bezawit + market\n\nOpen **Trip Planner**, set days and budget, then **Build plan**.',
     actions: [
       { label: 'Trip planner', to: '/trip-planner' },
-      { label: 'Things to do', to: '/todo' },
-      { label: 'Map', to: '/map' },
+      { label: 'Today', to: '/today' },
     ],
-  },
-  {
-    keys: ['safety', 'safe', 'scam', 'health', 'hospital', 'emergency', 'police'],
-    priority: 8,
-    reply:
-      '**Safety & help**\n• Use known boat operators; agree prices before departure.\n• Keep valuables discrete; careful in crowded markets.\n• Drink sealed bottled water only.\n• **Emergency (Ethiopia):** Police **991** · Ambulance **907** · Fire **939**\n• Main hospital orientation: **Felege Hiwot Referral Hospital** — ask hotel for the best current route.\n\nSee **Directory** in the app. This is general advice, not a substitute for local emergency services.',
-    actions: [{ label: 'Directory', to: '/directory' }],
-  },
-  {
-    keys: ['amharic', 'language', 'አማርኛ', 'speak'],
-    priority: 6,
-    reply:
-      '**Language**\n• Amharic is primary; English is common in hotels and tourism.\n• Useful phrases: **Selam** (hello) · **Ameseginalehu** (thank you) · **Sint new?** (how much?)\n• Switch the app language in **Profile** (EN / አማርኛ).',
-    actions: [{ label: 'Profile', to: '/profile' }],
-  },
-  {
-    keys: ['market', 'shopping', 'souvenir', 'craft'],
-    priority: 6,
-    reply:
-      '**Market & shopping**\n• Central market is best in the morning for produce, spices, and coffee.\n• Bargain politely; start lower than the first price.\n• Keep bags zipped in crowds.\n• Craft/souvenir stalls near tourist routes — compare quality before buying.\n\nPin **Bahir Dar Central Market** from **Explore** or **Map**.',
-    actions: [
-      { label: 'Explore', to: '/explore' },
-      { label: 'Map', to: '/map' },
-    ],
-  },
-  {
-    keys: ['weather', 'rain', 'hot', 'season', 'when to visit'],
-    priority: 6,
-    reply:
-      '**When to visit (general)**\n• Dry months are easier for boats and road trips; the Falls are often more dramatic after the rains.\n• Mornings are cooler for walking and boat departures.\n• Pack sun protection year-round and a light layer for lakeside evenings.\n\nAlways check a current forecast before a Falls day trip.',
   },
 ]
 
-function scoreMatch(lower: string, keys: string[]): number {
+function scoreMatch(text: string, keys: string[]): number {
   let score = 0
   for (const k of keys) {
-    if (lower.includes(k)) {
-      score += Math.max(1, k.length / 4)
-    }
+    if (text.includes(k)) score += k.length > 8 ? 3 : 2
   }
   return score
 }
 
+/** Amharic offline replies */
+const DEMO_AM: Record<string, { reply: string; actions?: GuideAction[] }> = {
+  hello: {
+    reply:
+      'ሰላም! የባሕር ዳር መመሪያዎ ነኝ።\n\nመጠየቅ ይችላሉ፦\n• **የት መሄድ** (ጣና ሐይቅ፣ ጥሶ አባይ፣ እይታ)\n• **ምግብ** (እንጀራ፣ ዓሳ፣ ቡና)\n• **ሆቴልና በጀት**\n• **ትራንስፖርት** (ባጃጅ፣ ጀልባ)\n• **1–3 ቀን እቅድ**\n\nዋጋዎች ግምት ናቸው — በቦታው ያረጋግጡ።',
+    actions: [
+      { label: 'የጉዞ እቅድ', to: '/trip-planner' },
+      { label: 'ካርታ', to: '/map' },
+      { label: 'መስህቦች', to: '/attractions' },
+    ],
+  },
+  where: {
+    reply:
+      '**በባሕር ዳር የት ይሂዱ**\n\n1. **ጣና ሐይቅ** — ጠዋት ጀልባ ወደ ገዳም ደሴቶች። ዋጋ በብር ከመነሳት በፊት ይደራደሩ።\n2. **ጥሶ አባይ (ፏፏቴ)** — ~30 ኪ.ሜ። ጫማ ይልበሱ።\n3. **በዛዊት እይታ** — የሐይቅና ናይል እይታ፤ ፀሐይ ግባት።\n4. **ገበያ** — ቅመም፣ ቡና፤ ጠዋት ይሂዱ።\n5. **የሐይቅ ዳር** — መሄድ፣ ቡና፣ ዓሳ።\n\n**አጭር እቅድ**\n• ግማሽ ቀን፦ ሐይቅ ዳር + ገበያ\n• 1 ቀን፦ ጀልባ + ምግብ + በዛዊት\n• 2 ቀን፦ ቀን1 ጀልባ · ቀን2 ፏፏቴ',
+    actions: [
+      { label: 'መስህቦች', to: '/attractions' },
+      { label: 'የጉዞ እቅድ', to: '/trip-planner' },
+      { label: 'ካርታ', to: '/map' },
+    ],
+  },
+  boat: {
+    reply:
+      '**የጣና ሐይቅ ጀልባ**\n\n• ጠዋት ይመረጣል።\n• የጋራ ወይም ግል ጀልባ — ዋጋ ይለያያል።\n• ደሴት/ገዳም ከመነሳት በፊት ያረጋግጡ።\n• ውሃ፣ ባርኔጣ፣ ትንሽ ብር ይያዙ።\n• ዋጋ **በፊት** በብር ይደራደሩ።',
+    actions: [
+      { label: 'መስህቦች', to: '/attractions' },
+      { label: 'ካርታ', to: '/map' },
+    ],
+  },
+  falls: {
+    reply:
+      '**ጥሶ አባይ (Blue Nile Falls)**\n\n• ከባሕር ዳር ~30 ኪ.ሜ።\n• ባጃጅ/ታክሲ ወይም የተደራጀ ጉዞ።\n• መግቢያ + አማራጭ መመሪያ + ትራንስፖርት ተለያይተው ናቸው።\n• በዝናብ ወቅት ውሃ ይጎላል — ጫማ ያስፈልጋል።\n• ጠዋት ይጀምሩ።',
+    actions: [
+      { label: 'ካርታ', to: '/map' },
+      { label: 'ትራንስፖርት', to: '/transport' },
+    ],
+  },
+  food: {
+    reply:
+      '**ምግብ በባሕር ዳር**\n\n• **እንጀራ** ከወጥ ጋር።\n• **የሐይቅ ዓሳ** — የሐይቅ ዳር ሬስቶራንቶች።\n• **ቡና ሥርዓት**።\n• ግምት፦ ቀላል ምግብ ~80–200 ብር፤ ሙሉ ~150–500+።\n\n**Restaurants** ገጽን ይክፈቱ።',
+    actions: [
+      { label: 'ምግብ ቤቶች', to: '/restaurants' },
+      { label: 'ካርታ', to: '/map' },
+    ],
+  },
+  hotel: {
+    reply:
+      '**ሆቴልና ማረፊያ**\n\n• ሐይቅ ዳር = እይታ፤ ከተማ መሃል ብዙ ጊዜ ርካሽ።\n• በጀት / መካከለኛ / ምቹ።\n• ዋጋ በወቅት ይለዋወጣል — በHotels ገጽ ያረጋግጡ።',
+    actions: [
+      { label: 'ሆቴሎች', to: '/hotels' },
+      { label: 'በጀት', to: '/budget' },
+    ],
+  },
+  transport: {
+    reply:
+      '**ትራንስፖርት**\n\n• **ባጃጅ** — ዋጋ **ከመቀመጥ በፊት** ይደራደሩ።\n• **ጀልባ** — ጣና ሐይቅ።\n• **ወደ ፏፏቴ** — ታክሲ ወይም የተደራጀ ጉዞ።\n• አውሮፕላን ማረፊያ ከከተማ ቅርብ ነው።',
+    actions: [
+      { label: 'ትራንስፖርት', to: '/transport' },
+      { label: 'ካርታ', to: '/map?locate=1' },
+    ],
+  },
+  budget: {
+    reply:
+      '**በጀት (ግምት በሰው)**\n\n• ሆቴል/ሌሊት፦ በጀት ~1,500–4,500 · መካከለኛ ~4,000–9,500\n• ምግብ/ቀን፦ ~400–2,000+\n• ጀልባ፦ የጋራ ርካሽ · ግል ውድ\n• ባጃጅ አጭር፦ በአስርዎች–መቶዎች ብር\n\n**Budget** እና **Trip Planner** ይጠቀሙ።',
+    actions: [
+      { label: 'በጀት', to: '/budget' },
+      { label: 'የጉዞ እቅድ', to: '/trip-planner' },
+    ],
+  },
+  plan: {
+    reply:
+      '**1–3 ቀን እቅድ**\n\n**1 ቀን:** ጀልባ + የሐይቅ ዳር ምግብ + ፀሐይ ግባት\n**2 ቀን:** ቀን1 ሐይቅ/ገዳም · ቀን2 ጥሶ አባይ\n**3 ቀን:** መድረስ+ሐይቅ · ጀልባ · ፏፏቴ ወይም በዛዊት\n\nበ**Trip Planner** ቀናትና በጀት ይምረጡ።',
+    actions: [
+      { label: 'የጉዞ እቅድ', to: '/trip-planner' },
+      { label: 'ዛሬ', to: '/today' },
+    ],
+  },
+}
+
+function hasAmharic(text: string) {
+  return /[\u1200-\u137F]/.test(text)
+}
+
+function matchDemoAm(userText: string): { reply: string; actions?: GuideAction[] } | null {
+  const t = userText.toLowerCase()
+  if (!hasAmharic(userText)) return null
+
+  if (/ሰላም|ታዲያስ|ሄሎ|ሃይ/.test(userText) || t.includes('selam')) return DEMO_AM.hello
+  if (/ጀልባ|ሐይቅ|ጣና|ደሴት|ገዳም/.test(userText)) return DEMO_AM.boat
+  if (/ፏፏቴ|ጥሶ|አባይ|ቲስ/.test(userText)) return DEMO_AM.falls
+  if (/ምግብ|እንጀራ|ዓሳ|ቡና|ሬስቶራንት|በል/.test(userText)) return DEMO_AM.food
+  if (/ሆቴል|ማረፊያ|እንየት|ሌሊት/.test(userText)) return DEMO_AM.hotel
+  if (/ባጃጅ|ትራንስፖርት|ታክሲ|መኪና|አውሮፕላን/.test(userText)) return DEMO_AM.transport
+  if (/በጀት|ዋጋ|ብር|ወጪ/.test(userText)) return DEMO_AM.budget
+  if (/እቅድ|ቀን|ጉዞ|ቱሪስት|መሄድ የት|የት መሄድ|የት እሄድ/.test(userText)) return DEMO_AM.plan
+  if (/የት|ቦታ|መስህብ|እይታ|በዛዊት/.test(userText)) return DEMO_AM.where
+  return DEMO_AM.hello
+}
+
 function matchDemo(userText: string): { reply: string; actions?: GuideAction[] } {
+  const am = matchDemoAm(userText)
+  if (am) return am
+
   const lower = userText.toLowerCase().trim()
 
   let best: { reply: string; score: number; actions?: GuideAction[] } | null = null
@@ -174,7 +238,7 @@ function matchDemo(userText: string): { reply: string; actions?: GuideAction[] }
       '• "Rough budget for 2 nights"\n' +
       '• "How do I get to the Blue Nile Falls?"\n\n' +
       'Or open **Map**, **Attractions**, **Restaurants**, and **Trip Planner** in the app.\n\n' +
-      '_Offline tips always work. Live AI uses Vercel `/api/ai-guide` or Supabase `ai-guide` with AI_API_KEY._',
+      '_Offline tips always work. Live AI uses Vercel `/api/ai-guide` when AI_API_KEY is set._',
     actions: [
       { label: 'Trip planner', to: '/trip-planner' },
       { label: 'Map', to: '/map' },
@@ -192,7 +256,6 @@ function isLiveSuccess(data: AIGuideResponse | null | undefined): boolean {
   return Boolean(data.reply && typeof data.reply === 'string' && !data.fallback && !data.error)
 }
 
-/** Call Vercel serverless /api/ai-guide (Gemini/Groq via env) */
 async function invokeVercelApi(
   messages: { role: string; content: string }[],
   locale: string
@@ -213,36 +276,23 @@ async function invokeVercelApi(
       }
     }
     return (await res.json()) as AIGuideResponse
-  } catch (e) {
-    console.warn('vercel /api/ai-guide:', e)
+  } catch {
     return null
   }
 }
 
-/** Call Supabase Edge Function ai-guide */
 async function invokeSupabase(
   messages: { role: string; content: string }[],
   locale: string
 ): Promise<AIGuideResponse | null> {
-  if (!isSupabaseConfigured) return null
+  if (!isSupabaseConfigured() || !supabase) return null
   try {
     const { data, error } = await supabase.functions.invoke('ai-guide', {
       body: { messages, locale },
     })
-    if (error) {
-      console.warn('ai-guide invoke:', error.message, data)
-      const msg = (error.message || '').toLowerCase()
-      if (msg.includes('not found') || msg.includes('404') || msg.includes('failed to send')) {
-        return null
-      }
-      if (data && typeof data === 'object' && (data as AIGuideResponse).reply) {
-        return data as AIGuideResponse
-      }
-      return null
-    }
-    return (data as AIGuideResponse) || null
-  } catch (e) {
-    console.warn('supabase ai-guide:', e)
+    if (error) return null
+    return data as AIGuideResponse
+  } catch {
     return null
   }
 }
@@ -326,3 +376,17 @@ export const SUGGESTED_PROMPTS = [
   'Rough budget for 2 nights',
   'How to get around the city?',
 ]
+
+const SUGGESTED_PROMPTS_AM = [
+  'በባሕር ዳር የት መሄድ አለብኝ?',
+  'የ2 ቀን እቅድ አውጣልኝ',
+  'የጣና ሐይቅ ጀልባ ምክር',
+  'ጥሶ አባይ እንዴት እሄዳለሁ?',
+  'ዓሳ እና እንጀራ የት በላለሁ?',
+  'የ2 ሌሊት በጀት ግምት',
+  'በከተማ ውስጥ እንዴት እሄዳለሁ?',
+]
+
+export function getSuggestedPrompts(locale: string): string[] {
+  return locale === 'am' ? SUGGESTED_PROMPTS_AM : SUGGESTED_PROMPTS
+}
