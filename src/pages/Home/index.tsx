@@ -28,31 +28,31 @@ import { HERO_BLUE_NILE_DATA_URL } from '@/data/heroBlueNile'
 /** Real Bahir Dar / Lake Tana / Blue Nile (Wikimedia Commons) */
 const BD = {
   lake:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/ET_Amhara_asv2018-02_img112_Lake_Tana_at_Bahir_Dar.jpg/800px-ET_Amhara_asv2018-02_img112_Lake_Tana_at_Bahir_Dar.jpg',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/ET%20Amhara%20asv2018-02%20img112%20Lake%20Tana%20at%20Bahir%20Dar.jpg?width=800',
   falls:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Blue_Nile_Falls-03%2C_by_CT_Snow.jpg/1280px-Blue_Nile_Falls-03%2C_by_CT_Snow.jpg',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Blue%20Nile%20Falls%2003.jpg?width=1280',
   city:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/The_city_of_Bahir_Dar%2C_Ethiopia.jpg/800px-The_city_of_Bahir_Dar%2C_Ethiopia.jpg',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/The%20city%20of%20Bahir%20Dar%2C%20Ethiopia.jpg?width=800',
 } as const
 
-/** Path cards — photography + soft 3D depth (Unsplash / Wikimedia with fallbacks) */
+/** Path cards — real Bahir Dar photos (Wikimedia Commons only) */
 const IMG = {
   stay:
-    'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/The%20city%20of%20Bahir%20Dar%2C%20Ethiopia.jpg?width=1000',
   eat:
-    'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1000&q=80',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Bahar%20dar%2C%20ristorazione%20sul%20lago%20tana%2006.jpg?width=1000',
   go:
-    'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1000&q=80',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Bahar%20dar%2C%20viale%20con%20palme%2001.jpg?width=1000',
   see:
-    'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1000&q=80',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Lake%20Tana%20in%20Bahir%20Dar.jpg?width=1000',
   stayFb:
-    'https://images.unsplash.com/photo-1582719508461-905c673771fd?auto=format&fit=crop&w=1000&q=80',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Bahir%20Dar%201.jpg?width=1000',
   eatFb:
-    'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1000&q=80',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Bahir-Dar-Strandcafe.JPG?width=1000',
   goFb:
-    'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1000&q=80',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Bahir%20Dar%20-%20street%20scene%20(1).jpg?width=1000',
   seeFb:
-    'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Blue_Nile_Falls-03%2C_by_CT_Snow.jpg/960px-Blue_Nile_Falls-03%2C_by_CT_Snow.jpg',
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Blue%20Nile%20Falls%2003.jpg?width=1000',
 } as const
 
 function PathPhoto({
@@ -142,7 +142,7 @@ export default function HomePage() {
     {
       label: t.home.emergency,
       icon: AlertTriangle,
-      path: '/directory#emergency',
+      path: '/help#emergency',
       color: 'bg-[#da121a]/12 text-[#da121a]',
     },
     { label: t.nav.directory, icon: Shield, path: '/help', color: 'bg-[#0b6e99]/12 text-[#0b6e99]' },
@@ -210,7 +210,7 @@ export default function HomePage() {
                     <div className={cn('absolute inset-0 bg-gradient-to-t', item.accent)} />
                     <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
                       <span className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm">
-                        <Icon className="h-4.5 w-4.5" strokeWidth={2} />
+                        <Icon className="h-4 w-4" strokeWidth={2} />
                       </span>
                       <p className="text-[16px] font-bold text-white sm:text-[17px]">{item.title}</p>
                       <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-white/85 sm:text-[13px]">
@@ -302,25 +302,48 @@ export default function HomePage() {
             {t.home.featured}
           </h2>
           <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
-            <Link to="/map" className="group block overflow-hidden rounded-[1.25rem] bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1c1c1e] dark:ring-white/10">
+            <Link
+              to="/map"
+              className="group block overflow-hidden rounded-[1.25rem] bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1c1c1e] dark:ring-white/10"
+            >
               <div className="aspect-[16/10] overflow-hidden">
-                <img src={BD.lake} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" decoding="async" referrerPolicy="no-referrer" />
+                <img
+                  src={BD.lake}
+                  alt=""
+                  className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                />
               </div>
               <div className="p-4">
                 <h3 className="text-[16px] font-semibold">{t.home.lakeTana}</h3>
                 <p className="mt-1 text-[13px] text-[#8e8e93]">{t.home.lakeTanaDesc}</p>
               </div>
             </Link>
-            <Link to="/map" className="group block overflow-hidden rounded-[1.25rem] bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1c1c1e] dark:ring-white/10">
+            <Link
+              to="/map"
+              className="group block overflow-hidden rounded-[1.25rem] bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1c1c1e] dark:ring-white/10"
+            >
               <div className="aspect-[16/10] overflow-hidden">
-                <img src={BD.falls} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" decoding="async" referrerPolicy="no-referrer" />
+                <img
+                  src={BD.falls}
+                  alt=""
+                  className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                />
               </div>
               <div className="p-4">
                 <h3 className="text-[16px] font-semibold">{t.home.blueNileFalls}</h3>
                 <p className="mt-1 text-[13px] text-[#8e8e93]">{t.home.blueNileFallsDesc}</p>
               </div>
             </Link>
-            <Link to="/todo" className="group block overflow-hidden rounded-[1.25rem] bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1c1c1e] dark:ring-white/10">
+            <Link
+              to="/todo"
+              className="group block overflow-hidden rounded-[1.25rem] bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1c1c1e] dark:ring-white/10"
+            >
               <div className="aspect-[16/10] overflow-hidden bg-gradient-to-br from-[#078930] to-[#0b6e99]">
                 <div className="flex h-full items-center justify-center">
                   <ListTodo className="h-12 w-12 text-white/90" />
