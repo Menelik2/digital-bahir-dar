@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Hotel, Waves, Building2, Plane, Star } from 'lucide-react'
+import { Hotel, Waves, Building2, Plane } from 'lucide-react'
 import { PlaceListPage } from '@/components/places/PlaceListPage'
 import { HotelPriceCompare } from '@/components/hotels/HotelPriceCompare'
 import { useT } from '@/hooks/useT'
