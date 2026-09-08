@@ -5,7 +5,7 @@
  * Vercel → Settings → Environment Variables (Production):
  *   AI_API_KEY   = Gemini key from https://aistudio.google.com/apikey
  *   AI_BASE_URL  = https://generativelanguage.googleapis.com/v1beta/openai
- *   AI_MODEL     = gemini-2.0-flash
+ *   AI_MODEL     = gemini-3.6-flash
  *
  * Aliases: GEMINI_API_KEY, GROQ_API_KEY, OPENAI_API_KEY
  * Redeploy after adding env vars.
@@ -73,7 +73,7 @@ export default async function handler(req: EnvReq, res: EnvRes) {
       'https://generativelanguage.googleapis.com/v1beta/openai'
     const baseUrl = String(rawBase).replace(/\/+$/, '')
     const model =
-      process.env.AI_MODEL || process.env.OPENAI_MODEL || 'gemini-2.0-flash'
+      process.env.AI_MODEL || process.env.OPENAI_MODEL || 'gemini-3.6-flash'
 
     const systemContent =
       locale === 'am'
@@ -106,7 +106,7 @@ export default async function handler(req: EnvReq, res: EnvRes) {
           upstream.status === 401 || upstream.status === 403
             ? 'AI API key was rejected. Update AI_API_KEY on Vercel (Gemini key from aistudio.google.com).'
             : upstream.status === 404
-              ? 'Model or endpoint not found. Check AI_MODEL (e.g. gemini-2.0-flash) and AI_BASE_URL.'
+              ? 'Model or endpoint not found. Check AI_MODEL (e.g. gemini-3.6-flash) and AI_BASE_URL.'
               : 'AI provider returned an error. Offline tips still work in the app.',
       })
     }
