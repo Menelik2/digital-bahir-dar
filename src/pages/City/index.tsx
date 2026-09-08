@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { SMART_CITY_MODULES, CITY_TODOS } from '@/data/thingsToDo'
 import { EMERGENCY_CONTACTS, CITY_EVENTS } from '@/data/cityLife'
+import { useAppStore } from '@/store'
 import { useTodoStore } from '@/store/todoStore'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -27,6 +28,7 @@ const ICONS = {
 } as const
 
 export default function CityHubPage() {
+  const am = useAppStore((s) => s.language) === 'am'
   const completed = useTodoStore((s) => s.completed)
   const done = CITY_TODOS.filter((t) => completed[t.id]).length
   const featuredEvents = CITY_EVENTS.filter((e) => e.featured).slice(0, 2)
@@ -36,31 +38,35 @@ export default function CityHubPage() {
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-sky-900 to-teal-800 px-6 py-10 text-white shadow-lg">
         <p className="text-sm font-medium text-sky-200">Digital Bahir Dar</p>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">Smart Digital City</h1>
+        <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">
+          {am ? 'ስማርት ዲጂታል ከተማ' : 'Smart Digital City'}
+        </h1>
         <p className="mt-3 max-w-2xl text-sky-100">
-          One platform for tourism, mobility, hospitality, civic info, and planning — built for Bahir
-          Dar, Ethiopia.
+          {am
+            ? 'ቱሪዝም፣ መጓጓዣ፣ ሆቴል፣ ደህንነት እና እቅድ — ለባሕር ዳር በአንድ መድረክ።'
+            : 'One platform for tourism, mobility, hospitality, civic info, and planning — built for Bahir Dar, Ethiopia.'}
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link to="/todo">
             <Button className="bg-white text-sky-900 hover:bg-sky-50">
-              <ListTodo className="h-4 w-4" /> Things to Do ({done}/{CITY_TODOS.length})
+              <ListTodo className="h-4 w-4" />{' '}
+              {am ? `ለማድረግ (${done}/${CITY_TODOS.length})` : `Things to Do (${done}/${CITY_TODOS.length})`}
             </Button>
           </Link>
           <Link to="/discover">
             <Button variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20">
-              <Compass className="h-4 w-4" /> Live Discover
+              <Compass className="h-4 w-4" /> {am ? 'አስስ' : 'Live Discover'}
             </Button>
           </Link>
           <Link to="/map">
             <Button variant="outline" className="border-white/40 bg-white/10 text-white hover:bg-white/20">
-              <Map className="h-4 w-4" /> City map
+              <Map className="h-4 w-4" /> {am ? 'ካርታ' : 'City map'}
             </Button>
           </Link>
         </div>
       </div>
 
-      <h2 className="mb-4 text-lg font-semibold">City modules</h2>
+      <h2 className="mb-4 text-lg font-semibold">{am ? 'የከተማ ክፍሎች' : 'City modules'}</h2>
       <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {SMART_CITY_MODULES.map((m) => {
           const Icon = ICONS[m.icon]
@@ -72,8 +78,8 @@ export default function CityHubPage() {
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="font-semibold">{m.title}</h3>
-                    <p className="mt-1 text-sm text-slate-500">{m.body}</p>
+                    <h3 className="font-semibold">{am ? m.titleAm : m.title}</h3>
+                    <p className="mt-1 text-sm text-slate-500">{am ? m.bodyAm : m.body}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -85,9 +91,9 @@ export default function CityHubPage() {
       <div className="grid gap-8 lg:grid-cols-2">
         <section>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Emergency</h2>
+            <h2 className="text-lg font-semibold">{am ? 'አደጋ ጊዜ' : 'Emergency'}</h2>
             <Link to="/directory" className="text-sm text-sky-600 hover:underline">
-              Full directory
+              {am ? 'ሙሉ ማውጫ' : 'Full directory'}
             </Link>
           </div>
           <div className="space-y-2">
@@ -115,9 +121,9 @@ export default function CityHubPage() {
 
         <section>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">This week in the city</h2>
+            <h2 className="text-lg font-semibold">{am ? 'በዚህ ሳምንት' : 'This week in the city'}</h2>
             <Link to="/events" className="text-sm text-sky-600 hover:underline">
-              Events
+              {am ? 'ዝግጅቶች' : 'Events'}
             </Link>
           </div>
           <div className="space-y-2">
@@ -136,7 +142,7 @@ export default function CityHubPage() {
               to="/banks"
               className="flex items-center gap-2 text-sm font-medium text-sky-600 hover:underline"
             >
-              <Building2 className="h-4 w-4" /> Banks & ATMs
+              <Building2 className="h-4 w-4" /> {am ? 'ባንኮችና ኤቲኤም' : 'Banks & ATMs'}
             </Link>
           </div>
         </section>
