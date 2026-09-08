@@ -1,5 +1,5 @@
 import type { Place } from '@/types/place'
-import { ALL_HOTELS } from '@/data/allHotels'
+import { ALL_HOTELS, estimateHotelPriceEtb } from '@/data/allHotels'
 
 function slugify(name: string): string {
   return name
@@ -59,8 +59,8 @@ export const CURATED_HOTELS: Place[] = ALL_HOTELS.map((h, i) => {
       id: `curated-h-${i + 1}`,
       place_id: id,
       star_rating: h.stars ?? null,
-      minimum_price: null,
-      maximum_price: null,
+      minimum_price: h.priceFrom ?? estimateHotelPriceEtb(h.stars).from,
+      maximum_price: h.priceTo ?? estimateHotelPriceEtb(h.stars).to,
       amenities: ['WiFi'],
       check_in: null,
       check_out: null,
