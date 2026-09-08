@@ -1,17 +1,22 @@
 import type { Place } from '@/types/place'
 
 /**
- * Cover images for Explore / place cards — real Bahir Dar photos from Wikimedia Commons.
- * Special:FilePath redirects stay stable when storage hashes change.
+ * Explore / place cards — real Bahir Dar photography only (Wikimedia Commons).
+ * Special:FilePath keeps links stable when storage hashes change.
  */
 
 function commons(fileName: string, width = 640): string {
   return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(fileName)}?width=${width}`
 }
 
-/** Verified / commonly used Bahir Dar & Lake Tana files on Commons */
-const BD = {
+/** Curated real Bahir Dar / Lake Tana / Blue Nile photos on Commons */
+const FILES = {
   city: 'The city of Bahir Dar, Ethiopia.jpg',
+  city1: 'Bahir Dar 1.jpg',
+  city5: 'Bahir Dar 5.jpg',
+  city6: 'Bahir Dar 6.jpg',
+  city7: 'Bahir Dar 7.jpg',
+  city8: 'Bahir Dar 8.jpg',
   lakeAerial: 'Lake Tana in Bahir Dar.jpg',
   lakeShore1: 'View from Shore of Lake Tana - Bahir Dar - Ethiopia - 01 (8678175404).jpg',
   lakeShore2: 'View from Shore of Lake Tana - Bahir Dar - Ethiopia - 02 (8677069911).jpg',
@@ -23,129 +28,218 @@ const BD = {
   lakeEt088: 'ET Amhara asv2018-02 img088 Lake Tana at Bahir Dar.jpg',
   lakeEt112: 'ET Amhara asv2018-02 img112 Lake Tana at Bahir Dar.jpg',
   falls: 'Blue Nile Falls 03.jpg',
+  fallsBlue: 'Blue Nile Bahir Dar.jpg',
+  fallsTis: 'ET Bahir Dar asv2018-02 img13 Tis Issat.jpg',
   bezawit: 'ET Bahir Dar asv2018-02 img33 view from Bezawit.jpg',
   street1: 'Bahir Dar - street scene (1).jpg',
   street2: 'Bahir Dar - street scene (2).jpg',
+  street3: 'Bahir Dar - street scene (3).jpg',
+  street4: 'Bahir Dar - street scene (4).jpg',
   palms: 'Bahar dar, viale con palme 01.jpg',
   lakesideDining: 'Bahar dar, ristorazione sul lago tana 06.jpg',
   strandCafe: 'Bahir-Dar-Strandcafe.JPG',
   dock: 'Dock on Lake Tana, Ethiopia (2260757035).jpg',
   boats: 'Boatmen Transporting Firewood - Lake Tana - Near Bahir Dar - Ethiopia - 01 (8679578999).jpg',
-  airport: 'Bahir Dar (BJR - HABD) AN0457026.jpg',
+  tankwa: 'Tankwas in Bahir Dar.jpg',
   papyrus: 'Papyrus - Lake Tana Bahir Dar.jpg',
+  airport: 'Bahir Dar (BJR - HABD) AN0457026.jpg',
+  uni: 'Bahir Dar University.jpg',
 } as const
 
-const BY_SLUG: Record<string, string> = {
-  'lake-tana': commons(BD.lakeAerial),
-  'lake-tana-demo': commons(BD.lakeAerial),
-  'lake-tana-boat-pier': commons(BD.dock),
-  'blue-nile-falls-tis-issat': commons(BD.falls),
-  'blue-nile-falls-demo': commons(BD.falls),
-  'blue-nile-bridge-outlet': commons(BD.lakeEt080),
-  'bezawit-palace-viewpoint': commons(BD.bezawit),
-  'bahir-dar-center': commons(BD.street1),
-  'bahir-dar-center-demo': commons(BD.street1),
-  'bahir-dar-central-market': commons(BD.street2),
-  'ura-kidane-mehret': commons(BD.lakeEt070),
-  'debre-maryam-monastery': commons(BD.lakeEt078),
-  'azwa-maryam-monastery': commons(BD.lakeEt070),
-  'bahir-dar-airport-bjr': commons(BD.airport),
-  'bahir-dar-bus-station': commons(BD.palms),
-  'felege-hiwot-hospital': commons(BD.street1),
-  'bahir-dar-university': commons(BD.palms),
-  'martyrs-memorial-bahir-dar': commons(BD.city),
+type FileKey = keyof typeof FILES
+
+function url(key: FileKey, width = 640): string {
+  return commons(FILES[key], width)
 }
 
-const BY_NAME_HINT: { test: RegExp; file: string }[] = [
-  { test: /airport|bjr|habd/i, file: BD.airport },
-  { test: /blue nile falls|tis\s*issat|tis\s*abay|tisabay/i, file: BD.falls },
-  { test: /lake tana|tana shore|tana lake/i, file: BD.lakeAerial },
-  { test: /bezawit|viewpoint|palace view/i, file: BD.bezawit },
-  { test: /ura kidane|zege|monastery|kidane mehret|debre maryam|azwa/i, file: BD.lakeEt070 },
-  { test: /pier|dock|boat|ferry|papyrus/i, file: BD.dock },
-  { test: /market|bazaar|merkato/i, file: BD.street2 },
-  { test: /kuriftu|papyrus|lakeside|lake side|shore/i, file: BD.lakesideDining },
-  { test: /coffee|café|cafe|bunna/i, file: BD.strandCafe },
-  { test: /fish|restaurant|kitfo|injera/i, file: BD.lakesideDining },
-  { test: /hotel|lodge|resort|guesthouse|pension/i, file: BD.lakesideDining },
-  { test: /bus station|taxi|bajaj/i, file: BD.palms },
-  { test: /hospital|clinic|pharmacy|health/i, file: BD.street1 },
-  { test: /bank|atm|cbe|dashen|awash/i, file: BD.street1 },
+/** Large pool for hash-based variety (all real BD photos) */
+const REAL_POOL: FileKey[] = [
+  'city',
+  'city1',
+  'city5',
+  'city6',
+  'city7',
+  'city8',
+  'lakeAerial',
+  'lakeShore1',
+  'lakeShore2',
+  'lakeShore3',
+  'lakeEt068',
+  'lakeEt070',
+  'lakeEt078',
+  'lakeEt080',
+  'lakeEt088',
+  'lakeEt112',
+  'falls',
+  'fallsBlue',
+  'fallsTis',
+  'bezawit',
+  'street1',
+  'street2',
+  'street3',
+  'street4',
+  'palms',
+  'lakesideDining',
+  'strandCafe',
+  'dock',
+  'boats',
+  'tankwa',
+  'papyrus',
 ]
 
-/** Category covers — all real Bahir Dar / Lake Tana photography (no generic Unsplash) */
-const BY_CATEGORY: Record<string, string> = {
-  hotel: commons(BD.lakesideDining),
-  restaurant: commons(BD.strandCafe),
-  cafe: commons(BD.strandCafe),
-  attraction: commons(BD.lakeAerial),
-  historical: commons(BD.bezawit),
-  religious: commons(BD.lakeEt070),
-  museum: commons(BD.city),
-  park: commons(BD.lakeShore1),
-  bank: commons(BD.street1),
-  atm: commons(BD.street2),
-  transport: commons(BD.airport),
-  hospital: commons(BD.street1),
-  pharmacy: commons(BD.palms),
-  shopping: commons(BD.street2),
-  emergency: commons(BD.city),
-  tourism: commons(BD.lakeEt112),
+const LAKE_POOL: FileKey[] = [
+  'lakeAerial',
+  'lakeShore1',
+  'lakeShore2',
+  'lakeShore3',
+  'lakeEt068',
+  'lakeEt070',
+  'lakeEt078',
+  'lakeEt080',
+  'lakeEt088',
+  'lakeEt112',
+  'dock',
+  'boats',
+  'tankwa',
+  'papyrus',
+]
+
+const CITY_POOL: FileKey[] = [
+  'city',
+  'city1',
+  'city5',
+  'city6',
+  'city7',
+  'city8',
+  'street1',
+  'street2',
+  'street3',
+  'street4',
+  'palms',
+  'bezawit',
+]
+
+const FOOD_POOL: FileKey[] = ['lakesideDining', 'strandCafe', 'palms', 'lakeShore1', 'city5']
+const STAY_POOL: FileKey[] = ['city', 'city1', 'palms', 'lakeShore2', 'lakeEt112', 'bezawit']
+const FALLS_POOL: FileKey[] = ['falls', 'fallsBlue', 'fallsTis', 'lakeEt080']
+
+function hashKey(s: string): number {
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
+  return h
 }
 
-const DEFAULT_COVER = commons(BD.city)
+function pick(pool: FileKey[], seed: string, width = 640): string {
+  const i = hashKey(seed) % pool.length
+  return url(pool[i], width)
+}
 
-/** Stable city-wide fallback when a specific file 404s in the browser */
-export const BAHIR_DAR_CITY_COVER = DEFAULT_COVER
+const SLUG_MAP: Record<string, FileKey> = {
+  'lake-tana': 'lakeAerial',
+  'lake-tana-demo': 'lakeAerial',
+  'lake-tana-boat-pier': 'dock',
+  'blue-nile-falls-tis-issat': 'falls',
+  'blue-nile-falls-demo': 'falls',
+  'blue-nile-bridge-outlet': 'fallsBlue',
+  'bezawit-palace-viewpoint': 'bezawit',
+  'bahir-dar-center': 'street1',
+  'bahir-dar-center-demo': 'city',
+  'bahir-dar-central-market': 'street2',
+  'ura-kidane-mehret': 'lakeEt070',
+  'debre-maryam-monastery': 'lakeEt078',
+  'azwa-maryam-monastery': 'lakeEt068',
+  'kebran-gabriel': 'lakeEt088',
+  'narga-selassie': 'lakeEt112',
+  'tana-kirkos': 'boats',
+  'papyrus-boats': 'tankwa',
+  'bahir-dar-airport': 'airport',
+  'bahir-dar-university': 'uni',
+}
 
+const NAME_HINTS: { test: RegExp; pool: FileKey[] }[] = [
+  { test: /tis\s*issat|tis\s*abay|blue\s*nile\s*falls|ፏፏቴ|ጥሶ/i, pool: FALLS_POOL },
+  { test: /lake\s*tana|ጣና|tana\s*kirkos|ura\s*kidane|debre\s*maryam|monastery|ገዳም/i, pool: LAKE_POOL },
+  { test: /bezawit|በዛዊት|viewpoint|palace/i, pool: ['bezawit', 'city', 'city1'] },
+  { test: /market|ገበያ|bazaar/i, pool: CITY_POOL },
+  { test: /airport|አውሮፕላን/i, pool: ['airport', 'city'] },
+  { test: /university|ዩኒቨርሲቲ/i, pool: ['uni', 'city', 'palms'] },
+  { test: /pier|dock|boat|ጀልባ|tankwa/i, pool: ['dock', 'boats', 'tankwa', 'lakeShore1'] },
+  { test: /hotel|resort|lodge|guesthouse|ሆቴል/i, pool: STAY_POOL },
+  { test: /restaurant|cafe|coffee|fish|injera|ሬስቶ|ካፌ|ቡና|ዓሳ/i, pool: FOOD_POOL },
+  { test: /bank|atm|ባንክ|ኤቲኤም/i, pool: CITY_POOL },
+  { test: /hospital|clinic|pharmacy|ሆስፒታል/i, pool: CITY_POOL },
+]
+
+const BY_CATEGORY: Record<string, FileKey[]> = {
+  hotel: STAY_POOL,
+  restaurant: FOOD_POOL,
+  cafe: FOOD_POOL,
+  attraction: LAKE_POOL,
+  historical: ['bezawit', 'city', 'fallsTis'],
+  religious: ['lakeEt070', 'lakeEt078', 'lakeEt068', 'lakeEt088'],
+  museum: CITY_POOL,
+  park: LAKE_POOL,
+  bank: CITY_POOL,
+  atm: CITY_POOL,
+  transport: ['airport', 'dock', 'street1', 'palms'],
+  hospital: CITY_POOL,
+  pharmacy: CITY_POOL,
+  shopping: CITY_POOL,
+  emergency: CITY_POOL,
+  tourism: LAKE_POOL,
+}
+
+export const BAHIR_DAR_CITY_COVER = url('city')
+
+/**
+ * Prefer real Wikimedia Bahir Dar photos for every Explore / place card.
+ * Uses slug → name hints → category pools → hash variety so cards don't all look identical.
+ */
 export function placeCoverImage(place: {
+  id?: string
   slug?: string
   category?: { slug?: string } | null
   category_id?: string
   name?: string
 }): string {
-  if (place.slug && BY_SLUG[place.slug]) return BY_SLUG[place.slug]
+  const seed = `${place.id || ''}|${place.slug || ''}|${place.name || ''}`
+
+  if (place.slug && SLUG_MAP[place.slug]) return url(SLUG_MAP[place.slug])
 
   const name = place.name || ''
-  for (const h of BY_NAME_HINT) {
-    if (h.test.test(name)) return commons(h.file)
+  for (const h of NAME_HINTS) {
+    if (h.test.test(name)) return pick(h.pool, seed)
   }
 
   const cat =
     place.category?.slug ||
     (typeof place.category_id === 'string' && place.category_id.includes('-')
-      ? place.category_id.replace(/^demo-/, '')
+      ? place.category_id.replace(/^demo-/, '').replace(/^osm-/, '')
       : undefined)
 
-  if (cat && BY_CATEGORY[cat]) return BY_CATEGORY[cat]
+  if (cat && BY_CATEGORY[cat]) return pick(BY_CATEGORY[cat], seed)
 
-  const n = name.toLowerCase()
-  if (n.includes('hotel') || n.includes('resort') || n.includes('guesthouse') || n.includes('lodge'))
-    return BY_CATEGORY.hotel
-  if (n.includes('restaurant') || n.includes('kitchen') || n.includes('grill') || n.includes('fish'))
-    return BY_CATEGORY.restaurant
-  if (n.includes('cafe') || n.includes('coffee') || n.includes('bunna')) return BY_CATEGORY.cafe
-  if (n.includes('bank') || n.includes('atm')) return BY_CATEGORY.bank
-  if (n.includes('hospital') || n.includes('clinic') || n.includes('pharmacy')) return BY_CATEGORY.hospital
-  if (
-    n.includes('airport') ||
-    n.includes('bus') ||
-    n.includes('boat') ||
-    n.includes('taxi') ||
-    n.includes('pier') ||
-    n.includes('bajaj')
-  )
-    return BY_CATEGORY.transport
-
-  return DEFAULT_COVER
+  return pick(REAL_POOL, seed || 'bahir-dar')
 }
 
 export function placeImageAlt(place: Place | { name: string }): string {
   return `${place.name.replace(' (DEMO)', '')} — Bahir Dar, Ethiopia`
 }
 
-/** Category hero images for Explore filter chips / list headers */
+/** Category hero / chip images for Explore */
 export function exploreCategoryImage(slug: string | null): string {
-  if (!slug) return DEFAULT_COVER
-  return BY_CATEGORY[slug] || DEFAULT_COVER
+  if (!slug) return BAHIR_DAR_CITY_COVER
+  const pool = BY_CATEGORY[slug]
+  if (pool) return url(pool[0])
+  return BAHIR_DAR_CITY_COVER
 }
+
+/** Ordered gallery of real BD photos (e.g. Explore hero strip) */
+export const EXPLORE_HERO_IMAGES = [
+  url('lakeAerial', 960),
+  url('falls', 960),
+  url('city', 960),
+  url('bezawit', 960),
+  url('lakesideDining', 960),
+  url('dock', 960),
+]
