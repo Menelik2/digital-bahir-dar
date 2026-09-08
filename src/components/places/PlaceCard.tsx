@@ -7,7 +7,7 @@ import type { Place } from '@/types/place'
 import { formatDistance } from '@/utils/geo'
 import { isOsmPlaceId, cacheOsmPlaceForDetail } from '@/services/osmPlaces'
 import { placeGuideLinks } from '@/constants/guideSites'
-import { placeCoverImage, placeImageAlt } from '@/utils/placeImage'
+import { placeCoverImage, placeImageAlt, BAHIR_DAR_CITY_COVER } from '@/utils/placeImage'
 import {
   placeName,
   placeNameSecondary,
@@ -24,9 +24,6 @@ interface PlaceCardProps {
   onDirections?: (place: Place) => void
   className?: string
 }
-
-const CITY_FALLBACK =
-  'https://commons.wikimedia.org/wiki/Special:FilePath/The%20city%20of%20Bahir%20Dar%2C%20Ethiopia.jpg?width=640'
 
 function CoverImage({ place, className }: { place: Place; className?: string }) {
   const primary = placeCoverImage(place)
@@ -52,8 +49,8 @@ function CoverImage({ place, className }: { place: Place; className?: string }) 
       referrerPolicy="no-referrer"
       className={cn('object-cover', className)}
       onError={() => {
-        if (src !== CITY_FALLBACK) {
-          setSrc(CITY_FALLBACK)
+        if (src !== BAHIR_DAR_CITY_COVER) {
+          setSrc(BAHIR_DAR_CITY_COVER)
         } else {
           setFailed(true)
         }
