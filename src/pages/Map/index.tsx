@@ -4,6 +4,7 @@ import { Search, X, AlertCircle, Layers } from 'lucide-react'
 import { MapView } from '@/components/map/MapView'
 import { MapFilter } from '@/components/map/MapFilter'
 import { LocationButton } from '@/components/map/LocationButton'
+import { WhereAmIPanel } from '@/components/map/WhereAmIPanel'
 import { LocationStatus } from '@/components/map/LocationStatus'
 import { PlaceBottomSheet } from '@/components/map/PlaceBottomSheet'
 import { DirectionsPanel } from '@/components/map/DirectionsPanel'
@@ -98,6 +99,27 @@ export default function MapPage() {
     if (to) setMapCenter(to)
   }, [searchParams, setMapCenter])
 
+  // ?locate=1 or ?near=1 — for visitors who open map from “Where am I?”
+  useEffect(() => {
+    const want = searchParams.get('locate') === '1' || searchParams.get('near') === '1'
+    if (!want) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const pos = await requestLocation()
+        if (cancelled || !pos) return
+        setMapCenter({ lat: pos.latitude, lng: pos.longitude })
+        if (searchParams.get('near') === '1') setFilter('near_me')
+      } catch {
+        setLocationHint('Please allow location to see where you are.')
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const categorySlug = (() => {
     if (!filter || filter === 'near_me' || filter === 'verified') return null
     if (filter === 'taxi') return 'transport'
@@ -108,9 +130,7 @@ export default function MapPage() {
 
   const { places: dbPlaces, isLoading, isError, refetch } = useFilteredPlaces({
     search: undefined,
-    categorySlug,
-    nearMe,
-    verifiedOnly,
+    categorySlug: categorySlug ?? undefined,
   })
 
   const osmCategories = useMemo((): OsmCategory[] => {
@@ -204,45 +224,24 @@ export default function MapPage() {
   const handleLocate = useCallback(
     (lat: number, lng: number) => {
       setMapCenter({ lat, lng })
+      setLocationHint(null)
     },
     [setMapCenter]
   )
 
   const ensureLocationForRoute = useCallback(async () => {
     if (location.latitude != null && location.longitude != null) return true
-    setLocationHint(null)
-    const pos = await requestLocation()
-    if (pos) {
-      setMapCenter({ lat: pos.latitude, lng: pos.longitude })
-      setLocationHint(null)
-      return true
+    try {
+      const pos = await requestLocation()
+      if (pos) {
+        setMapCenter({ lat: pos.latitude, lng: pos.longitude })
+        return true
+      }
+    } catch {
+      setLocationHint(getLastError?.() || 'Location needed for route')
     }
-    setLocationHint((getLastError && getLastError()) || t.map.enableLocation)
-    window.setTimeout(() => setLocationHint(null), 5000)
     return false
-  }, [
-    location.latitude,
-    location.longitude,
-    requestLocation,
-    setMapCenter,
-    getLastError,
-    t.map.enableLocation,
-  ])
-
-  const handleDirections = useCallback(
-    (place: Place) => {
-      setDirectionsPlace(place)
-      setSelectedPlaceId(null)
-      void ensureLocationForRoute()
-    },
-    [setSelectedPlaceId, ensureLocationForRoute]
-  )
-
-  const handleCloseDirections = useCallback(() => {
-    setDirectionsPlace(null)
-    setRouteCoords(null)
-    setRouteError(false)
-  }, [])
+  }, [location.latitude, location.longitude, requestLocation, setMapCenter, getLastError])
 
   useEffect(() => {
     if (!nearMe) return
@@ -250,70 +249,72 @@ export default function MapPage() {
     void ensureLocationForRoute()
   }, [nearMe, location.latitude, location.longitude, ensureLocationForRoute])
 
-  useEffect(() => {
-    const placeId = searchParams.get('placeId')
-    const modeParam = searchParams.get('mode')
-    if (modeParam === 'driving' || modeParam === 'walking') {
-      setTravelMode(modeParam)
-    }
-    if (!placeId || openedDeepLink.current === placeId) return
-    const found = places.find((p) => p.id === placeId)
-    if (found) {
-      openedDeepLink.current = placeId
-      setDirectionsPlace(found)
+  const handleDirections = useCallback(
+    async (place: Place) => {
+      setDirectionsPlace(place)
       setSelectedPlaceId(null)
-      void ensureLocationForRoute()
-    }
-  }, [searchParams, places, ensureLocationForRoute, setSelectedPlaceId])
+      const ok = await ensureLocationForRoute()
+      if (!ok) return
+    },
+    [ensureLocationForRoute, setSelectedPlaceId]
+  )
+
+  const handleCloseDirections = useCallback(() => {
+    setDirectionsPlace(null)
+    setRouteCoords(null)
+    setRouteError(false)
+    setRouteDurationSec(null)
+  }, [])
 
   useEffect(() => {
     if (!directionsPlace || !userPos) {
       setRouteCoords(null)
+      setRouteDurationSec(null)
       return
     }
     let cancelled = false
     setRouteLoading(true)
     setRouteError(false)
-    void fetchRoute(
-      userPos,
-      { lat: directionsPlace.latitude, lng: directionsPlace.longitude },
-      travelMode
-    )
-      .then((r) => {
+    ;(async () => {
+      try {
+        const r = await fetchRoute(
+          { lat: userPos.lat, lng: userPos.lng },
+          { lat: directionsPlace.latitude, lng: directionsPlace.longitude },
+          travelMode
+        )
         if (cancelled) return
         if (r?.coordinates?.length) {
           setRouteCoords(r.coordinates)
-          setRouteDurationSec(r.durationSec ?? null)
+          setRouteDurationSec(r.duration ?? null)
         } else {
           setRouteCoords(null)
           setRouteError(true)
         }
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) {
           setRouteCoords(null)
           setRouteError(true)
         }
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setRouteLoading(false)
-      })
+      }
+    })()
     return () => {
       cancelled = true
     }
-  }, [directionsPlace, userPos, travelMode])
+  }, [directionsPlace, userPos?.lat, userPos?.lng, travelMode])
 
   return (
-    <div className="relative h-[calc(100dvh-3.5rem)] w-full overflow-hidden lg:h-[calc(100dvh-4rem)]">
+    <div className="relative h-[calc(100dvh-3.5rem)] w-full overflow-hidden bg-slate-100 dark:bg-slate-900">
       <div className="absolute inset-0 z-0">
         <MapView
           places={places}
-          selectedPlaceId={selectedPlaceId || directionsPlace?.id || null}
-          userLocation={userPos}
-          center={mapCenter || BAHIR_DAR_CENTER}
-          onPlaceSelect={handlePlaceSelect}
+          center={mapCenter.lat ? mapCenter : BAHIR_DAR_CENTER}
+          selectedId={selectedPlaceId}
+          onSelect={handlePlaceSelect}
           onCenterChange={handleCenterChange}
-          routeCoordinates={routeCoords}
+          userLocation={userPos}
+          routeCoords={routeCoords}
           basemap={basemap}
         />
       </div>
@@ -375,7 +376,20 @@ export default function MapPage() {
           {locationHint}
         </div>
       )}
-      <LocationStatus />
+      <div className="pointer-events-none absolute inset-x-0 top-[4.25rem] z-[1050] px-3 sm:top-[4.5rem] sm:px-4">
+        <div className="pointer-events-auto mx-auto max-w-2xl">
+          <WhereAmIPanel
+            onLocated={(lat, lng) => handleLocate(lat, lng)}
+            onNearFilter={(cat) => {
+              setFilter(cat)
+              setDirectionsPlace(null)
+            }}
+          />
+        </div>
+      </div>
+      <div className="absolute right-3 top-[4.5rem] z-[1060] hidden sm:block">
+        <LocationStatus />
+      </div>
 
       {directionsPlace && isValidPlace(directionsPlace) && (
         <DirectionsPanel
