@@ -12,6 +12,18 @@ export type HotelSeed = {
   address?: string
   stars?: number
   featured?: boolean
+  /** Estimated room/night low (ETB) — planning only, not live rates */
+  priceFrom?: number
+  /** Estimated room/night high (ETB) */
+  priceTo?: number
+}
+
+/** Default ETB/night band from star rating (Bahir Dar planning averages) */
+export function estimateHotelPriceEtb(stars?: number): { from: number; to: number; tier: 'budget' | 'mid' | 'comfort' } {
+  if (stars != null && stars >= 4) return { from: 9000, to: 22000, tier: 'comfort' }
+  if (stars != null && stars >= 3) return { from: 4000, to: 9500, tier: 'mid' }
+  if (stars != null && stars >= 2) return { from: 1800, to: 4500, tier: 'budget' }
+  return { from: 1500, to: 4000, tier: 'budget' }
 }
 
 export const ALL_HOTELS: HotelSeed[] = [
