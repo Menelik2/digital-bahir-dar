@@ -1,198 +1,284 @@
 /**
- * “Things to Do” — Bahir Dar Smart Digital City checklist.
- * Practical visitor + resident actions with deep links into the app.
+ * Real visitor checklist for Bahir Dar — practical order of importance.
+ * Times/costs are typical ranges (ETB) and vary by season and negotiation.
  */
 
-export type TodoPillar =
-  | 'explore'
-  | 'stay'
-  | 'eat'
-  | 'move'
-  | 'money'
-  | 'safety'
-  | 'culture'
-  | 'plan'
+export type TodoPillar = 'must' | 'see' | 'eat' | 'move' | 'money' | 'plan'
 
-export type CityTodo = {
+export interface CityTodo {
   id: string
   title: string
-  titleAm?: string
+  titleAm: string
   description: string
+  descriptionAm: string
+  tip?: string
+  tipAm?: string
   pillar: TodoPillar
-  /** Estimated half-days or hours label */
   timeLabel: string
+  timeLabelAm: string
   costLabel: string
-  priority: 1 | 2 | 3
-  href: string
-  mapQuery?: string
-  tips?: string
+  costLabelAm: string
+  /** Lower = do sooner */
+  priority: number
+  href?: string
 }
 
-export const PILLAR_LABEL: Record<TodoPillar, { en: string; am: string; color: string }> = {
-  explore: { en: 'Explore', am: 'አስስ', color: 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200' },
-  stay: { en: 'Stay', am: 'ማረፊያ', color: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200' },
-  eat: { en: 'Eat & drink', am: 'ምግብ', color: 'bg-orange-100 text-orange-900 dark:bg-orange-950 dark:text-orange-200' },
-  move: { en: 'Get around', am: 'ትራንስፖርት', color: 'bg-violet-100 text-violet-900 dark:bg-violet-950 dark:text-violet-200' },
-  money: { en: 'Money', am: 'ገንዘብ', color: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-200' },
-  safety: { en: 'Safety', am: 'ደህንነት', color: 'bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-200' },
-  culture: { en: 'Culture', am: 'ባህል', color: 'bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200' },
-  plan: { en: 'Plan', am: 'እቅድ', color: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200' },
+export const PILLAR_LABEL: Record<TodoPillar, { en: string; am: string }> = {
+  must: { en: 'Must do', am: 'አስፈላጊ' },
+  see: { en: 'See & experience', am: 'ይጎብኙ' },
+  eat: { en: 'Eat & drink', am: 'ምግብ' },
+  move: { en: 'Getting around', am: 'መጓጓዣ' },
+  money: { en: 'Money & safety', am: 'ገንዘብና ደህንነት' },
+  plan: { en: 'Plan more', am: 'እቅድ' },
 }
 
+/** Ordered by real visitor priority for Bahir Dar */
 export const CITY_TODOS: CityTodo[] = [
   {
-    id: 'todo-lake-tana',
-    title: 'Boat trip on Lake Tana',
-    titleAm: 'በጣና ሐይቅ ጀልባ ጉዞ',
-    description: 'Visit island monasteries (e.g. Ura Kidane Mehret area). Book a reliable boat via hotel or verified guide.',
-    pillar: 'explore',
-    timeLabel: 'Half–full day',
-    costLabel: 'Est. 800–2500 ETB / person',
+    id: 'todo-lake-boat',
+    title: 'Take a Lake Tana boat trip',
+    titleAm: 'የጣና ሐይቅ ጀልባ ጉዞ ይውሰዱ',
+    description:
+      'Visit island monasteries (e.g. Ura Kidane Mehret). Morning departures are calmer; agree the price and islands before boarding.',
+    descriptionAm:
+      'የደሴት ገዳማትን ይጎብኙ (ኡራ ኪዳነ ምሕረት ወዘተ)። ጠዋት ጸጥ ያለ ነው። ከመነሳት በፊት ዋጋና ደሴቶችን ያረጋግጡ።',
+    tip: 'Book at the main lakeside pier near the hotels strip. Shared boats cost less than private.',
+    tipAm: 'ከሆቴሎች አጠገብ ካለው ዋና ጀልባ ማረፊያ ይያዙ። የጋራ ጀልባ ከግል ይረከሳል።',
+    pillar: 'must',
+    timeLabel: 'Half day',
+    timeLabelAm: 'ግማሽ ቀን',
+    costLabel: '~300–1500 ETB/person',
+    costLabelAm: '~300–1500 ብር/ሰው',
     priority: 1,
-    href: '/attractions',
-    tips: 'Start early; agree islands & return time before departure.',
+    href: '/map?filter=attraction',
   },
   {
     id: 'todo-falls',
-    title: 'Blue Nile Falls (Tis Abay)',
-    titleAm: 'የአባይ ፏፏቴ (ጢስ አባይ)',
-    description: 'Day trip to the falls. Combine with private car or organized tour; check water levels by season.',
-    pillar: 'explore',
-    timeLabel: 'Full day',
-    costLabel: 'Transport 2500–6000 ETB / vehicle (est.)',
+    title: 'Day trip to Blue Nile Falls (Tis Abay)',
+    titleAm: 'ወደ ጥሶ አባይ (ሰማያዊ ናይል ፏፏቴ) ቀን ጉዞ',
+    description:
+      'About 30 km south of Bahir Dar. Water volume depends on season — more impressive in/after rains. Wear shoes for the walk and short bridge sections.',
+    descriptionAm:
+      'ከባሕር ዳር ወደ ደቡብ ~30 ኪ.ሜ። ውሃው በዝናብ ወቅት ይጎላል። ለእግር መንገድ ጫማ ይልበሱ።',
+    tip: 'Combine with a driver or organized tour; confirm entrance fees on arrival.',
+    tipAm: 'ከሹፌር ወይም ጉብኝት ጋር ይያዙ፤ የመግቢያ ክፍያን በቦታው ያረጋግጡ።',
+    pillar: 'must',
+    timeLabel: '4–6 hours',
+    timeLabelAm: '4–6 ሰዓት',
+    costLabel: 'Transport + entrance',
+    costLabelAm: 'ትራንስፖርት + መግቢያ',
     priority: 1,
-    href: '/attractions',
-    tips: 'Wear shoes with grip; spray can soak clothes in wet season.',
-  },
-  {
-    id: 'todo-lakeside-walk',
-    title: 'Lakeside walk at sunset',
-    description: 'Walk the lakeside roads/promenade areas for views and evening air.',
-    pillar: 'explore',
-    timeLabel: '1–2 hours',
-    costLabel: 'Free',
-    priority: 2,
     href: '/map',
   },
   {
-    id: 'todo-hotel',
-    title: 'Book or confirm lodging',
-    description: 'Choose a hotel or guesthouse; prefer verified listings and lakeside if you want views.',
-    pillar: 'stay',
-    timeLabel: '30 min',
-    costLabel: 'Varies by star level',
+    id: 'todo-lakeside',
+    title: 'Walk the lakeside promenade at sunset',
+    titleAm: 'በፀሐይ ግባት የሐይቁን ዳር ይራመዱ',
+    description:
+      'Free and iconic. Path along the shore near the palace and hotels — safe in early evening with others around.',
+    descriptionAm:
+      'ነጻ እና የሚታወቅ ነው። ከቤተ መንግሥትና ሆቴሎች አጠገብ። በመጀመሪያ ማታ ከሰዎች ጋር ደህንነቱ የተጠበቀ ነው።',
+    pillar: 'must',
+    timeLabel: '1–2 hours',
+    timeLabelAm: '1–2 ሰዓት',
+    costLabel: 'Free',
+    costLabelAm: 'ነጻ',
     priority: 1,
-    href: '/hotels',
+    href: '/map?locate=1',
+  },
+  {
+    id: 'todo-fish',
+    title: 'Eat fresh lake fish',
+    titleAm: 'የጣና ሐይቅ ትኩስ ዓሳ ይቅመሱ',
+    description:
+      'Try fried or stewed fish at lakeside restaurants. Ask the day’s price; fish is a Bahir Dar specialty.',
+    descriptionAm:
+      'በሐይቁ ዳር ሬስቶራንቶች የተጠበሰ ወይም የተቀቀለ ዓሳ ይሞክሩ። የዕለቱን ዋጋ ይጠይቁ።',
+    pillar: 'eat',
+    timeLabel: '1–2 hours',
+    timeLabelAm: '1–2 ሰዓት',
+    costLabel: '~200–500 ETB',
+    costLabelAm: '~200–500 ብር',
+    priority: 2,
+    href: '/restaurants',
   },
   {
     id: 'todo-injera',
-    title: 'Try traditional Ethiopian food',
-    description: 'Injera with local stews; fish dishes are common near the lake.',
+    title: 'Have a full Ethiopian meal (injera)',
+    titleAm: 'ሙሉ የኢትዮጵያ ምግብ (እንጀራ) ይብሉ',
+    description:
+      'Order a combo platter to share: shiro, key wet, gomen, and local specialties. Wash hands; eat with right hand traditionally.',
+    descriptionAm:
+      'የጋራ ጭማቂ ይዘዙ፦ ሽሮ፣ ቀይ ወጥ፣ ጎመን። እጅ ይታጠቡ፤ በባህል በቀኝ እጅ ይበላል።',
     pillar: 'eat',
-    timeLabel: 'Evening',
-    costLabel: 'Budget–mid ETB',
-    priority: 1,
+    timeLabel: '1 hour',
+    timeLabelAm: '1 ሰዓት',
+    costLabel: '~150–400 ETB',
+    costLabelAm: '~150–400 ብር',
+    priority: 2,
     href: '/restaurants',
   },
   {
     id: 'todo-coffee',
-    title: 'Coffee ceremony or lakeside café',
-    description: 'Ethiopia’s coffee culture — café stop or full ceremony where offered.',
+    title: 'Join a traditional coffee ceremony',
+    titleAm: 'ባህላዊ የቡና ሥርዓት ይሳተፉ',
+    description:
+      'Roasting, grinding, and three rounds of coffee. Many hotels and cultural restaurants offer it — ask before ordering.',
+    descriptionAm:
+      'መቁጠር፣ መፍጨት እና ሦስት ዙር ቡና። ብዙ ሆቴሎችና ባህላዊ ቦታዎች ያቀርባሉ — ከመዘዝ በፊት ይጠይቁ።',
     pillar: 'eat',
-    timeLabel: '1 hour',
-    costLabel: 'Low–mid',
+    timeLabel: '45–90 min',
+    timeLabelAm: '45–90 ደቂቃ',
+    costLabel: '~50–200 ETB',
+    costLabelAm: '~50–200 ብር',
     priority: 2,
-    href: '/discover',
+    href: '/restaurants',
+  },
+  {
+    id: 'todo-hotel',
+    title: 'Choose a hotel by area & budget',
+    titleAm: 'በአካባቢና በበጀት ሆቴል ይምረጡ',
+    description:
+      'Lakeside = views & higher price. Town centre = cheaper and closer to shops. Compare star bands and nightly ETB estimates in the app.',
+    descriptionAm:
+      'የሐይቅ ዳር = እይታና ከፍተኛ ዋጋ። ከተማ መሃል = ርካሽና ከሱቆች ቅርብ። በመተግበሪያው ዋጋዎችን ያወዳድሩ።',
+    pillar: 'plan',
+    timeLabel: '20 min',
+    timeLabelAm: '20 ደቂቃ',
+    costLabel: 'See Hotels page',
+    costLabelAm: 'የሆቴል ገጽ ይመልከቱ',
+    priority: 1,
+    href: '/hotels',
   },
   {
     id: 'todo-bajaj',
-    title: 'Learn bajaj & taxi price norms',
-    description: 'Agree price before the ride. Use hotel taxis at night if unsure.',
+    title: 'Learn bajaj (tuk-tuk) fares',
+    titleAm: 'የባጃጅ ዋጋ ይረዱ',
+    description:
+      'Agree the price before you sit. Short central rides are often 50–150 ETB; longer trips more. Night fares can be higher.',
+    descriptionAm:
+      'ከመቀመጥ በፊት ዋጋ ያውሩ። አጭር ከተማ ውስጥ ብዙ ጊዜ 50–150 ብር ነው። ማታ ሊጨምር ይችላል።',
+    tip: 'Open Transport page for typical ranges; point on the map if language is hard.',
+    tipAm: 'የትራንስፖርት ገጽን ይክፈቱ፤ ቋንቋ ካልተመቸ ካርታ ላይ ያሳዩ።',
     pillar: 'move',
-    timeLabel: '15 min read',
-    costLabel: 'See fare guide',
+    timeLabel: '5 min',
+    timeLabelAm: '5 ደቂቃ',
+    costLabel: '50–150+ ETB short',
+    costLabelAm: 'አጭር 50–150+ ብር',
     priority: 1,
     href: '/transport',
   },
   {
     id: 'todo-atm',
-    title: 'Withdraw ETB cash',
-    description: 'ATMs can run low on weekends — withdraw early for markets and bajaj.',
+    title: 'Find a working ATM or bank',
+    titleAm: 'የሚሰራ ኤቲኤም ወይም ባንክ ያግኙ',
+    description:
+      'CBE, Dashen, Awash and others operate in town. Machines can run out of cash — try another branch. Keep small notes for bajaj and tips.',
+    descriptionAm:
+      'ሲቢኢ፣ ዳሽን፣ አዋሽ ወዘተ አሉ። ገንዘብ ሊያልቅ ይችላል — ሌላ ቅርንጫፍ ይሞክሩ። ለባጃጅ ትንሽ ብር ይያዙ።',
     pillar: 'money',
-    timeLabel: '20 min',
+    timeLabel: '15–30 min',
+    timeLabelAm: '15–30 ደቂቃ',
     costLabel: 'Bank fees may apply',
-    priority: 1,
-    href: '/banks',
-  },
-  {
-    id: 'todo-budget',
-    title: 'Set a daily budget',
-    description: 'Use the in-app budget tool for lodging, food, boats, and transport.',
-    pillar: 'plan',
-    timeLabel: '15 min',
-    costLabel: '—',
-    priority: 2,
-    href: '/budget',
-  },
-  {
-    id: 'todo-emergency',
-    title: 'Save emergency numbers',
-    description: 'Police 991, medical 907, fire 939 — confirm locally if numbers change.',
-    pillar: 'safety',
-    timeLabel: '5 min',
-    costLabel: 'Free',
+    costLabelAm: 'የባንክ ክፍያ ሊኖር ይችላል',
     priority: 1,
     href: '/directory',
   },
   {
-    id: 'todo-market',
-    title: 'Visit the open market',
-    description: 'Spices, produce, textiles — go in the morning; keep valuables secure.',
-    pillar: 'culture',
-    timeLabel: '2–3 hours',
-    costLabel: 'Free to browse',
-    priority: 2,
-    href: '/events',
+    id: 'todo-emergency',
+    title: 'Save emergency numbers',
+    titleAm: 'የአደጋ ጊዜ ቁጥሮችን ያስቀምጡ',
+    description:
+      'National police/ambulance lines plus local hospital contacts. Also ask your hotel’s front desk for the nearest clinic.',
+    descriptionAm:
+      'ብሔራዊ ፖሊስ/አምቡላንስ እና የአካባቢ ሆስፒታል። የሆቴልዎን ፊት ለፊት ዴስክም ይጠይቁ።',
+    pillar: 'money',
+    timeLabel: '2 min',
+    timeLabelAm: '2 ደቂቃ',
+    costLabel: 'Free',
+    costLabelAm: 'ነጻ',
+    priority: 1,
+    href: '/help#emergency',
   },
   {
-    id: 'todo-guide',
-    title: 'Arrange a local guide (optional)',
-    description: 'Licensed guides help with monasteries, Falls, and language.',
+    id: 'todo-market',
+    title: 'Visit the local market',
+    titleAm: 'የአካባቢ ገበያ ይጎብኙ',
+    description:
+      'Spices, coffee, textiles, and everyday goods. Keep valuables close; bargain politely for souvenirs.',
+    descriptionAm:
+      'ቅመም፣ ቡና፣ ጨርቅ እና የዕለት ተዕለት ዕቃ። ንብረትዎን ይጠብቁ፤ በሟችነት ዋጋ ይደራደሩ።',
+    pillar: 'see',
+    timeLabel: '1–2 hours',
+    timeLabelAm: '1–2 ሰዓት',
+    costLabel: 'As you buy',
+    costLabelAm: 'እንደ ግዢዎ',
+    priority: 3,
+    href: '/map',
+  },
+  {
+    id: 'todo-viewpoint',
+    title: 'See the city from a viewpoint',
+    titleAm: 'ከእይታ ቦታ ከተማውን ይመልከቱ',
+    description:
+      'Hill viewpoints (e.g. areas toward Bezawit) give a wide view of the lake and town — best late afternoon.',
+    descriptionAm:
+      'ከኮረብታ እይታዎች (እንደ በዛዊት አቅጣጫ) ሐይቁንና ከተማውን ያያሉ — ከሰዓት በኋላ ይመረጣል።',
+    pillar: 'see',
+    timeLabel: '1–2 hours',
+    timeLabelAm: '1–2 ሰዓት',
+    costLabel: 'Transport only',
+    costLabelAm: 'ትራንስፖርት ብቻ',
+    priority: 3,
+    href: '/map',
+  },
+  {
+    id: 'todo-today',
+    title: 'Open “Today in Bahir Dar” plan',
+    titleAm: 'የ«ዛሬ በባሕር ዳር» እቅድ ይክፈቱ',
+    description:
+      'Weather-aware suggestions for one day: boat, falls, food, and rest — built for first-time visitors.',
+    descriptionAm:
+      'ለአንድ ቀን የአየር ሁኔታ ግምት ያለው እቅድ፦ ጀልባ፣ ፏፏቴ፣ ምግብ — ለመጀመሪያ ጎብኝዎች።',
     pillar: 'plan',
-    timeLabel: 'Call / desk',
-    costLabel: 'Day rates ~1200–4000 ETB',
+    timeLabel: '5 min',
+    timeLabelAm: '5 ደቂቃ',
+    costLabel: 'Free',
+    costLabelAm: 'ነጻ',
     priority: 2,
-    href: '/guides',
+    href: '/today',
   },
   {
     id: 'todo-ai',
-    title: 'Ask the AI city guide',
-    description: 'Get itinerary ideas in English or Amharic for your dates and budget.',
+    title: 'Ask the AI guide in Amharic or English',
+    titleAm: 'AI መመሪያን በአማርኛ ወይም እንግሊዝኛ ይጠይቁ',
+    description:
+      'Get a custom day plan for your budget, mobility, and interests without leaving the app.',
+    descriptionAm:
+      'በበጀትዎ፣ እንቅስቃሴዎ እና ፍላጎትዎ የቀን እቅድ ያግኙ።',
     pillar: 'plan',
     timeLabel: '10 min',
+    timeLabelAm: '10 ደቂቃ',
     costLabel: 'Free in-app',
+    costLabelAm: 'በመተግበሪያ ነጻ',
     priority: 2,
     href: '/ai-guide',
   },
   {
-    id: 'todo-trip',
-    title: 'Build a multi-day trip plan',
-    description: 'Save days, stops, and expenses in Trips.',
-    pillar: 'plan',
-    timeLabel: '20 min',
-    costLabel: '—',
-    priority: 2,
-    href: '/trips',
-  },
-  {
-    id: 'todo-discover',
-    title: 'Browse live map places (OSM)',
-    description: 'Hotels, cafés, and transport points from OpenStreetMap with Google directions.',
-    pillar: 'explore',
-    timeLabel: '15 min',
+    id: 'todo-help',
+    title: 'Read visitor help (arrival & phrases)',
+    titleAm: 'የጎብኝ እርዳታ (መድረስና ሐረጎች) ያንብቡ',
+    description:
+      'First steps after the airport/bus, useful Amharic phrases, money tips, and safety notes.',
+    descriptionAm:
+      'ከአውሮፕላን/አውቶቡስ በኋላ ደረጃዎች፣ ጠቃሚ አማርኛ፣ የገንዘብ ምክር እና ደህንነት።',
+    pillar: 'money',
+    timeLabel: '10 min',
+    timeLabelAm: '10 ደቂቃ',
     costLabel: 'Free',
-    priority: 3,
-    href: '/discover',
+    costLabelAm: 'ነጻ',
+    priority: 1,
+    href: '/help',
   },
 ]
 
@@ -200,42 +286,54 @@ export const SMART_CITY_MODULES = [
   {
     id: 'tourism',
     title: 'Tourism & map',
-    body: 'Places, GPS map, Discover (OSM), attractions.',
+    titleAm: 'ቱሪዝምና ካርታ',
+    body: 'Places, GPS map, Discover, attractions.',
+    bodyAm: 'ቦታዎች፣ ካርታ፣ መስህቦች።',
     href: '/map',
     icon: 'map',
   },
   {
     id: 'mobility',
     title: 'Mobility',
-    body: 'Fares, bajaj/taxi norms, bus & boat tips.',
+    titleAm: 'መጓጓዣ',
+    body: 'Fares, bajaj, bus & boat tips.',
+    bodyAm: 'ዋጋ፣ ባጃጅ፣ አውቶቡስና ጀልባ።',
     href: '/transport',
     icon: 'car',
   },
   {
     id: 'hospitality',
     title: 'Stay & eat',
-    body: 'Hotels, restaurants, cafés — verified + live data.',
+    titleAm: 'መጠለያና ምግብ',
+    body: 'Hotels, restaurants, cafés.',
+    bodyAm: 'ሆቴሎች፣ ሬስቶራንቶች፣ ካፌዎች።',
     href: '/hotels',
     icon: 'hotel',
   },
   {
     id: 'civic',
     title: 'Civic & safety',
-    body: 'Directory, emergency contacts, banks & ATMs.',
+    titleAm: 'ደህንነትና አገልግሎት',
+    body: 'Directory, emergency, banks.',
+    bodyAm: 'ማውጫ፣ አደጋ ጊዜ፣ ባንኮች።',
     href: '/directory',
     icon: 'shield',
   },
   {
     id: 'events',
     title: 'Events & culture',
+    titleAm: 'ዝግጅቶችና ባህል',
     body: 'Markets, festivals, lakeside culture.',
+    bodyAm: 'ገበያ፣ በዓላት፣ የሐይቅ ባህል።',
     href: '/events',
     icon: 'calendar',
   },
   {
     id: 'intelligence',
     title: 'AI & planning',
-    body: 'AI Guide, trips, budgets, Things to Do.',
+    titleAm: 'AI እና እቅድ',
+    body: 'AI Guide, trips, budgets, to-do list.',
+    bodyAm: 'AI መመሪያ፣ ጉዞ፣ በጀት፣ ዝርዝር።',
     href: '/todo',
     icon: 'sparkles',
   },
