@@ -345,7 +345,7 @@ export default function MapPage() {
         if (cancelled) return
         if (r?.coordinates?.length) {
           setRouteCoords(r.coordinates)
-          setRouteDurationSec(r.duration ?? null)
+          setRouteDurationSec(r.durationSec ?? null)
         } else {
           setRouteCoords(null)
           setRouteError(true)
