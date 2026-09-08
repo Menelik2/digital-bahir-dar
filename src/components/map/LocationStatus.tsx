@@ -3,22 +3,27 @@ import { useGeolocation } from '@/hooks/useGeolocation'
 import { formatAccuracy } from '@/services/geolocation'
 import { formatDistance } from '@/utils/geo'
 import { distanceToBahirDarCenter } from '@/services/geolocation'
+import { useAppStore } from '@/store'
 import { cn } from '@/lib/utils'
 
 /** Compact status chip for map / explore headers */
 export function LocationStatus({ className }: { className?: string }) {
+  const lang = useAppStore((s) => s.language)
+  const am = lang === 'am'
   const { location, hasFix, insideBahirDar, nearBahirDar, loading, watching } = useGeolocation(false)
 
   if (loading) {
     return (
-      <span className={cn('text-[11px] text-slate-500', className)}>Getting location…</span>
+      <span className={cn('text-[11px] text-slate-500', className)}>
+        {am ? 'ቦታ እየተገኘ…' : 'Getting location…'}
+      </span>
     )
   }
 
   if (!hasFix || location.latitude == null || location.longitude == null) {
     return (
       <span className={cn('inline-flex items-center gap-1 text-[11px] text-slate-500', className)}>
-        <Crosshair className="h-3 w-3" /> Location off
+        <Crosshair className="h-3 w-3" /> {am ? 'ቦታ ጠፍቷል' : 'Location off'}
       </span>
     )
   }
@@ -35,11 +40,17 @@ export function LocationStatus({ className }: { className?: string }) {
     >
       <MapPin className="h-3 w-3" />
       {insideBahirDar
-        ? `In Bahir Dar · ${formatAccuracy(location.accuracy)}`
+        ? am
+          ? `ባሕር ዳር · ${formatAccuracy(location.accuracy)}`
+          : `In Bahir Dar · ${formatAccuracy(location.accuracy)}`
         : nearBahirDar
-          ? `${formatDistance(dist)} from center`
-          : `${formatDistance(dist)} from Bahir Dar`}
-      {watching ? ' · live' : ''}
+          ? am
+            ? `ከማዕከሉ ${formatDistance(dist)}`
+            : `${formatDistance(dist)} from center`
+          : am
+            ? `ከባሕር ዳር ${formatDistance(dist)}`
+            : `${formatDistance(dist)} from Bahir Dar`}
+      {watching ? (am ? ' · ቀጥታ' : ' · live') : ''}
     </span>
   )
 }
