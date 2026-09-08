@@ -26,14 +26,16 @@ export function Layout() {
       <main id="main-content" className="page-enter flex-1 pb-nav-safe lg:pb-0" tabIndex={-1}>
         <Outlet />
       </main>
-      <footer className="border-t border-black/[0.04] bg-white/80 px-4 py-5 text-center dark:border-white/[0.08] dark:bg-[#0c0c0e]/90 lg:py-6">
-        <p className="text-[12px] font-medium tracking-wide text-[#8e8e93] sm:text-[13px]">
-          {t.common.developedBy}{' '}
-          <span className="font-semibold text-[#1c1c1e] dark:text-white">Menelik Admasu</span>
-        </p>
-        <p className="mt-1 text-[11px] text-[#aeaeb2] dark:text-white/40">
-          © {new Date().getFullYear()} Digital Bahir Dar
-        </p>
+      <footer className="border-t border-black/[0.04] bg-white/80 dark:border-white/[0.08] dark:bg-[#0c0c0e]/90">
+        <div className="mx-auto max-w-7xl px-4 py-5 text-center sm:px-6 lg:px-8 lg:py-6">
+          <p className="text-[12px] font-medium tracking-wide text-[#8e8e93] sm:text-[13px]">
+            {t.common.developedBy}{' '}
+            <span className="font-semibold text-[#1c1c1e] dark:text-white">Menelik Admasu</span>
+          </p>
+          <p className="mt-1 text-[11px] text-[#aeaeb2] dark:text-white/40">
+            © {new Date().getFullYear()} Digital Bahir Dar
+          </p>
+        </div>
       </footer>
       <MobileNav />
       <InstallPrompt />

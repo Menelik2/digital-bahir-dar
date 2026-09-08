@@ -159,7 +159,7 @@ export default function HomePage() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/45 to-[#f2f2f7] dark:to-black" />
         </div>
-        <div className="relative mx-auto max-w-6xl px-4 pb-10 pt-12 sm:pb-14 sm:pt-16 lg:pb-16 lg:pt-20">
+        <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-12 sm:px-6 sm:pb-14 sm:pt-16 lg:px-8 lg:pb-16 lg:pt-20">
           <div className="max-w-2xl">
             <p className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[12px] font-semibold text-white backdrop-blur-sm sm:text-[13px]">
               <MapPin className="h-3.5 w-3.5 text-[#f5c518] sm:h-4 sm:w-4" /> {t.home.badge}
@@ -187,7 +187,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-6xl px-4 pb-12 sm:pb-16">
+      <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-16 lg:px-8">
         <section className="-mt-2 mb-8 sm:mb-10">
           <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[#8e8e93]">
             {t.home.startHere}
@@ -198,12 +198,12 @@ export default function HomePage() {
           <p className="mt-1 max-w-2xl text-[14px] text-[#8e8e93] sm:text-[15px]">{t.home.whatNeedSub}</p>
           <p className="mt-1 text-[13px] text-[#8e8e93]">{t.home.startHereSub}</p>
 
-          <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+          <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-2 sm:gap-3 md:grid-cols-4 md:gap-3 lg:gap-4">
             {primaryPaths.map((item) => {
               const Icon = item.icon
               return (
                 <Link key={item.path} to={item.path} className="group block">
-                  <div className="relative aspect-[5/4] overflow-hidden rounded-2xl bg-slate-200 shadow-sm ring-1 ring-black/[0.04] transition duration-300 active:scale-[0.98] group-hover:-translate-y-0.5 group-hover:shadow-md dark:ring-white/10 sm:aspect-[4/3]">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-slate-200 shadow-sm ring-1 ring-black/[0.04] transition duration-300 active:scale-[0.98] group-hover:-translate-y-0.5 group-hover:shadow-md dark:ring-white/10 sm:aspect-[5/4] md:aspect-[4/3]">
                     <PathPhoto src={item.image} fallback={item.imageFb} />
                     <div className={cn('absolute inset-0 bg-gradient-to-t', item.accent)} />
                     <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
@@ -243,7 +243,7 @@ export default function HomePage() {
           <h2 className="mb-4 text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-2xl">
             {t.home.moreTools}
           </h2>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 lg:grid-cols-5">
+          <div className="grid grid-cols-3 gap-2 min-[400px]:grid-cols-3 sm:grid-cols-4 sm:gap-3 lg:grid-cols-5 xl:grid-cols-5">
             {moreTools.map((tool) => {
               const Icon = tool.icon
               return (
@@ -275,7 +275,7 @@ export default function HomePage() {
                 {t.home.allEvents}
               </Link>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {featuredEvents.map((e) => (
                 <Link key={e.id} to="/events" className="block">
                   <Card className="h-full border-0 shadow-sm ring-1 ring-black/[0.04] transition hover:shadow-md dark:ring-white/10">
@@ -295,7 +295,7 @@ export default function HomePage() {
           <h2 className="mb-5 text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:mb-6 sm:text-2xl">
             {t.home.featured}
           </h2>
-          <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
             <Link
               to="/map"
               className="group block overflow-hidden rounded-[1.25rem] bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1c1c1e] dark:ring-white/10"
@@ -336,7 +336,7 @@ export default function HomePage() {
             </Link>
             <Link
               to="/todo"
-              className="group block overflow-hidden rounded-[1.25rem] bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1c1c1e] dark:ring-white/10"
+              className="group block overflow-hidden rounded-[1.25rem] bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1c1c1e] dark:ring-white/10 sm:col-span-2 lg:col-span-1"
             >
               <div className="aspect-[16/10] overflow-hidden bg-gradient-to-br from-[#078930] to-[#0b6e99]">
                 <div className="flex h-full items-center justify-center">
