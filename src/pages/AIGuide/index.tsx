@@ -1,10 +1,18 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Sparkles, Send, Loader2, Map, Wallet, Route, RotateCcw, ExternalLink, Compass,
+  Sparkles,
+  Send,
+  Loader2,
+  Map,
+  Wallet,
+  Route,
+  RotateCcw,
+  ExternalLink,
+  Compass,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { sendGuideMessage, SUGGESTED_PROMPTS } from '@/services/aiGuide'
+import { sendGuideMessage, getSuggestedPrompts } from '@/services/aiGuide'
 import type { ChatMessage, GuideAction } from '@/types/ai'
 import { useAppStore } from '@/store'
 import { cn } from '@/lib/utils'
@@ -22,16 +30,18 @@ export default function AIGuidePage() {
     (): ChatMessage => ({
       id: 'welcome',
       role: 'assistant',
-      content: t.ai.welcome,
+      content: t.ai.welcome || (language === 'am'
+        ? 'ሰላም! የባሕር ዳር መመሪያዎ ነኝ። ስለ ቦታዎች፣ ምግብ፣ ሆቴል ወይም እቅድ ይጠይቁ።'
+        : "Selam! I'm your Bahir Dar guide. Ask about places, food, hotels, transport, or a 1–3 day plan."),
       createdAt: new Date().toISOString(),
       isDemo: true,
       actions: [
-        { label: 'Trip planner', to: '/trip-planner' },
-        { label: 'Map', to: '/map' },
-        { label: 'Attractions', to: '/attractions' },
+        { label: language === 'am' ? 'የጉዞ እቅድ' : 'Trip planner', to: '/trip-planner' },
+        { label: language === 'am' ? 'ካርታ' : 'Map', to: '/map' },
+        { label: language === 'am' ? 'መስህቦች' : 'Attractions', to: '/attractions' },
       ],
     }),
-    [t.ai.welcome]
+    [t.ai.welcome, language]
   )
 
   const [messages, setMessages] = useState<ChatMessage[]>([welcome])
@@ -52,6 +62,12 @@ export default function AIGuidePage() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, sending])
+
+  const reset = () => {
+    setMessages([welcome])
+    setDemoMode(true)
+    setInput('')
+  }
 
   const send = async (text: string) => {
     const trimmed = text.trim()
@@ -88,7 +104,7 @@ export default function AIGuidePage() {
         {
           id: uid(),
           role: 'assistant',
-          content: t.ai.error,
+          content: t.ai.error || 'Could not get a reply. Try again.',
           createdAt: new Date().toISOString(),
           isDemo: true,
         },
@@ -99,57 +115,49 @@ export default function AIGuidePage() {
     }
   }
 
-  const reset = () => {
-    setMessages([welcome])
-    setDemoMode(true)
-  }
-
   return (
-    /* Full viewport under header; sticky composer above tab bar */
-    <div className="mx-auto flex h-[calc(100dvh-3.25rem-env(safe-area-inset-top,0px))] max-w-2xl flex-col bg-[#f2f2f7] dark:bg-black lg:h-[calc(100dvh-4rem)]">
-      {/* Header strip */}
+    <div className="flex h-[calc(100dvh-3.5rem)] flex-col bg-[#f2f2f7] dark:bg-black sm:h-[calc(100dvh-4rem)] lg:h-[calc(100dvh-4rem)]">
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-black/[0.06] bg-white/90 px-3 py-2.5 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#1c1c1e]/90 sm:px-4">
         <div className="flex min-w-0 items-center gap-2.5">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#078930] via-[#0b6e99] to-[#d4a017] text-white shadow-sm">
-            <Sparkles className="h-4.5 w-4.5" strokeWidth={2.25} />
+            <Sparkles className="h-4 w-4" strokeWidth={2.25} />
           </div>
           <div className="min-w-0">
             <h1 className="truncate text-[17px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white">
               {t.ai.title}
             </h1>
             <p className="text-[11px] font-medium text-[#8e8e93]">
-              {demoMode ? t.ai.demoMode : t.ai.liveMode}
+              {demoMode ? t.ai.demoMode || 'Offline tips' : t.ai.liveMode || 'Live AI'}
             </p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-0.5">
           <Link to="/trip-planner">
             <Button size="icon" variant="ghost" className="h-10 w-10" title="Trip planner">
-              <Compass className="h-4.5 w-4.5" />
+              <Compass className="h-4 w-4" />
             </Button>
           </Link>
           <Link to="/map">
             <Button size="icon" variant="ghost" className="h-10 w-10" title={t.nav.map}>
-              <Map className="h-4.5 w-4.5" />
+              <Map className="h-4 w-4" />
             </Button>
           </Link>
           <Link to="/budget" className="hidden sm:inline-flex">
             <Button size="icon" variant="ghost" className="h-10 w-10" title={t.nav.budget}>
-              <Wallet className="h-4.5 w-4.5" />
+              <Wallet className="h-4 w-4" />
             </Button>
           </Link>
-          <Link to="/trips" className="hidden sm:inline-flex">
-            <Button size="icon" variant="ghost" className="h-10 w-10" title={t.nav.trips}>
-              <Route className="h-4.5 w-4.5" />
+          <Link to="/transport" className="hidden sm:inline-flex">
+            <Button size="icon" variant="ghost" className="h-10 w-10" title={t.nav.transport}>
+              <Route className="h-4 w-4" />
             </Button>
           </Link>
-          <Button size="icon" variant="ghost" className="h-10 w-10" title={t.ai.reset} onClick={reset}>
-            <RotateCcw className="h-4.5 w-4.5" />
+          <Button size="icon" variant="ghost" className="h-10 w-10" title={t.ai.reset || 'Clear'} onClick={reset}>
+            <RotateCcw className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* Scrollable messages */}
       <div className="flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 py-4 sm:px-4">
         {messages.map((m) => (
           <div key={m.id} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
@@ -182,7 +190,6 @@ export default function AIGuidePage() {
         <div ref={bottomRef} className="h-1" />
       </div>
 
-      {/* Sticky composer — above mobile tab bar */}
       <div
         className="shrink-0 border-t border-black/[0.06] bg-white/95 px-3 pt-2 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#1c1c1e]/95 sm:px-4"
         style={{
@@ -191,14 +198,14 @@ export default function AIGuidePage() {
         }}
       >
         {messages.length <= 2 && (
-          <div className="mobile-chips mb-2.5 gap-1.5">
-            {SUGGESTED_PROMPTS.map((p) => (
+          <div className="mb-2.5 flex flex-wrap gap-1.5">
+            {getSuggestedPrompts(language).map((p) => (
               <button
                 key={p}
                 type="button"
                 disabled={sending}
                 onClick={() => send(p)}
-                className="shrink-0 rounded-full border border-black/[0.08] bg-[#f2f2f7] px-3 py-2 text-[12px] font-medium text-[#3c3c43] active:bg-black/5 dark:border-white/10 dark:bg-white/10 dark:text-white/80"
+                className="rounded-full border border-black/[0.08] bg-[#f2f2f7] px-3 py-1.5 text-[12px] font-medium text-[#1c1c1e] active:bg-black/[0.06] dark:border-white/10 dark:bg-white/10 dark:text-white/80"
               >
                 {p}
               </button>
