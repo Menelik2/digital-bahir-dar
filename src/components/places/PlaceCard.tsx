@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { MapPin, Star, BadgeCheck, Navigation, ExternalLink } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -7,7 +7,7 @@ import type { Place } from '@/types/place'
 import { formatDistance } from '@/utils/geo'
 import { isOsmPlaceId, cacheOsmPlaceForDetail } from '@/services/osmPlaces'
 import { placeGuideLinks } from '@/constants/guideSites'
-import { placeCoverImage, placeImageAlt, BAHIR_DAR_CITY_COVER } from '@/utils/placeImage'
+import { placeCoverImage, placeImageAlt, BAHIR_DAR_CITY_COVER, EXPLORE_HERO_IMAGES } from '@/utils/placeImage'
 import {
   placeName,
   placeNameSecondary,
@@ -27,13 +27,19 @@ interface PlaceCardProps {
 
 function CoverImage({ place, className }: { place: Place; className?: string }) {
   const primary = placeCoverImage(place)
-  const [src, setSrc] = useState(primary)
+  const fallbacks = [primary, BAHIR_DAR_CITY_COVER, ...EXPLORE_HERO_IMAGES]
+  const [idx, setIdx] = useState(0)
   const [failed, setFailed] = useState(false)
+  useEffect(() => {
+    setIdx(0)
+    setFailed(false)
+  }, [place.id, primary])
+  const src = fallbacks[Math.min(idx, fallbacks.length - 1)]
 
   if (failed) {
     return (
       <div
-        className={cn('bg-gradient-to-br from-sky-400 via-sky-500 to-teal-600', className)}
+        className={cn('bg-gradient-to-br from-sky-500 via-teal-600 to-emerald-700', className)}
         role="img"
         aria-label={placeImageAlt(place)}
       />
@@ -49,11 +55,8 @@ function CoverImage({ place, className }: { place: Place; className?: string }) 
       referrerPolicy="no-referrer"
       className={cn('object-cover', className)}
       onError={() => {
-        if (src !== BAHIR_DAR_CITY_COVER) {
-          setSrc(BAHIR_DAR_CITY_COVER)
-        } else {
-          setFailed(true)
-        }
+        if (idx < fallbacks.length - 1) setIdx((i) => i + 1)
+        else setFailed(true)
       }}
     />
   )
@@ -121,7 +124,7 @@ export function PlaceCard({
             </span>
           )}
           {isDemo && (
-            <span className="absolute right-2.5 top-2.5 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+            <span className="absolute right-2.5 top-2.5 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-medium text-white">
               DEMO
             </span>
           )}
@@ -129,16 +132,16 @@ export function PlaceCard({
         <CardContent className="p-3.5 sm:p-4">
           <div className="mb-1 flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <h3 className="text-[16px] font-semibold leading-snug tracking-tight text-[#1c1c1e] dark:text-white">
+              <h3 className="truncate text-[16px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white">
                 {name}
               </h3>
               {secondary && (
-                <p className="mt-0.5 text-[12px] text-[#8e8e93]">{secondary}</p>
+                <p className="truncate text-[12px] text-[#8e8e93]">{secondary}</p>
               )}
             </div>
             {place.verified && <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />}
           </div>
-          <p className="mb-1.5 text-[13px] font-medium text-sky-700 dark:text-sky-400">{cat}</p>
+          <p className="mb-1 text-[12px] font-medium text-[#078930] dark:text-[#30d158]">{cat}</p>
           {shortDesc && (
             <p className="mb-3 line-clamp-2 text-[14px] leading-relaxed text-[#8e8e93]">{shortDesc}</p>
           )}
