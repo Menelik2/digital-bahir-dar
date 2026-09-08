@@ -12,6 +12,7 @@ import type { OsmCategory } from '@/services/osmPlaces'
 import type { Place } from '@/types/place'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { EXPLORE_HERO_IMAGES, exploreCategoryImage } from '@/utils/placeImage'
 
 const EXPLORE_CATEGORIES: { slug: string; name: string; osm: OsmCategory[] }[] = [
   { slug: 'hotel', name: 'Hotels', osm: ['hotel'] },
@@ -142,6 +143,26 @@ export default function ExplorePage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-5 sm:py-8">
+      {/* Real Bahir Dar photo strip */}
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {EXPLORE_HERO_IMAGES.map((src, i) => (
+          <div
+            key={src}
+            className="relative h-28 w-44 shrink-0 overflow-hidden rounded-2xl bg-slate-200 shadow-sm sm:h-32 sm:w-52"
+          >
+            <img
+              src={src}
+              alt={i === 0 ? 'Lake Tana, Bahir Dar' : 'Bahir Dar, Ethiopia'}
+              loading={i === 0 ? 'eager' : 'lazy'}
+              decoding="async"
+              referrerPolicy="no-referrer"
+              className="h-full w-full object-cover"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
+          </div>
+        ))}
+      </div>
+
       {/* Large title */}
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3 sm:mb-6">
         <div>
@@ -241,7 +262,7 @@ export default function ExplorePage() {
         )}
       </div>
 
-      {/* Filter chips — horizontal scroll */}
+      {/* Filter chips with real photo thumbs */}
       <div className="mobile-chips mb-5 gap-2">
         <button
           type="button"
@@ -255,8 +276,22 @@ export default function ExplorePage() {
             key={c.slug}
             type="button"
             onClick={() => setCategory(category === c.slug ? null : c.slug)}
-            className={cn(chipBase, category === c.slug ? chipOn : chipOff)}
+            className={cn(
+              chipBase,
+              'inline-flex items-center gap-2',
+              category === c.slug ? chipOn : chipOff
+            )}
           >
+            <span className="relative h-6 w-6 overflow-hidden rounded-full ring-1 ring-black/10">
+              <img
+                src={exploreCategoryImage(c.slug)}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
+                className="h-full w-full object-cover"
+              />
+            </span>
             {c.name}
           </button>
         ))}
