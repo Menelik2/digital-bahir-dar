@@ -25,13 +25,11 @@ import {
   QUICK_LINKS,
 } from '@/data/visitorEssentials'
 import { useAppStore } from '@/store'
-import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
 
 const STEP_ICONS = [Plane, Banknote, Smartphone, Sun, MapPin]
 
 export default function HelpPage() {
-  const t = useT()
   const lang = useAppStore((s) => s.language)
   const am = lang === 'am'
 
