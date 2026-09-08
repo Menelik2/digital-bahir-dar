@@ -150,7 +150,6 @@ export default function HomePage() {
 
   return (
     <div className="bg-[#f2f2f7] dark:bg-black">
-      {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <img
@@ -189,7 +188,6 @@ export default function HomePage() {
       </section>
 
       <div className="mx-auto max-w-6xl px-4 pb-12 sm:pb-16">
-        {/* Start here */}
         <section className="-mt-2 mb-8 sm:mb-10">
           <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[#8e8e93]">
             {t.home.startHere}
@@ -200,20 +198,20 @@ export default function HomePage() {
           <p className="mt-1 max-w-2xl text-[14px] text-[#8e8e93] sm:text-[15px]">{t.home.whatNeedSub}</p>
           <p className="mt-1 text-[13px] text-[#8e8e93]">{t.home.startHereSub}</p>
 
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
             {primaryPaths.map((item) => {
               const Icon = item.icon
               return (
                 <Link key={item.path} to={item.path} className="group block">
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-[1.25rem] bg-slate-200 shadow-sm ring-1 ring-black/[0.04] transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg dark:ring-white/10 sm:aspect-[3/4]">
+                  <div className="relative aspect-[5/4] overflow-hidden rounded-2xl bg-slate-200 shadow-sm ring-1 ring-black/[0.04] transition duration-300 active:scale-[0.98] group-hover:-translate-y-0.5 group-hover:shadow-md dark:ring-white/10 sm:aspect-[4/3]">
                     <PathPhoto src={item.image} fallback={item.imageFb} />
                     <div className={cn('absolute inset-0 bg-gradient-to-t', item.accent)} />
-                    <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-4">
-                      <span className="mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm">
-                        <Icon className="h-4 w-4" strokeWidth={2} />
+                    <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
+                      <span className="mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm">
+                        <Icon className="h-3.5 w-3.5" strokeWidth={2} />
                       </span>
-                      <p className="text-[16px] font-bold text-white sm:text-[17px]">{item.title}</p>
-                      <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-white/85 sm:text-[13px]">
+                      <p className="text-[14px] font-bold leading-tight text-white sm:text-[15px]">{item.title}</p>
+                      <p className="mt-0.5 line-clamp-1 text-[11px] leading-snug text-white/85 sm:text-[12px]">
                         {item.body}
                       </p>
                     </div>
@@ -224,7 +222,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Today strip */}
         <Link to="/today" className="group mb-8 block sm:mb-10">
           <Card className="overflow-hidden border-0 bg-white shadow-sm ring-1 ring-black/[0.04] transition group-hover:shadow-md dark:bg-[#1c1c1e] dark:ring-white/10">
             <CardContent className="flex items-center gap-3 p-4 sm:gap-4 sm:p-5">
@@ -242,7 +239,6 @@ export default function HomePage() {
           </Card>
         </Link>
 
-        {/* More tools */}
         <section className="mb-10 sm:mb-12">
           <h2 className="mb-4 text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-2xl">
             {t.home.moreTools}
@@ -266,7 +262,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Events */}
         {featuredEvents.length > 0 && (
           <section className="mb-10 sm:mb-12">
             <div className="mb-4 flex items-end justify-between gap-2">
@@ -296,7 +291,6 @@ export default function HomePage() {
           </section>
         )}
 
-        {/* Featured places */}
         <section className="mb-10 sm:mb-12">
           <h2 className="mb-5 text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:mb-6 sm:text-2xl">
             {t.home.featured}
@@ -359,7 +353,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* CTA */}
         <section className="rounded-[1.5rem] bg-gradient-to-br from-[#0b6e99]/15 to-[#078930]/20 p-6 sm:p-8 dark:from-[#0b6e99]/25 dark:to-[#078930]/20">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
