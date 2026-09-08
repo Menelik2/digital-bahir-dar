@@ -49,6 +49,7 @@ export function Header() {
   ]
 
   const exploreNav = [
+    { path: '/help', label: t.nav.help || 'Help', icon: Compass },
     { path: '/discover', label: t.nav.discover, icon: Compass },
     { path: '/trip-planner', label: t.nav.planner, icon: Sparkles },
     { path: '/todo', label: t.nav.todo, icon: ListTodo },
@@ -63,7 +64,6 @@ export function Header() {
   const mobileNav = [
     ...primaryNav,
     ...exploreNav.filter((e) => !primaryNav.some((p) => p.path === e.path)),
-    { path: '/directory', label: t.nav.directory },
   ]
 
   useEffect(() => {
@@ -156,7 +156,7 @@ export function Header() {
                   : 'text-[#3c3c43]/85 hover:bg-black/[0.05] dark:text-white/75 dark:hover:bg-white/10'
               )}
             >
-              {t.nav.exploreMenu}
+              {t.nav.exploreMenu || 'More'}
               <ChevronDown className={cn('h-3.5 w-3.5 transition', exploreOpen && 'rotate-180')} />
             </button>
 
@@ -221,11 +221,10 @@ export function Header() {
         </div>
       </div>
 
-      {/* Desktop helper row — plain language shortcuts */}
       <div className="hidden border-t border-black/[0.04] bg-[#f8f8fa]/95 dark:border-white/[0.06] dark:bg-black/40 lg:block">
         <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-6 py-2 xl:px-8">
           <span className="mr-1 shrink-0 text-[12px] font-semibold text-[#8e8e93]">
-            {t.nav.find}:
+            {t.nav.find || 'Find'}:
           </span>
           {[
             { path: '/today', label: t.nav.today },
@@ -234,6 +233,7 @@ export function Header() {
             { path: '/events', label: t.nav.events },
             { path: '/ai-guide', label: t.nav.aiGuide },
             { path: '/budget', label: t.home.budget },
+            { path: '/help', label: t.nav.help || 'Help' },
             { path: '/directory', label: t.nav.directory },
           ].map((item) => (
             <Link
@@ -252,7 +252,6 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile full-screen sheet (iOS-like) */}
       {mobileOpen && (
         <div className="fixed inset-0 z-[60] lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <button
