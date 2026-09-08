@@ -23,6 +23,7 @@ const BanksPage = lazy(() => import('@/pages/Banks'))
 const TransportPage = lazy(() => import('@/pages/Transport'))
 const EventsPage = lazy(() => import('@/pages/Events'))
 const DirectoryPage = lazy(() => import('@/pages/Directory'))
+const HelpPage = lazy(() => import('@/pages/Help'))
 const TripsPage = lazy(() => import('@/pages/Trips'))
 const TripDetailPage = lazy(() => import('@/pages/Trips/TripDetail'))
 const TripPlannerPage = lazy(() => import('@/pages/TripPlanner'))
@@ -53,7 +54,7 @@ export default function App() {
       <SplashScreen onDone={onSplashDone} />
 
       <div
-        className={splashDone ? 'app-reveal' : 'app-hidden'}
+        className={splashDone ? 'contents' : 'invisible pointer-events-none absolute inset-0'}
         aria-hidden={!splashDone}
       >
         <BrowserRouter>
@@ -75,6 +76,8 @@ export default function App() {
                   <Route path="/transport" element={<TransportPage />} />
                   <Route path="/events" element={<EventsPage />} />
                   <Route path="/directory" element={<DirectoryPage />} />
+                  <Route path="/help" element={<HelpPage />} />
+                  <Route path="/visitor" element={<HelpPage />} />
                   <Route path="/trips" element={<TripsPage />} />
                   <Route path="/trips/:tripId" element={<TripDetailPage />} />
                   <Route path="/trip-planner" element={<TripPlannerPage />} />
