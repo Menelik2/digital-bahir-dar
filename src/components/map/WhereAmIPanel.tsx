@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Crosshair, Loader2, MapPin, Navigation, Hotel, UtensilsCrossed, Landmark, Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -14,15 +15,14 @@ type Props = {
   onNearFilter?: (filter: string) => void
 }
 
-/**
- * Clear “where am I?” panel for visitors who don’t know the city.
- */
+/** Clear “where am I?” panel for visitors who don’t know the city. */
 export function WhereAmIPanel({ className, onLocated, onNearFilter }: Props) {
   const t = useT()
   const lang = useAppStore((s) => s.language)
   const am = lang === 'am'
   const { location, setMapCenter } = useAppStore()
   const { request, loading, hasFix, insideBahirDar, nearBahirDar } = useGeolocation(false)
+  const [collapsed, setCollapsed] = useState(false)
 
   const showMe = async () => {
     try {
@@ -98,6 +98,27 @@ export function WhereAmIPanel({ className, onLocated, onNearFilter }: Props) {
     { id: 'bank', label: am ? 'ባንክ' : 'Banks', icon: Building2 },
   ]
 
+  if (collapsed) {
+    return (
+      <button
+        type="button"
+        onClick={() => setCollapsed(false)}
+        className={cn(
+          'pointer-events-auto flex w-full items-center gap-2 rounded-full border border-emerald-200/80 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-xl dark:border-emerald-800/50 dark:bg-[#1c1c1e]/95',
+          className
+        )}
+      >
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#078930] text-white">
+          <MapPin className="h-3.5 w-3.5" />
+        </span>
+        <span className="min-w-0 flex-1 truncate text-left text-[13px] font-semibold text-[#1c1c1e] dark:text-white">
+          {am ? 'እዚህ ነዎት' : 'You are here'} · {placeLabel}
+        </span>
+        <span className="text-[11px] font-medium text-[#078930]">{am ? 'ክፈት' : 'Open'}</span>
+      </button>
+    )
+  }
+
   return (
     <div
       className={cn(
@@ -119,15 +140,24 @@ export function WhereAmIPanel({ className, onLocated, onNearFilter }: Props) {
             {am ? ' · ሰማያዊ ነጥብ = እርስዎ' : ' · Blue dot = you'}
           </p>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-9 shrink-0 rounded-full text-[12px]"
-          onClick={() => void showMe()}
-          disabled={loading}
-        >
-          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : am ? 'አድስ' : 'Refresh'}
-        </Button>
+        <div className="flex shrink-0 flex-col gap-1">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 rounded-full text-[11px]"
+            onClick={() => void showMe()}
+            disabled={loading}
+          >
+            {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : am ? 'አድስ' : 'Refresh'}
+          </Button>
+          <button
+            type="button"
+            className="text-[11px] font-medium text-[#8e8e93] underline"
+            onClick={() => setCollapsed(true)}
+          >
+            {am ? 'ደብቅ' : 'Hide'}
+          </button>
+        </div>
       </div>
 
       <p className="mt-3 text-[12px] font-semibold text-[#8e8e93]">
