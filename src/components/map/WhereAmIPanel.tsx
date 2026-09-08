@@ -6,7 +6,6 @@ import { useGeolocation } from '@/hooks/useGeolocation'
 import { formatAccuracy, distanceToBahirDarCenter } from '@/services/geolocation'
 import { formatDistance } from '@/utils/geo'
 import { useAppStore } from '@/store'
-import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -17,7 +16,6 @@ type Props = {
 
 /** Clear “where am I?” panel for visitors who don’t know the city. */
 export function WhereAmIPanel({ className, onLocated, onNearFilter }: Props) {
-  const t = useT()
   const lang = useAppStore((s) => s.language)
   const am = lang === 'am'
   const { location, setMapCenter } = useAppStore()
