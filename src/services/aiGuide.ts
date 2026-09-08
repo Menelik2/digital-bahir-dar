@@ -285,7 +285,7 @@ async function invokeSupabase(
   messages: { role: string; content: string }[],
   locale: string
 ): Promise<AIGuideResponse | null> {
-  if (!isSupabaseConfigured() || !supabase) return null
+  if (!isSupabaseConfigured || !supabase) return null
   try {
     const { data, error } = await supabase.functions.invoke('ai-guide', {
       body: { messages, locale },
