@@ -100,15 +100,15 @@ export default function HomePage() {
               <MapPin className="h-3.5 w-3.5" /> Bahir Dar Smart Digital City
             </p>
             <h1 className="text-[34px] font-bold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
-              {t.home.heroTitle}
+              {t.home.title}
             </h1>
             <p className="mt-3 max-w-xl text-[16px] leading-relaxed text-white/90 sm:text-lg">
-              {t.home.heroSubtitle}
+              {t.home.heroHint}
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link to="/today" className="w-full sm:w-auto">
                 <Button className="h-12 w-full rounded-full bg-[#f5c518] px-6 text-[15px] font-semibold text-[#1c1c1e] hover:bg-[#e6b800] sm:w-auto">
-                  <Sun className="h-5 w-5" /> {t.home.todayCta}
+                  <Sun className="h-5 w-5" /> {t.home.todayTitle}
                 </Button>
               </Link>
               <Link to="/trip-planner" className="w-full sm:w-auto">
@@ -212,7 +212,7 @@ export default function HomePage() {
                 {t.home.happening}
               </h2>
               <Link to="/events" className="text-[13px] font-semibold text-[#078930]">
-                {t.common.seeAll}
+                {t.common.showAll}
               </Link>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
