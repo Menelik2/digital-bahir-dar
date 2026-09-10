@@ -55,20 +55,26 @@ function parseInfoBlocks(text: string | null | undefined) {
 }
 
 export default function PlaceDetailsPage() {
-  const { slug = '' } = useParams()
+  const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
   const { language, isAm } = useLang()
-  const { place, isLoading, error } = usePlace(slug)
-  const { hasFix, location } = useGeolocation()
+  const { data: place, isLoading, error } = usePlace(slug)
+  const { location } = useAppStore()
+  useGeolocation(true)
+  const canSocial = isPersistedPlaceId(place?.id)
+  const { data: reviews = [], isLoading: reviewsLoading } = useReviews(canSocial ? place?.id : undefined)
+  const { data: myReview } = useMyReview(canSocial ? place?.id : undefined)
+  const { data: ratingSummary } = useRatingSummary(canSocial ? place?.id : undefined)
+
   const userPos =
-    hasFix && location.latitude != null && location.longitude != null
+    location.latitude != null && location.longitude != null
       ? { lat: location.latitude, lng: location.longitude }
       : null
 
-  const distM =
-    place && userPos
-      ? distanceMeters(userPos.lat, userPos.lng, place.latitude, place.longitude)
-      : null
+  const distM = useMemo(() => {
+    if (!place || !userPos) return null
+    return distanceMeters(userPos.lat, userPos.lng, place.latitude, place.longitude)
+  }, [place, userPos])
 
   const info = useMemo(
     () => parseInfoBlocks(place?.attraction?.historical_information),
@@ -116,106 +122,122 @@ export default function PlaceDetailsPage() {
 
   const name = placeName(place, language)
   const secondary = placeNameSecondary(place, language)
-  const desc = placeDescription(place, language)
-  const cat = categoryLabel(place.category, language)
+  const description = placeDescription(place, language)
+  const category = categoryLabel(place.category, language)
   const cover = placeCoverImage(place)
-  const canReview = isPersistedPlaceId(place.id)
 
   return (
-    <div className="bg-[#f2f2f7] dark:bg-black">
-      <div className="relative">
-        <img
-          src={cover}
-          alt={placeImageAlt(place)}
-          className="h-[42vh] max-h-[360px] w-full object-cover sm:h-[48vh] sm:max-h-[420px]"
-          referrerPolicy="no-referrer"
-          onError={(e) => {
-            const el = e.currentTarget
-            el.onerror = null
-            el.src =
-              'https://commons.wikimedia.org/wiki/Special:FilePath/The%20city%20of%20Bahir%20Dar%2C%20Ethiopia.jpg?width=1200'
-          }}
-        />
+    <div className="min-h-full bg-[#f2f2f7] dark:bg-black">
+      <div className="relative h-56 w-full overflow-hidden sm:h-72">
+        {cover ? (
+          <img src={cover} alt={placeImageAlt(place)} className="h-full w-full object-cover" />
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-sky-400 to-teal-600" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="absolute left-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm"
-          aria-label={isAm ? 'ተመለስ' : 'Back'}
+          className="absolute left-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur"
+          aria-label="Back"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
-          {cat && (
-            <span className="mb-2 inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-semibold text-white backdrop-blur-sm">
-              {cat}
+        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+          {category && (
+            <span className="mb-1 inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-semibold backdrop-blur">
+              {category}
             </span>
           )}
-          <h1 className="text-2xl font-bold text-white drop-shadow sm:text-3xl">{name}</h1>
-          {secondary && <p className="mt-0.5 text-[14px] text-white/85">{secondary}</p>}
-          {distM != null && (
-            <p className="mt-1 text-[13px] font-medium text-white/90">
-              {formatDistance(distM)} · 🚶 {walkingMinutes(distM)} {isAm ? 'ደቂቃ' : 'min'}
-            </p>
-          )}
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{name}</h1>
+          {secondary && <p className="text-sm text-white/80">{secondary}</p>}
         </div>
       </div>
 
-      <div className="mx-auto max-w-3xl px-4 py-5 sm:px-6">
-        <div className="mb-5 flex flex-wrap gap-2">
-          <Button className="rounded-full bg-[#078930] hover:bg-[#056b24]" onClick={() => goDirections('walking')}>
-            <Footprints className="h-4 w-4" /> {isAm ? 'በእግር' : 'Walk'}
-          </Button>
-          <Button variant="outline" className="rounded-full" onClick={() => goDirections('driving')}>
-            <Navigation className="h-4 w-4" /> {isAm ? 'መኪና' : 'Drive'}
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
+        <div className="mb-4 flex flex-wrap gap-2">
+          <Button onClick={() => goDirections('walking')}>
+            <Navigation className="h-4 w-4" /> {isAm ? 'አቅጣጫ' : 'Directions'}
           </Button>
           <FavoriteButton placeId={place.id} />
+          {distM != null && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-2 text-sm shadow-sm dark:bg-[#1c1c1e]">
+              <MapPin className="h-3.5 w-3.5 text-[#078930]" />
+              {formatDistance(distM)} · 🚶 {walkingMinutes(distM)} {isAm ? 'ደቂቃ' : 'min'}
+            </span>
+          )}
         </div>
 
-        {desc && (
-          <section className="mb-6">
-            <h2 className="mb-2 text-[17px] font-bold text-[#1c1c1e] dark:text-white">
-              {isAm ? 'ስለ ቦታው' : 'About'}
-            </h2>
-            <p className="text-[15px] leading-relaxed text-[#3c3c43] dark:text-white/80">{desc}</p>
-          </section>
+        {description && (
+          <Card className="mb-4">
+            <CardContent className="p-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+              {description}
+            </CardContent>
+          </Card>
         )}
 
-        {info.highlights && (
-          <section className="mb-5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1c1c1e] dark:ring-white/10">
-            <h3 className="mb-1 flex items-center gap-1.5 text-[14px] font-bold text-[#078930]">
-              <Star className="h-4 w-4" /> {isAm ? 'ዋና ነጥቦች' : 'Highlights'}
-            </h3>
-            <p className="text-[14px] leading-relaxed text-[#3c3c43] dark:text-white/80">{info.highlights}</p>
-          </section>
-        )}
-
-        {info.tips && (
-          <section className="mb-5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1c1c1e] dark:ring-white/10">
-            <h3 className="mb-1 flex items-center gap-1.5 text-[14px] font-bold text-[#d4a017]">
-              <Lightbulb className="h-4 w-4" /> {isAm ? 'ጠቃሚ ምክሮች' : 'Tips'}
-            </h3>
-            <p className="text-[14px] leading-relaxed text-[#3c3c43] dark:text-white/80">{info.tips}</p>
-          </section>
-        )}
-
-        {(place.phone || place.website) && (
-          <section className="mb-6 flex flex-wrap gap-3">
-            {place.phone && (
-              <a href={`tel:${place.phone}`} className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[#0b6e99]">
-                <Phone className="h-4 w-4" /> {place.phone}
-              </a>
+        {(info.highlights || info.tips || info.howTo) && (
+          <section className="mb-6 space-y-3">
+            {info.highlights && (
+              <Card>
+                <CardContent className="p-4">
+                  <p className="mb-1 flex items-center gap-2 text-sm font-semibold">
+                    <Landmark className="h-4 w-4 text-[#078930]" /> {isAm ? 'ዋና ነጥቦች' : 'Highlights'}
+                  </p>
+                  <p className="text-sm text-slate-600 dark:text-slate-300">{info.highlights}</p>
+                </CardContent>
+              </Card>
             )}
-            {place.website && (
-              <a href={place.website} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[#0b6e99]">
-                <Globe className="h-4 w-4" /> {isAm ? 'ድረ-ገጽ' : 'Website'}
-              </a>
+            {info.tips && (
+              <Card>
+                <CardContent className="p-4">
+                  <p className="mb-1 flex items-center gap-2 text-sm font-semibold">
+                    <Lightbulb className="h-4 w-4 text-amber-500" /> {isAm ? 'ምክሮች' : 'Tips'}
+                  </p>
+                  <p className="text-sm text-slate-600 dark:text-slate-300">{info.tips}</p>
+                </CardContent>
+              </Card>
+            )}
+            {info.howTo && (
+              <Card>
+                <CardContent className="p-4">
+                  <p className="mb-1 flex items-center gap-2 text-sm font-semibold">
+                    <Footprints className="h-4 w-4 text-sky-600" /> {isAm ? 'እንዴት መድረስ' : 'How to get there'}
+                  </p>
+                  <p className="text-sm text-slate-600 dark:text-slate-300">{info.howTo}</p>
+                </CardContent>
+              </Card>
             )}
           </section>
         )}
 
-        <section className="mb-8">
-          <h2 className="mb-3 text-[17px] font-bold text-[#1c1c1e] dark:text-white">
+        <section className="mb-6">
+          <Card>
+            <CardContent className="space-y-2 p-4">
+              {place.address && (
+                <p className="flex items-start gap-2 text-sm">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#078930]" />
+                  {place.address}
+                </p>
+              )}
+              {place.phone && (
+                <a href={`tel:${place.phone}`} className="flex items-center gap-2 text-sm text-sky-600 hover:underline">
+                  <Phone className="h-4 w-4" />
+                  {place.phone}
+                </a>
+              )}
+              {place.website && (
+                <a href={place.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-sky-600 hover:underline">
+                  <Globe className="h-4 w-4" />
+                  {isAm ? 'ድረ-ገጽ' : 'Website'}
+                </a>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="mb-6">
+          <h2 className="mb-2 text-[17px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white">
             {isAm ? 'ካርታ እና ርቀት' : 'Map & distance'}
           </h2>
           <PlaceGoogleEmbed
@@ -230,19 +252,17 @@ export default function PlaceDetailsPage() {
 
         {similar.length > 0 && (
           <section className="mb-10">
-            <div className="mb-4 flex items-end justify-between gap-3">
-              <div>
-                <h2 className="text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white">
-                  {isAm ? 'ተመሳሳይ ቦታዎች' : 'Similar places'}
-                </h2>
-                <p className="mt-0.5 text-[13px] text-[#8e8e93]">
-                  {isAm ? 'በአይነት እና በርቀት የቀረቡ' : 'Nearby matches by type'}
-                </p>
-              </div>
+            <div className="mb-4">
+              <h2 className="text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white">
+                {isAm ? 'ተመሳሳይ ቦታዎች' : 'Similar places'}
+              </h2>
+              <p className="mt-0.5 text-[13px] text-[#8e8e93]">
+                {isAm ? 'በአይነት እና በርቀት የቀረቡ' : 'Nearby matches by type'}
+              </p>
             </div>
             <div className="flex flex-col gap-2.5 sm:grid sm:grid-cols-2 sm:gap-3">
               {similar.map((p) => {
-                const simCat = categoryLabel(p.category, language)
+                const cat = categoryLabel(p.category, language)
                 const short = placeShortDescription(p, language) || p.short_description
                 const simCover = placeCoverImage(p)
                 const dist =
@@ -274,13 +294,12 @@ export default function PlaceDetailsPage() {
                             'https://commons.wikimedia.org/wiki/Special:FilePath/The%20city%20of%20Bahir%20Dar%2C%20Ethiopia.jpg?width=400'
                         }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/5" />
                     </div>
                     <div className="flex min-w-0 flex-1 flex-col justify-center px-3 py-2.5 sm:px-3.5">
                       <div className="mb-1 flex flex-wrap items-center gap-1.5">
-                        {simCat && (
+                        {cat && (
                           <span className="rounded-full bg-[#0b6e99]/10 px-2 py-0.5 text-[10px] font-semibold text-[#0a5a7e] dark:bg-sky-950 dark:text-sky-300">
-                            {simCat}
+                            {cat}
                           </span>
                         )}
                         {dist && (
@@ -318,20 +337,33 @@ export default function PlaceDetailsPage() {
                         ? '/restaurants'
                         : '/explore'
                 }
-                className="text-[13px] font-semibold text-[#078930]"
+                className="text-sm font-semibold text-[#078930] hover:underline dark:text-[#30d158]"
               >
-                {isAm ? 'ተመሳሳይ ሁሉንም ይመልከቱ →' : 'See all in category →'}
+                {isAm ? 'ተመሳሳይ ምድብ ይመልከቱ →' : 'Browse same category →'}
+              </Link>
+              <Link to="/map" className="text-sm font-semibold text-[#0b6e99] hover:underline dark:text-sky-300">
+                {isAm ? 'ካርታ ላይ ይመልከቱ →' : 'View on map →'}
               </Link>
             </div>
           </section>
         )}
 
-        {canReview && (
+        {canSocial && (
           <section className="mb-10">
-            <h2 className="mb-3 text-[17px] font-bold text-[#1c1c1e] dark:text-white">
-              {isAm ? 'ግምገማዎች' : 'Reviews'}
-            </h2>
-            <ReviewForm placeId={place.id} />
+            <h2 className="mb-3 text-lg font-semibold">{isAm ? 'ግምገማዎች' : 'Reviews'}</h2>
+            {ratingSummary && (
+              <p className="mb-3 text-sm text-slate-500">
+                <Star className="mr-1 inline h-4 w-4 text-amber-400" />
+                {ratingSummary.avg?.toFixed?.(1) ?? '—'} · {ratingSummary.count ?? 0}
+              </p>
+            )}
+            <ReviewForm placeId={place.id} existing={myReview} />
+            <div className="mt-4 space-y-3">
+              {reviewsLoading && <p className="text-sm text-slate-400">…</p>}
+              {reviews.map((r) => (
+                <ReviewCard key={r.id} review={r} placeId={place.id} />
+              ))}
+            </div>
           </section>
         )}
       </div>
