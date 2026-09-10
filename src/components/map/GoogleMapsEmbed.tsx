@@ -15,6 +15,8 @@ type Props = {
   view?: GoogleMapsEmbedMode
   className?: string
   title?: string
+  /** Place name helps Google pin the real business, not a nearby shop */
+  placeName?: string
 }
 
 /** Bahir Dar / Lake Tana region — reject VPN/global GPS for route embed */
@@ -57,6 +59,7 @@ export function GoogleMapsEmbed({
   view = 'place',
   className,
   title = 'Google Map',
+  placeName,
 }: Props) {
   const { lat, lng } = normalizeCoords(Number(rawLat), Number(rawLng))
   const origin = useMemo(() => {
@@ -73,8 +76,8 @@ export function GoogleMapsEmbed({
     view === 'directions' && origin ? 'directions' : 'place'
 
   const src = useMemo(
-    () => buildEmbedSrc({ lat, lng, origin, mode, view: effectiveView }),
-    [lat, lng, origin, mode, effectiveView]
+    () => buildEmbedSrc({ lat, lng, origin, mode, view: effectiveView, placeName }),
+    [lat, lng, origin, mode, effectiveView, placeName]
   )
 
   if (!Number.isFinite(lat) || !Number.isFinite(lng) || (lat === 0 && lng === 0)) {
@@ -121,11 +124,17 @@ function buildEmbedSrc(opts: {
   origin?: { lat: number; lng: number } | null
   mode: 'walking' | 'driving'
   view: GoogleMapsEmbedMode
+  placeName?: string
 }): string {
   const key = getEmbedKey()
-  const { lat, lng, origin, mode, view } = opts
+  const { lat, lng, origin, mode, view, placeName } = opts
   const travelmode = mode === 'walking' ? 'walking' : 'driving'
-  const q = `${lat.toFixed(6)},${lng.toFixed(6)}`
+  // Prefer "Name @ lat,lng" so the pin is labeled as the place, not a random nearby POI
+  const coord = `${lat.toFixed(6)},${lng.toFixed(6)}`
+  const q =
+    placeName && placeName.trim()
+      ? `${placeName.trim()} Bahir Dar@${coord}`
+      : coord
 
   // Official Embed API — use place (pin), not view (no marker)
   if (key) {
@@ -134,15 +143,16 @@ function buildEmbedSrc(opts: {
         `https://www.google.com/maps/embed/v1/directions` +
         `?key=${encodeURIComponent(key)}` +
         `&origin=${origin.lat.toFixed(6)},${origin.lng.toFixed(6)}` +
-        `&destination=${q}` +
+        `&destination=${coord}` +
         `&mode=${travelmode}`
       )
     }
     return (
       `https://www.google.com/maps/embed/v1/place` +
       `?key=${encodeURIComponent(key)}` +
-      `&q=${encodeURIComponent(q)}` +
-      `&zoom=16`
+      `&q=${encodeURIComponent(placeName ? `${placeName}, Bahir Dar` : coord)}` +
+      `&center=${coord}` +
+      `&zoom=17`
     )
   }
 
@@ -151,18 +161,18 @@ function buildEmbedSrc(opts: {
     return (
       `https://maps.google.com/maps` +
       `?saddr=${origin.lat.toFixed(6)},${origin.lng.toFixed(6)}` +
-      `&daddr=${q}` +
+      `&daddr=${encodeURIComponent(q)}` +
       `&dirflg=${mode === 'walking' ? 'w' : 'd'}` +
       `&hl=en&output=embed`
     )
   }
 
-  // Accurate place pin — force lat,lng query (not address search)
+  // Accurate place pin — name + coordinates so marker matches the place
   return (
     `https://maps.google.com/maps` +
     `?q=${encodeURIComponent(q)}` +
-    `&ll=${q}` +
-    `&z=16` +
+    `&ll=${coord}` +
+    `&z=17` +
     `&hl=en` +
     `&output=embed`
   )
