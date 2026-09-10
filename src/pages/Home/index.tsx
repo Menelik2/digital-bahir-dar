@@ -133,27 +133,27 @@ export default function HomePage() {
           <p className="mt-1 max-w-2xl text-[14px] text-[#8e8e93] sm:text-[15px]">{t.home.whatNeedSub}</p>
           <p className="mt-1 text-[13px] text-[#8e8e93]">{t.home.startHereSub}</p>
 
-          <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-2 sm:gap-3 md:grid-cols-4 md:gap-3">
+          <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-4 md:gap-3 lg:gap-4">
             {primaryPaths.map((item) => {
               const Icon = item.icon
               return (
-                <Link key={item.path} to={item.path} className="group block">
+                <Link key={item.path} to={item.path} className="group flex h-full">
                   <div
                     className={cn(
-                      'flex min-h-[92px] flex-col justify-between rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/[0.04] transition duration-200 active:scale-[0.98] group-hover:-translate-y-0.5 group-hover:shadow-md dark:bg-[#1c1c1e] dark:ring-white/10 sm:min-h-[100px] sm:p-3.5',
+                      'flex h-full min-h-[88px] w-full flex-col justify-between rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/[0.04] transition duration-200 active:scale-[0.98] group-hover:-translate-y-0.5 group-hover:shadow-md dark:bg-[#1c1c1e] dark:ring-white/10 sm:min-h-[96px] sm:p-3.5 md:min-h-[108px]',
                       item.ring
                     )}
                   >
                     <span
                       className={cn(
-                        'mb-2 flex h-9 w-9 items-center justify-center rounded-full sm:h-10 sm:w-10',
+                        'mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full sm:h-10 sm:w-10',
                         item.color
                       )}
                     >
-                      <Icon className="h-4.5 w-4.5 sm:h-5 sm:w-5" strokeWidth={2} />
+                      <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={2} />
                     </span>
-                    <div>
-                      <p className="text-[14px] font-bold leading-tight text-[#1c1c1e] dark:text-white sm:text-[15px]">
+                    <div className="min-w-0">
+                      <p className="truncate text-[14px] font-bold leading-tight text-[#1c1c1e] dark:text-white sm:text-[15px]">
                         {item.title}
                       </p>
                       <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-[#8e8e93] sm:text-[12px]">
@@ -186,16 +186,16 @@ export default function HomePage() {
           <h2 className="mb-4 text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-2xl">
             {t.home.moreTools}
           </h2>
-          <div className="grid grid-cols-3 gap-2 min-[400px]:grid-cols-3 sm:grid-cols-4 sm:gap-3 lg:grid-cols-5 xl:grid-cols-5">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-3 sm:gap-2.5 md:grid-cols-4 md:gap-3 lg:grid-cols-5 lg:gap-3 xl:grid-cols-6">
             {moreTools.map((tool) => {
               const Icon = tool.icon
               return (
-                <Link key={tool.path} to={tool.path} className="group">
-                  <div className="flex min-h-[88px] flex-col items-center justify-center gap-2 rounded-[1.15rem] bg-white p-3 text-center shadow-sm ring-1 ring-black/[0.04] transition active:scale-[0.98] group-hover:shadow-md dark:bg-[#1c1c1e] dark:ring-white/10 sm:min-h-[100px]">
-                    <span className={cn('flex h-10 w-10 items-center justify-center rounded-full', tool.color)}>
-                      <Icon className="h-5 w-5" strokeWidth={2} />
+                <Link key={tool.path} to={tool.path} className="group flex h-full">
+                  <div className="flex h-full min-h-[84px] w-full flex-col items-center justify-center gap-1.5 rounded-[1.15rem] bg-white px-2 py-3 text-center shadow-sm ring-1 ring-black/[0.04] transition active:scale-[0.98] group-hover:shadow-md dark:bg-[#1c1c1e] dark:ring-white/10 sm:min-h-[92px] sm:gap-2 sm:px-3 md:min-h-[100px]">
+                    <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-full sm:h-10 sm:w-10', tool.color)}>
+                      <Icon className="h-4.5 w-4.5 sm:h-5 sm:w-5" strokeWidth={2} />
                     </span>
-                    <span className="text-[12px] font-semibold leading-tight text-[#1c1c1e] dark:text-white sm:text-[13px]">
+                    <span className="line-clamp-2 max-w-full text-[11px] font-semibold leading-tight text-[#1c1c1e] dark:text-white sm:text-[12px] md:text-[13px]">
                       {tool.label}
                     </span>
                   </div>
@@ -215,7 +215,7 @@ export default function HomePage() {
                 {t.common.showAll}
               </Link>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 lg:gap-4">
               {featuredEvents.map((ev) => (
                 <Link key={ev.id} to="/events" className="block">
                   <Card className="h-full border-0 shadow-sm ring-1 ring-black/[0.04] transition hover:shadow-md dark:ring-white/10">
@@ -239,7 +239,7 @@ export default function HomePage() {
               {done}/{CITY_TODOS.length}
             </Link>
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 lg:gap-4">
             {CITY_TODOS.slice(0, 6).map((todo) => (
               <Link key={todo.id} to="/todo" className="block">
                 <Card className="border-0 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/10">
