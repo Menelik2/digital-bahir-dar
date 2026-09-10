@@ -94,10 +94,8 @@ function buildEmbedSrc(opts: {
   const { lat, lng, origin, mode, view, placeName } = opts
   const travelmode = mode === 'walking' ? 'walking' : 'driving'
   const coord = `${lat.toFixed(6)},${lng.toFixed(6)}`
-  const q =
-    placeName && placeName.trim()
-      ? `${placeName.trim()} Bahir Dar@${coord}`
-      : coord
+  // placeName kept for future label use; pin always uses pure coordinates
+  void placeName
 
   // Official Embed API — pin by coordinates so marker matches the place, not a nearby shop
   if (key) {
@@ -124,15 +122,16 @@ function buildEmbedSrc(opts: {
     return (
       `https://maps.google.com/maps` +
       `?saddr=${origin.lat.toFixed(6)},${origin.lng.toFixed(6)}` +
-      `&daddr=${encodeURIComponent(q)}` +
+      `&daddr=${encodeURIComponent(coord)}` +
       `&dirflg=${mode === 'walking' ? 'w' : 'd'}` +
       `&hl=en&output=embed`
     )
   }
 
+  // Pure coordinates — name search often pins a nearby shop instead of the place
   return (
     `https://maps.google.com/maps` +
-    `?q=${encodeURIComponent(q)}` +
+    `?q=${encodeURIComponent(coord)}` +
     `&ll=${coord}` +
     `&z=17` +
     `&hl=en` +
