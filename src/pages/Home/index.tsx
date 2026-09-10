@@ -25,6 +25,57 @@ import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
 import { HERO_BLUE_NILE_DATA_URL } from '@/data/heroBlueNile'
 
+/** Path cards — real Bahir Dar photos (Wikimedia Commons) */
+const IMG = {
+  stay:
+    'https://commons.wikimedia.org/wiki/Special:FilePath/The%20city%20of%20Bahir%20Dar%2C%20Ethiopia.jpg?width=800',
+  eat:
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Bahar%20dar%2C%20ristorazione%20sul%20lago%20tana%2006.jpg?width=800',
+  go:
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Bahar%20dar%2C%20viale%20con%20palme%2001.jpg?width=800',
+  see:
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Lake%20Tana%20in%20Bahir%20Dar.jpg?width=800',
+  stayFb:
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Bahir%20Dar%201.jpg?width=800',
+  eatFb:
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Bahir-Dar-Strandcafe.JPG?width=800',
+  goFb:
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Bahir%20Dar%20-%20street%20scene%20(1).jpg?width=800',
+  seeFb:
+    'https://commons.wikimedia.org/wiki/Special:FilePath/Blue%20Nile%20Falls%2003.jpg?width=800',
+} as const
+
+function PathPhoto({
+  src,
+  fallback,
+  className,
+}: {
+  src: string
+  fallback: string
+  className?: string
+}) {
+  return (
+    <img
+      src={src}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+      className={cn(
+        'h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]',
+        className
+      )}
+      onError={(e) => {
+        const el = e.currentTarget
+        if (el.dataset.fb !== '1') {
+          el.dataset.fb = '1'
+          el.src = fallback
+        }
+      }}
+    />
+  )
+}
+
 export default function HomePage() {
   const t = useT()
   const completed = useTodoStore((s) => s.completed)
@@ -37,32 +88,36 @@ export default function HomePage() {
       body: t.home.stayBody,
       path: '/hotels',
       icon: Hotel,
-      color: 'bg-[#078930]/12 text-[#078930]',
-      ring: 'ring-[#078930]/20',
+      image: IMG.stay,
+      imageFb: IMG.stayFb,
+      accent: 'from-[#078930]/85 via-[#078930]/40 to-black/55',
     },
     {
       title: t.home.eat,
       body: t.home.eatBody,
       path: '/restaurants',
       icon: UtensilsCrossed,
-      color: 'bg-[#0b6e99]/12 text-[#0b6e99]',
-      ring: 'ring-[#0b6e99]/20',
+      image: IMG.eat,
+      imageFb: IMG.eatFb,
+      accent: 'from-[#0b6e99]/85 via-[#0b6e99]/40 to-black/55',
     },
     {
       title: t.home.go,
       body: t.home.goBody,
       path: '/transport',
       icon: Bus,
-      color: 'bg-[#d4a017]/15 text-[#9a7b0a]',
-      ring: 'ring-[#d4a017]/25',
+      image: IMG.go,
+      imageFb: IMG.goFb,
+      accent: 'from-[#d4a017]/80 via-[#d4a017]/35 to-black/55',
     },
     {
       title: t.home.see,
       body: t.home.seeBody,
       path: '/attractions',
       icon: Landmark,
-      color: 'bg-[#5b4b8a]/12 text-[#5b4b8a]',
-      ring: 'ring-[#5b4b8a]/20',
+      image: IMG.see,
+      imageFb: IMG.seeFb,
+      accent: 'from-[#5b4b8a]/85 via-[#5b4b8a]/40 to-black/55',
     },
   ]
 
@@ -137,26 +192,18 @@ export default function HomePage() {
             {primaryPaths.map((item) => {
               const Icon = item.icon
               return (
-                <Link key={item.path} to={item.path} className="group flex h-full">
-                  <div
-                    className={cn(
-                      'flex h-full min-h-[88px] w-full flex-col justify-between rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/[0.04] transition duration-200 active:scale-[0.98] group-hover:-translate-y-0.5 group-hover:shadow-md dark:bg-[#1c1c1e] dark:ring-white/10 sm:min-h-[96px] sm:p-3.5 md:min-h-[108px]',
-                      item.ring
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        'mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full sm:h-10 sm:w-10',
-                        item.color
-                      )}
-                    >
-                      <Icon className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={2} />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-[14px] font-bold leading-tight text-[#1c1c1e] dark:text-white sm:text-[15px]">
+                <Link key={item.path} to={item.path} className="group block">
+                  <div className="relative aspect-[5/4] overflow-hidden rounded-2xl bg-slate-200 shadow-sm ring-1 ring-black/[0.04] transition duration-300 active:scale-[0.98] group-hover:-translate-y-0.5 group-hover:shadow-lg dark:ring-white/10 sm:aspect-[4/3] md:aspect-[5/4]">
+                    <PathPhoto src={item.image} fallback={item.imageFb} />
+                    <div className={cn('absolute inset-0 bg-gradient-to-t', item.accent)} />
+                    <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
+                      <span className="mb-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/25 text-white backdrop-blur-sm sm:h-8 sm:w-8">
+                        <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.2} />
+                      </span>
+                      <p className="text-[14px] font-bold leading-tight text-white drop-shadow sm:text-[15px]">
                         {item.title}
                       </p>
-                      <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-[#8e8e93] sm:text-[12px]">
+                      <p className="mt-0.5 line-clamp-1 text-[11px] leading-snug text-white/90 sm:text-[12px]">
                         {item.body}
                       </p>
                     </div>
