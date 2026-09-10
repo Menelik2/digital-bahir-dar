@@ -29,3 +29,12 @@ export function walkingMinutes(meters: number): number {
 export function drivingMinutes(meters: number): number {
   return Math.max(1, Math.round(meters / 417))
 }
+
+/** Unswap inverted lat/lng pairs common in bad imports (lng,lat stored as lat,lng). */
+export function normalizeBahirDarCoords(lat: number, lng: number): { lat: number; lng: number } {
+  const a = Number(lat)
+  const b = Number(lng)
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return { lat: a, lng: b }
+  if (a > 20 && a < 50 && b > 5 && b < 20) return { lat: b, lng: a }
+  return { lat: a, lng: b }
+}

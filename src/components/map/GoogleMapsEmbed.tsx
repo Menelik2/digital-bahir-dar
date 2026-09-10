@@ -4,83 +4,47 @@ import { cn } from '@/lib/utils'
 export type GoogleMapsEmbedMode = 'place' | 'directions'
 
 type Props = {
-  /** Destination lat */
   lat: number
-  /** Destination lng */
   lng: number
-  /** Optional origin for directions */
+  /** When set with view=directions, shows route from origin to the place */
   origin?: { lat: number; lng: number } | null
   mode?: 'walking' | 'driving'
-  /** place = pin only; directions = route (when origin set and near destination) */
   view?: GoogleMapsEmbedMode
-  className?: string
-  title?: string
-  /** Place name helps Google pin the real business, not a nearby shop */
   placeName?: string
-}
-
-/** Bahir Dar / Lake Tana region — reject VPN/global GPS for route embed */
-function inBahirDarRegion(lat: number, lng: number): boolean {
-  return lat >= 10.8 && lat <= 12.3 && lng >= 36.6 && lng <= 38.2
-}
-
-function normalizeCoords(lat: number, lng: number): { lat: number; lng: number } {
-  // If values look swapped (Ethiopia: lat~11, lng~37)
-  if (lat > 20 && lng < 20 && lng > 5) {
-    return { lat: lng, lng: lat }
-  }
-  return { lat, lng }
-}
-
-function haversineKm(
-  a: { lat: number; lng: number },
-  b: { lat: number; lng: number }
-): number {
-  const R = 6371
-  const dLat = ((b.lat - a.lat) * Math.PI) / 180
-  const dLng = ((b.lng - a.lng) * Math.PI) / 180
-  const la1 = (a.lat * Math.PI) / 180
-  const la2 = (b.lat * Math.PI) / 180
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(la1) * Math.cos(la2) * Math.sin(dLng / 2) ** 2
-  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)))
+  title?: string
+  className?: string
 }
 
 /**
- * Google Maps embedded in our site (iframe) — user never leaves Digital Bahir Dar.
- * Always pins the place accurately. Directions only when origin is near the place.
+ * Google Maps iframe embed.
+ * Always prefers exact coordinates so the pin matches the place, not a nearby shop.
  */
 export function GoogleMapsEmbed({
-  lat: rawLat,
-  lng: rawLng,
-  origin: rawOrigin,
+  lat,
+  lng,
+  origin = null,
   mode = 'walking',
   view = 'place',
-  className,
-  title = 'Google Map',
   placeName,
+  title = 'Google Map',
+  className,
 }: Props) {
-  const { lat, lng } = normalizeCoords(Number(rawLat), Number(rawLng))
-  const origin = useMemo(() => {
-    if (!rawOrigin) return null
-    const o = normalizeCoords(Number(rawOrigin.lat), Number(rawOrigin.lng))
-    if (!Number.isFinite(o.lat) || !Number.isFinite(o.lng)) return null
-    // Reject far-away GPS (VPN, another city) so map stays on the real place
-    if (!inBahirDarRegion(o.lat, o.lng)) return null
-    if (haversineKm(o, { lat, lng }) > 80) return null
-    return o
-  }, [rawOrigin, lat, lng])
+  const coordsOk =
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    !(lat === 0 && lng === 0)
 
   const effectiveView: GoogleMapsEmbedMode =
-    view === 'directions' && origin ? 'directions' : 'place'
+    view === 'directions' && origin && Number.isFinite(origin.lat) && Number.isFinite(origin.lng)
+      ? 'directions'
+      : 'place'
 
   const src = useMemo(
     () => buildEmbedSrc({ lat, lng, origin, mode, view: effectiveView, placeName }),
     [lat, lng, origin, mode, effectiveView, placeName]
   )
 
-  if (!Number.isFinite(lat) || !Number.isFinite(lng) || (lat === 0 && lng === 0)) {
+  if (!coordsOk) {
     return (
       <div
         className={cn(
@@ -129,14 +93,13 @@ function buildEmbedSrc(opts: {
   const key = getEmbedKey()
   const { lat, lng, origin, mode, view, placeName } = opts
   const travelmode = mode === 'walking' ? 'walking' : 'driving'
-  // Prefer "Name @ lat,lng" so the pin is labeled as the place, not a random nearby POI
   const coord = `${lat.toFixed(6)},${lng.toFixed(6)}`
   const q =
     placeName && placeName.trim()
       ? `${placeName.trim()} Bahir Dar@${coord}`
       : coord
 
-  // Official Embed API — use place (pin), not view (no marker)
+  // Official Embed API — pin by coordinates so marker matches the place, not a nearby shop
   if (key) {
     if (view === 'directions' && origin) {
       return (
@@ -147,16 +110,16 @@ function buildEmbedSrc(opts: {
         `&mode=${travelmode}`
       )
     }
+    // q=lat,lng is the reliable pin; name-only search often lands on the wrong POI
     return (
       `https://www.google.com/maps/embed/v1/place` +
       `?key=${encodeURIComponent(key)}` +
-      `&q=${encodeURIComponent(placeName ? `${placeName}, Bahir Dar` : coord)}` +
-      `&center=${coord}` +
+      `&q=${encodeURIComponent(coord)}` +
       `&zoom=17`
     )
   }
 
-  // Key-free: pin the exact coordinates (ll + q keeps marker on place)
+  // Key-free: pin the exact coordinates
   if (view === 'directions' && origin) {
     return (
       `https://maps.google.com/maps` +
@@ -167,7 +130,6 @@ function buildEmbedSrc(opts: {
     )
   }
 
-  // Accurate place pin — name + coordinates so marker matches the place
   return (
     `https://maps.google.com/maps` +
     `?q=${encodeURIComponent(q)}` +
