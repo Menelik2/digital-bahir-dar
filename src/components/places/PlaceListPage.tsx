@@ -14,6 +14,8 @@ import { useGeolocation } from '@/hooks/useGeolocation'
 import { useOsmPlaces } from '@/hooks/useOsmPlaces'
 import { rankNearby } from '@/services/places'
 import type { OsmCategory } from '@/services/osmPlaces'
+import { CURATED_HOTELS } from '@/services/curatedHotels'
+import { CURATED_TOURISM_PLACES } from '@/services/curatedTourism'
 import type { Place, SortOption } from '@/types/place'
 import { cn } from '@/lib/utils'
 import { placeSearchText } from '@/utils/placeLocale'
@@ -114,7 +116,18 @@ export function PlaceListPage({
   } = useOsmPlaces(osmCategories ?? ['all'], mergeOsm)
 
   const places = useMemo(() => {
-    let list = mergeOsm && osmPlaces.length > 0 ? mergePlaces(dbPlaces, osmPlaces) : dbPlaces
+    // Curated verified pins first, then DB, then live OSM
+    let list: typeof dbPlaces = []
+    if (categorySlug === 'hotel' || !categorySlug) {
+      list = mergePlaces(list, CURATED_HOTELS as typeof dbPlaces)
+    }
+    if (categorySlug === 'attraction' || !categorySlug) {
+      list = mergePlaces(list, CURATED_TOURISM_PLACES as typeof dbPlaces)
+    }
+    list = mergePlaces(list, dbPlaces)
+    if (mergeOsm && osmPlaces.length > 0) {
+      list = mergePlaces(list, osmPlaces)
+    }
     if (search.trim()) {
       const q = search.toLowerCase()
       list = list.filter((p) => placeSearchText(p).includes(q))
@@ -148,6 +161,7 @@ export function PlaceListPage({
     dbPlaces,
     osmPlaces,
     mergeOsm,
+    categorySlug,
     search,
     filterId,
     sort,
