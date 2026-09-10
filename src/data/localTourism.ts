@@ -408,3 +408,16 @@ export const LOCAL_TOURISM_SITES: LocalTourismSite[] = [
     href: '/places/abay-nile-avenue-stretch',
   },
 ]
+
+export const TOURISM_CATEGORIES: {
+  id: TourismCategory
+  label: string
+  labelAm: string
+}[] = [
+  { id: 'nature', label: 'Nature', labelAm: 'ተፈጥሮ' },
+  { id: 'religious', label: 'Monasteries', labelAm: 'ገዳሞች' },
+  { id: 'viewpoint', label: 'Viewpoints', labelAm: 'እይታ' },
+  { id: 'activity', label: 'Activities', labelAm: 'እንቅስቃሴ' },
+  { id: 'market', label: 'Market', labelAm: 'ገበያ' },
+  { id: 'culture', label: 'Heritage', labelAm: 'ቅርስ' },
+]
