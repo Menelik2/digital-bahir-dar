@@ -1,21 +1,23 @@
 import { BAHIR_DAR_CENTER } from '@/constants'
 
 /**
- * Bahir Dar city viewport — map is locked here (no world panning).
+ * Bahir Dar region viewport — map is locked here (no world panning).
+ * Covers city + Zege monasteries + Blue Nile Falls day-trip (matches OSM bbox).
  * Leaflet uses [lat, lng]; Mapbox GL uses [lng, lat].
  */
+/** Region lock: city + Zege monasteries + Blue Nile Falls day-trip (matches OSM bbox) */
 export const BAHIR_DAR_MAX_BOUNDS: [[number, number], [number, number]] = [
-  [11.52, 37.3], // SW — lat, lng (Leaflet)
-  [11.66, 37.48], // NE
+  [11.45, 37.28], // SW — lat, lng (Leaflet)
+  [11.72, 37.62], // NE
 ]
 
 /** Mapbox GL maxBounds: [SW, NE] as [lng, lat] */
 export const BAHIR_DAR_MAX_BOUNDS_GL: [[number, number], [number, number]] = [
-  [37.3, 11.52],
-  [37.48, 11.66],
+  [37.28, 11.45],
+  [37.62, 11.72],
 ]
 
-export const BAHIR_DAR_MIN_ZOOM = 12
+export const BAHIR_DAR_MIN_ZOOM = 11
 export const BAHIR_DAR_MAX_ZOOM = 18
 export const BAHIR_DAR_DEFAULT_ZOOM = 13
 
