@@ -100,7 +100,20 @@ async function fetchFromSupabase(opts?: {
 }
 
 function normalizePlace(row: Record<string, unknown>): Place {
-  return row as unknown as Place
+  const lat = Number(row.latitude)
+  const lng = Number(row.longitude)
+  // Fix swapped coords if needed (Bahir Dar: lat ~11, lng ~37)
+  let latitude = lat
+  let longitude = lng
+  if (Number.isFinite(lat) && Number.isFinite(lng) && lat > 20 && lng < 20 && lng > 5) {
+    latitude = lng
+    longitude = lat
+  }
+  return {
+    ...(row as unknown as Place),
+    latitude: Number.isFinite(latitude) ? latitude : 0,
+    longitude: Number.isFinite(longitude) ? longitude : 0,
+  }
 }
 
 function sleepReject(ms: number, message: string): Promise<never> {
