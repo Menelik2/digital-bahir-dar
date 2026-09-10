@@ -8,10 +8,11 @@ import type { CategorySlug, Place } from '@/types/place'
 import { placeGuideLinks } from '@/constants/guideSites'
 
 export const BAHIR_DAR_BBOX = {
-  south: 11.52,
-  west: 37.3,
-  north: 11.66,
-  east: 37.48,
+  // Wider box: city + Zege monasteries + Blue Nile Falls day-trip
+  south: 11.45,
+  west: 37.28,
+  north: 11.72,
+  east: 37.62,
 }
 
 /** Prefer mirrors that respond from more networks */
@@ -222,104 +223,78 @@ function writeLocalCache(key: string, data: Place[]) {
   try {
     localStorage.setItem(LS_PREFIX + key, JSON.stringify({ at: Date.now(), data }))
   } catch {
-    /* */
+    /* quota */
   }
 }
 
-async function postToEndpoint(endpoint: string, query: string): Promise<OverpassResponse> {
-  const body = `data=${encodeURIComponent(query)}`
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/json',
-      'User-Agent': APP_USER_AGENT,
-    },
-    body,
-    signal: AbortSignal.timeout(NETWORK_TIMEOUT_MS),
-  })
-  if (res.status === 429) {
-    const err = new Error('Overpass 429') as Error & { status?: number }
-    err.status = 429
-    throw err
-  }
-  if (!res.ok) throw new Error(`Overpass HTTP ${res.status}`)
-  return (await res.json()) as OverpassResponse
-}
-
-async function postOverpass(query: string): Promise<OverpassResponse> {
-  return enqueue(async () => {
-    let lastError: unknown
+async function overpassFetch(query: string): Promise<OverpassResponse> {
+  let lastErr: Error | null = null
+  for (const endpoint of OVERPASS_ENDPOINTS) {
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      for (const endpoint of OVERPASS_ENDPOINTS) {
-        try {
-          return await postToEndpoint(endpoint, query)
-        } catch (e) {
-          lastError = e
-          if ((e as { status?: number }).status === 429) {
-            await sleep(BACKOFF_429_MS)
-            break
-          }
+      try {
+        const ctrl = new AbortController()
+        const timer = setTimeout(() => ctrl.abort(), NETWORK_TIMEOUT_MS)
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': APP_USER_AGENT,
+          },
+          body: `data=${encodeURIComponent(query)}`,
+          signal: ctrl.signal,
+        })
+        clearTimeout(timer)
+        if (res.status === 429) {
+          await sleep(BACKOFF_429_MS)
+          continue
         }
+        if (!res.ok) throw new Error(`Overpass ${res.status}`)
+        return (await res.json()) as OverpassResponse
+      } catch (e) {
+        lastErr = e instanceof Error ? e : new Error(String(e))
+        if (String(lastErr.message).includes('abort')) break
       }
-      if (attempt < MAX_RETRIES) await sleep(400)
     }
-    throw lastError instanceof Error ? lastError : new Error('Overpass failed')
-  })
-}
-
-function cacheKey(categories: OsmCategory[]) {
-  return categories.slice().sort().join(',')
+  }
+  throw lastErr || new Error('Overpass failed')
 }
 
 export async function fetchOsmPlaces(opts?: {
   categories?: OsmCategory[]
-  limit?: number
-  force?: boolean
 }): Promise<Place[]> {
   const categories = opts?.categories?.length ? opts.categories : (['all'] as OsmCategory[])
-  const key = cacheKey(categories)
+  const cacheKey = categories.slice().sort().join(',')
 
-  if (!opts?.force) {
-    const mem = memoryCache.get(key)
-    if (mem && Date.now() - mem.at < CACHE_TTL_MS) {
-      return opts?.limit ? mem.data.slice(0, opts.limit) : mem.data
-    }
-    const disk = readLocalCache(key)
-    if (disk?.length) {
-      memoryCache.set(key, { at: Date.now(), data: disk })
-      return opts?.limit ? disk.slice(0, opts.limit) : disk
-    }
+  const mem = memoryCache.get(cacheKey)
+  if (mem && Date.now() - mem.at < CACHE_TTL_MS) return mem.data
+
+  const cached = readLocalCache(cacheKey)
+  if (cached) {
+    memoryCache.set(cacheKey, { at: Date.now(), data: cached })
+    return cached
   }
 
-  try {
+  return enqueue(async () => {
+    const mem2 = memoryCache.get(cacheKey)
+    if (mem2 && Date.now() - mem2.at < CACHE_TTL_MS) return mem2.data
+
     const query = buildQuery(categories)
-    const data = await postOverpass(query)
-    const seen = new Set<string>()
+    const data = await overpassFetch(query)
     const places: Place[] = []
+    const seen = new Set<string>()
     for (const el of data.elements || []) {
-      const p = elementToPlace(el)
-      if (!p || seen.has(p.id)) continue
-      seen.add(p.id)
-      places.push(p)
+      const place = elementToPlace(el)
+      if (!place) continue
+      const key = place.name.toLowerCase()
+      if (seen.has(key)) continue
+      seen.add(key)
+      places.push(place)
     }
-    places.sort((a, b) => a.name.localeCompare(b.name))
-    memoryCache.set(key, { at: Date.now(), data: places })
-    writeLocalCache(key, places)
-    return opts?.limit ? places.slice(0, opts.limit) : places
-  } catch (e) {
-    console.warn('OSM fetch failed:', e)
-    const disk = readLocalCache(key)
-    if (disk?.length) return disk
-    return []
-  }
+    memoryCache.set(cacheKey, { at: Date.now(), data: places })
+    writeLocalCache(cacheKey, places)
+    return places
+  })
 }
-
-export const fetchOsmHotels = () => fetchOsmPlaces({ categories: ['hotel'] })
-export const fetchOsmRestaurants = () => fetchOsmPlaces({ categories: ['restaurant'] })
-export const fetchOsmCafes = () => fetchOsmPlaces({ categories: ['cafe'] })
-export const fetchOsmAttractions = () => fetchOsmPlaces({ categories: ['attraction'] })
-export const fetchOsmTransport = () => fetchOsmPlaces({ categories: ['transport'] })
 
 export function cacheOsmPlaceForDetail(place: Place) {
   try {
@@ -330,10 +305,6 @@ export function cacheOsmPlaceForDetail(place: Place) {
 }
 
 export function findCachedOsmPlace(slug: string): Place | null {
-  for (const entry of memoryCache.values()) {
-    const hit = entry.data.find((x) => x.slug === slug || x.id === slug)
-    if (hit) return hit
-  }
   try {
     const raw = sessionStorage.getItem(DETAIL_KEY)
     if (raw) {
