@@ -32,10 +32,10 @@ export const CURATED_HOTELS: Place[] = ALL_HOTELS.map((h, i) => {
     slug,
     category_id: HOTEL_CAT.id,
     description:
-      `${h.name} in Bahir Dar. Open Google Maps for the exact pin and directions. ` +
-      `Coordinates in the app are approximate — confirm on the linked map before travel.`,
+      `${h.name} · ${h.address ?? 'Bahir Dar, Ethiopia'}. ` +
+      `Map pin uses verified coordinates for this hotel.`,
     description_am: h.nameAm
-      ? `${h.nameAm} በባሕር ዳር። ትክክለኛ አካባቢ ለማግኘት Google Maps ይክፈቱ።`
+      ? `${h.nameAm} · ${h.address ?? 'ባሕር ዳር'}። ካርታው የተረጋገጠ መጋጠሚያ ይጠቀማል።`
       : null,
     short_description: h.nameAm ? `${h.nameAm} · Hotel` : 'Hotel · Bahir Dar',
     short_description_am: h.nameAm ? `${h.nameAm} · ሆቴል` : 'ሆቴል · ባሕር ዳር',

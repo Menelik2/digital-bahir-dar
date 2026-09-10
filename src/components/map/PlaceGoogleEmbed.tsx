@@ -94,6 +94,7 @@ export function PlaceGoogleEmbed({
           origin={useDirections ? origin : null}
           view={useDirections ? 'directions' : 'place'}
           mode="walking"
+          placeName={name}
           title={name ? `Map of ${name}` : 'Google Map'}
           className={cn(
             'h-[min(52vh,420px)] w-full min-h-[280px] sm:h-[min(56vh,480px)] sm:min-h-[320px] lg:h-[min(60vh,520px)]'
