@@ -38,19 +38,22 @@ export async function fetchPlaces(opts?: {
         return rows
       }
     } catch (e) {
-      console.warn('fetchPlaces supabase:', e)
+      console.warn('places supabase:', e)
     }
   }
+
   return getCuratedPlaces(opts?.categorySlug)
 }
 
 function mergeByName(primary: Place[], secondary: Place[]): Place[] {
-  const seen = new Set(primary.map((p) => p.name.toLowerCase().trim()))
+  const seen = new Set(
+    primary.map((p) => p.name.toLowerCase().replace(/\s+/g, ' ').trim().split(' · ')[0])
+  )
   const out = [...primary]
   for (const p of secondary) {
-    const key = p.name.toLowerCase().trim()
-    if (seen.has(key)) continue
-    seen.add(key)
+    const base = p.name.toLowerCase().replace(/\s+/g, ' ').trim().split(' · ')[0]
+    if (seen.has(base)) continue
+    seen.add(base)
     out.push(p)
   }
   return out
@@ -61,19 +64,37 @@ async function fetchFromSupabase(opts?: {
   verifiedOnly?: boolean
   limit?: number
 }): Promise<Place[]> {
-  let q = supabase
+  let query = supabase
     .from('places')
     .select(
-      `*, category:categories(*), hotel:hotels(*), restaurant:restaurants(*), attraction:attractions(*), bank:banks(*)`
+      `
+        *,
+        category:categories(*),
+        hotel:hotels(*),
+        restaurant:restaurants(*),
+        attraction:attractions(*),
+        bank:banks(*)
+      `
     )
     .eq('status', 'published')
-  if (opts?.verifiedOnly) q = q.eq('verified', true)
-  if (opts?.limit) q = q.limit(opts.limit)
+    .is('deleted_at', null)
+    .order('featured', { ascending: false })
+    .order('name')
+
+  if (opts?.verifiedOnly) query = query.eq('verified', true)
+  if (opts?.limit) query = query.limit(opts.limit)
+
   if (opts?.categorySlug) {
-    const { data: cats } = await supabase.from('categories').select('id').eq('slug', opts.categorySlug).maybeSingle()
-    if (cats?.id) q = q.eq('category_id', cats.id)
+    const { data: cat, error: catErr } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('slug', opts.categorySlug)
+      .maybeSingle()
+    if (catErr) throw new PlacesFetchError(catErr.message)
+    if (cat) query = query.eq('category_id', cat.id)
   }
-  const { data, error } = await q
+
+  const { data, error } = await query
   if (error) throw new PlacesFetchError(error.message)
   return (data ?? []).map(normalizePlace) as Place[]
 }
@@ -164,24 +185,75 @@ export function searchPlaces(places: Place[], query: string): Place[] {
   )
 }
 
-export function findSimilarPlaces(place: Place, pool: Place[], limit = 6): Place[] {
+function categoriesRelated(a: string, b: string): boolean {
+  const groups: string[][] = [
+    ['hotel', 'guest_house', 'hostel'],
+    ['restaurant', 'cafe', 'fast_food'],
+    ['attraction', 'museum', 'viewpoint', 'historic'],
+    ['bank', 'atm'],
+    ['hospital', 'clinic', 'pharmacy'],
+    ['transport', 'bus', 'taxi'],
+  ]
+  for (const g of groups) {
+    if (g.includes(a) && g.includes(b)) return true
+  }
+  return false
+}
+
+export type SimilarPlace = Place & { distance_m: number }
+
+export function findSimilarPlaces(place: Place, candidates: Place[], limit = 6): SimilarPlace[] {
+  const selfId = place.id
+  const selfSlug = (place.slug || '').toLowerCase()
+  const cat = (place.category?.slug || '').toLowerCase()
+  const type = (place.attraction?.attraction_type || '').toLowerCase()
   const lat = place.latitude
   const lng = place.longitude
-  const cat = place.category?.slug
-  const scored = []
-  for (const p of pool) {
-    if (p.id === place.id || p.slug === place.slug) continue
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return []
+
+  const scored: Array<SimilarPlace & { _score: number }> = []
+
+  for (const p of candidates) {
+    if (!p || p.id === selfId) continue
+    if ((p.slug || '').toLowerCase() === selfSlug) continue
     if (!Number.isFinite(p.latitude) || !Number.isFinite(p.longitude)) continue
-    if (p.latitude === 0 && p.longitude === 0) continue
+
     const dist = distanceMeters(lat, lng, p.latitude, p.longitude)
+    if (dist > 25_000) continue
+
+    const pCat = (p.category?.slug || '').toLowerCase()
+    const pType = (p.attraction?.attraction_type || '').toLowerCase()
     let score = 0
-    if (cat && p.category?.slug === cat) score += 50
-    if (dist < 500) score += 40
-    else if (dist < 1500) score += 25
-    else if (dist < 4000) score += 10
-    else score += Math.max(0, 5 - dist / 10000)
-    scored.push({ p, score, dist })
+
+    if (cat && pCat === cat) score += 100
+    else if (cat && pCat && categoriesRelated(cat, pCat)) score += 45
+
+    if (type && pType && type === pType) score += 55
+
+    if (dist < 400) score += 45
+    else if (dist < 1200) score += 35
+    else if (dist < 3000) score += 25
+    else if (dist < 7000) score += 12
+    else score += 4
+
+    if (p.verified) score += 10
+    if (p.featured) score += 6
+    if (p.name && !p.name.includes('(DEMO)')) score += 5
+
+    const tokens = (place.name || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\u1200-\u137f\s]/gi, ' ')
+      .split(/\s+/)
+      .filter((t) => t.length > 3)
+    const pname = (p.name || '').toLowerCase()
+    for (const t of tokens.slice(0, 6)) {
+      if (pname.includes(t)) score += 8
+    }
+
+    scored.push({ ...p, distance_m: dist, _score: score })
   }
-  scored.sort((a, b) => b.score - a.score || a.dist - b.dist)
-  return scored.slice(0, limit).map((x) => x.p)
+
+  scored.sort((a, b) => b._score - a._score || a.distance_m - b.distance_m)
+  return scored.slice(0, limit).map(({ _score, ...rest }) => rest)
 }
