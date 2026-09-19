@@ -8,6 +8,39 @@ import { useThemeSync } from '@/hooks/useTheme'
 import { useDocumentLang, useT } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
 
+/** Routes where the site footer is hidden (places, map, browse, tools). */
+function hideFooter(pathname: string): boolean {
+  if (pathname === '/map' || pathname.startsWith('/map/')) return true
+  if (pathname.startsWith('/places/')) return true
+  const noFooter = [
+    '/hotels',
+    '/restaurants',
+    '/attractions',
+    '/banks',
+    '/transport',
+    '/explore',
+    '/discover',
+    '/events',
+    '/directory',
+    '/todo',
+    '/today',
+    '/city',
+    '/trips',
+    '/trip-planner',
+    '/budget',
+    '/spend-guide',
+    '/expenses',
+    '/ai-guide',
+    '/guides',
+    '/help',
+    '/visitor',
+    '/business',
+    '/admin',
+    '/auth',
+  ]
+  return noFooter.some((p) => pathname === p || pathname.startsWith(p + '/'))
+}
+
 export function Layout() {
   useRegisterSW()
   useThemeSync()
@@ -15,6 +48,7 @@ export function Layout() {
   const t = useT()
   const { pathname } = useLocation()
   const isMap = pathname === '/map' || pathname.startsWith('/map/')
+  const noFooter = hideFooter(pathname)
 
   return (
     <div
@@ -35,21 +69,19 @@ export function Layout() {
         id="main-content"
         className={cn(
           'page-enter flex-1',
-          isMap ? 'min-h-0 overflow-hidden pb-0' : 'pb-nav-safe lg:pb-0'
+          isMap ? 'min-h-0 overflow-hidden pb-0' : 'pb-nav-safe lg:pb-8'
         )}
         tabIndex={-1}
       >
         <Outlet />
       </main>
-      {!isMap && (
-        <footer className="border-t border-black/[0.04] bg-white/80 dark:border-white/[0.08] dark:bg-[#0c0c0e]/90">
-          <div className="mx-auto max-w-7xl px-4 py-5 text-center sm:px-6 lg:px-8 lg:py-6">
-            <p className="text-[12px] font-medium tracking-wide text-[#8e8e93] sm:text-[13px]">
+      {!noFooter && (
+        <footer className="hidden border-t border-black/[0.04] bg-white/80 dark:border-white/[0.08] dark:bg-[#0c0c0e]/90 lg:block">
+          <div className="mx-auto max-w-7xl px-4 py-4 text-center sm:px-6 lg:px-8">
+            <p className="text-[12px] font-medium tracking-wide text-[#8e8e93]">
               {t.common.developedBy}{' '}
               <span className="font-semibold text-[#1c1c1e] dark:text-white">Menelik Admasu</span>
-            </p>
-            <p className="mt-1 text-[11px] text-[#aeaeb2] dark:text-white/40">
-              © {new Date().getFullYear()} Digital Bahir Dar
+              <span className="text-[#aeaeb2]"> · © {new Date().getFullYear()} Digital Bahir Dar</span>
             </p>
           </div>
         </footer>
