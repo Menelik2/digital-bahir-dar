@@ -42,7 +42,7 @@ export default function HotelsPage() {
 
   return (
     <div className="bg-[#f2f2f7] dark:bg-black">
-      <section className="mx-auto max-w-6xl px-4 pt-6 sm:pt-8">
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 lg:max-w-7xl lg:px-8 pt-6 sm:pt-8">
         <div className="mb-4 flex items-center gap-2">
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#078930]/12 text-[#078930] dark:bg-[#30d158]/15 dark:text-[#30d158]">
             <Hotel className="h-5 w-5" />
@@ -122,7 +122,7 @@ export default function HotelsPage() {
         </p>
       </section>
 
-      <div className="mx-auto max-w-6xl px-4">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
         <HotelPriceCompare />
       </div>
 
