@@ -18,7 +18,7 @@ export type MapBasemap = 'streets' | 'satellite'
 export type MapViewProps = {
   places: Place[]
   selectedPlaceId: string | null
-  userLocation: { lat: number; lng: number } | null
+  userLocation: { lat: number; lng: number; accuracy?: number | null } | null
   center: { lat: number; lng: number }
   onPlaceSelect: (place: Place) => void
   onCenterChange?: (center: { lat: number; lng: number }) => void
@@ -58,42 +58,41 @@ function categoryColor(slug?: string | null): string {
   }
 }
 
-function placesToGeoJSON(places: Place[], selectedId: string | null): GeoJSON.FeatureCollection {
-  return {
-    type: 'FeatureCollection',
-    features: places.slice(0, 500).map((p) => ({
-      type: 'Feature',
-      id: p.id,
-      properties: {
-        id: p.id,
-        name: displayPlaceName(p.name),
-        category: p.category?.name ?? '',
-        slug: p.category?.slug ?? '',
-        color: selectedId === p.id ? '#0ea5e9' : p.featured ? '#f59e0b' : categoryColor(p.category?.slug),
-        selected: selectedId === p.id ? 1 : 0,
-      },
-      geometry: {
-        type: 'Point',
-        coordinates: [p.longitude, p.latitude],
-      },
-    })),
-  }
+function isValidLatLng(lat: number, lng: number) {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  )
 }
 
-function routeToGeoJSON(coords: [number, number][]): GeoJSON.FeatureCollection {
-  return {
-    type: 'FeatureCollection',
-    features: [
-      {
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'LineString',
-          coordinates: coords.map(([lat, lng]) => [lng, lat]),
-        },
-      },
-    ],
+let userMarker: mapboxgl.Marker | null = null
+let accuracyCircle: mapboxgl.Marker | null = null
+
+function syncUser(
+  map: mapboxgl.Map,
+  userLocation: { lat: number; lng: number; accuracy?: number | null } | null
+) {
+  if (userMarker) {
+    userMarker.remove()
+    userMarker = null
   }
+  if (accuracyCircle) {
+    accuracyCircle.remove()
+    accuracyCircle = null
+  }
+  if (!userLocation || !isValidLatLng(userLocation.lat, userLocation.lng)) return
+
+  const el = document.createElement('div')
+  el.style.cssText =
+    'width:18px;height:18px;background:#2563eb;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.4);'
+  userMarker = new mapboxgl.Marker({ element: el })
+    .setLngLat([userLocation.lng, userLocation.lat])
+    .setPopup(new mapboxgl.Popup({ offset: 12 }).setText('You are here'))
+    .addTo(map)
 }
 
 export function MapViewGl({
@@ -105,256 +104,98 @@ export function MapViewGl({
   onCenterChange,
   routeCoordinates,
   basemap = 'streets',
-  token,
-}: MapViewProps & { token: string }) {
+}: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<mapboxgl.Map | null>(null)
-  const placesRef = useRef(places)
-  const onSelectRef = useRef(onPlaceSelect)
-  const onCenterRef = useRef(onCenterChange)
-  placesRef.current = places
-  onSelectRef.current = onPlaceSelect
-  onCenterRef.current = onCenterChange
+  const markersRef = useRef<mapboxgl.Marker[]>([])
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
-
+    const token = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined
+    if (!token) return
     mapboxgl.accessToken = token
 
     const map = new mapboxgl.Map({
       container: containerRef.current,
       style: basemap === 'satellite' ? MAPBOX_STYLES.satellite : MAPBOX_STYLES.streets,
-      center: [BAHIR_DAR_CENTER.lng, BAHIR_DAR_CENTER.lat],
+      center: [center.lng || BAHIR_DAR_CENTER.lng, center.lat || BAHIR_DAR_CENTER.lat],
       zoom: BAHIR_DAR_DEFAULT_ZOOM,
       minZoom: BAHIR_DAR_MIN_ZOOM,
       maxZoom: BAHIR_DAR_MAX_ZOOM,
       maxBounds: BAHIR_DAR_MAX_BOUNDS_GL,
-      attributionControl: true,
-      logoPosition: 'bottom-left',
     })
-
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: true }), 'bottom-right')
-    map.addControl(new mapboxgl.ScaleControl({ unit: 'metric' }), 'bottom-left')
-    map.addControl(
-      new mapboxgl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: false,
-        showUserHeading: false,
-      }),
-      'bottom-right'
-    )
-
-    map.on('load', () => {
-      addDataLayers(map)
-      syncPlaces(map, placesRef.current, selectedPlaceId)
-      syncUser(map, userLocation)
-      syncRoute(map, routeCoordinates ?? null)
-    })
+    map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), 'top-right')
+    mapRef.current = map
 
     map.on('moveend', () => {
       const c = map.getCenter()
-      onCenterRef.current?.({ lat: c.lat, lng: c.lng })
+      onCenterChange?.({ lat: c.lat, lng: c.lng })
     })
-
-    map.on('click', 'places-circle', (e) => {
-      const f = e.features?.[0]
-      const id = f?.properties?.id as string | undefined
-      if (!id) return
-      const place = placesRef.current.find((p) => p.id === id)
-      if (place) onSelectRef.current(place)
-    })
-
-    map.on('mouseenter', 'places-circle', () => {
-      map.getCanvas().style.cursor = 'pointer'
-    })
-    map.on('mouseleave', 'places-circle', () => {
-      map.getCanvas().style.cursor = ''
-    })
-
-    mapRef.current = map
 
     return () => {
+      markersRef.current.forEach((m) => m.remove())
+      markersRef.current = []
+      if (userMarker) {
+        userMarker.remove()
+        userMarker = null
+      }
       map.remove()
       mapRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token])
+  }, [])
 
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
-    const styleUrl = basemap === 'satellite' ? MAPBOX_STYLES.satellite : MAPBOX_STYLES.streets
-    let onSat = false
-    try {
-      const style = map.getStyle()
-      const name = (style?.name || '').toLowerCase()
-      const sprite = typeof style?.sprite === 'string' ? style.sprite : ''
-      onSat = name.includes('satellite') || sprite.includes('satellite')
-    } catch {
-      /* style not ready */
+    const style = basemap === 'satellite' ? MAPBOX_STYLES.satellite : MAPBOX_STYLES.streets
+    if (map.getStyle()?.sprite !== undefined) {
+      try {
+        map.setStyle(style)
+      } catch {
+        /* ignore */
+      }
     }
-    const wantSat = basemap === 'satellite'
-    if (wantSat === onSat && map.isStyleLoaded()) return
-
-    const c = map.getCenter()
-    const z = map.getZoom()
-    map.setStyle(styleUrl)
-    map.once('style.load', () => {
-      map.setCenter(c)
-      map.setZoom(z)
-      addDataLayers(map)
-      syncPlaces(map, placesRef.current, selectedPlaceId)
-      syncUser(map, userLocation)
-      syncRoute(map, routeCoordinates ?? null)
-    })
-  }, [basemap, selectedPlaceId, userLocation, routeCoordinates])
+  }, [basemap])
 
   useEffect(() => {
     const map = mapRef.current
-    if (!map) return
-    const [[w, s], [e, n]] = BAHIR_DAR_MAX_BOUNDS_GL
-    const lng = Math.min(Math.max(center.lng, w), e)
-    const lat = Math.min(Math.max(center.lat, s), n)
-    map.easeTo({
-      center: [lng, lat],
-      zoom: Math.max(map.getZoom(), 15),
-      duration: 450,
-    })
+    if (!map || !isValidLatLng(center.lat, center.lng)) return
+    map.flyTo({ center: [center.lng, center.lat], zoom: Math.max(map.getZoom(), 15), essential: true })
   }, [center.lat, center.lng])
 
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !map.isStyleLoaded()) return
-    syncPlaces(map, places, selectedPlaceId)
-  }, [places, selectedPlaceId])
+    if (!map) return
+    markersRef.current.forEach((m) => m.remove())
+    markersRef.current = []
+    for (const place of places) {
+      if (!isValidLatLng(place.latitude, place.longitude)) continue
+      const color = place.id === selectedPlaceId ? '#0ea5e9' : categoryColor(place.category?.slug)
+      const el = document.createElement('div')
+      el.style.cssText = `width:14px;height:14px;background:${color};border:2px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.35);cursor:pointer;`
+      el.addEventListener('click', (e) => {
+        e.stopPropagation()
+        onPlaceSelect(place)
+      })
+      const marker = new mapboxgl.Marker({ element: el })
+        .setLngLat([place.longitude, place.latitude])
+        .setPopup(
+          new mapboxgl.Popup({ offset: 10 }).setHTML(
+            `<strong>${displayPlaceName(place)}</strong><br/><a href="${inAppDirectionsPath(place)}">Directions</a>`
+          )
+        )
+        .addTo(map)
+      markersRef.current.push(marker)
+    }
+    syncUser(map, userLocation)
+  }, [places, selectedPlaceId, onPlaceSelect, userLocation])
 
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !map.isStyleLoaded()) return
+    if (!map) return
     syncUser(map, userLocation)
   }, [userLocation])
 
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map || !map.isStyleLoaded()) return
-    syncRoute(map, routeCoordinates ?? null)
-    if (routeCoordinates && routeCoordinates.length > 1) {
-      const bounds = new mapboxgl.LngLatBounds()
-      routeCoordinates.forEach(([lat, lng]) => bounds.extend([lng, lat]))
-      map.fitBounds(bounds, { padding: 56, maxZoom: 16, duration: 600 })
-    }
-  }, [routeCoordinates])
-
-  return (
-    <div
-      ref={containerRef}
-      className="h-full w-full z-0"
-      style={{ minHeight: 320, background: '#e2e8f0' }}
-    />
-  )
+  return <div ref={containerRef} className="h-full w-full" />
 }
-
-function addDataLayers(map: mapboxgl.Map) {
-  if (!map.getSource('places')) {
-    map.addSource('places', {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] },
-    })
-    map.addLayer({
-      id: 'places-circle',
-      type: 'circle',
-      source: 'places',
-      paint: {
-        'circle-radius': ['case', ['==', ['get', 'selected'], 1], 11, 8],
-        'circle-color': ['get', 'color'],
-        'circle-stroke-width': 2.5,
-        'circle-stroke-color': '#ffffff',
-      },
-    })
-  }
-
-  if (!map.getSource('user')) {
-    map.addSource('user', {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] },
-    })
-    map.addLayer({
-      id: 'user-accuracy',
-      type: 'circle',
-      source: 'user',
-      paint: {
-        'circle-radius': 28,
-        'circle-color': '#0ea5e9',
-        'circle-opacity': 0.15,
-        'circle-stroke-width': 1,
-        'circle-stroke-color': '#0ea5e9',
-      },
-    })
-    map.addLayer({
-      id: 'user-dot',
-      type: 'circle',
-      source: 'user',
-      paint: {
-        'circle-radius': 7,
-        'circle-color': '#0ea5e9',
-        'circle-stroke-width': 3,
-        'circle-stroke-color': '#0369a1',
-      },
-    })
-  }
-
-  if (!map.getSource('route')) {
-    map.addSource('route', {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] },
-    })
-    map.addLayer({
-      id: 'route-line',
-      type: 'line',
-      source: 'route',
-      layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: {
-        'line-color': '#0b6e99',
-        'line-width': 5,
-        'line-opacity': 0.92,
-      },
-    })
-  }
-}
-
-function syncPlaces(map: mapboxgl.Map, places: Place[], selectedId: string | null) {
-  const src = map.getSource('places') as mapboxgl.GeoJSONSource | undefined
-  if (!src) return
-  src.setData(placesToGeoJSON(places, selectedId))
-}
-
-function syncUser(map: mapboxgl.Map, user: { lat: number; lng: number } | null) {
-  const src = map.getSource('user') as mapboxgl.GeoJSONSource | undefined
-  if (!src) return
-  if (!user) {
-    src.setData({ type: 'FeatureCollection', features: [] })
-    return
-  }
-  src.setData({
-    type: 'FeatureCollection',
-    features: [
-      {
-        type: 'Feature',
-        properties: {},
-        geometry: { type: 'Point', coordinates: [user.lng, user.lat] },
-      },
-    ],
-  })
-}
-
-function syncRoute(map: mapboxgl.Map, coords: [number, number][] | null) {
-  const src = map.getSource('route') as mapboxgl.GeoJSONSource | undefined
-  if (!src) return
-  if (!coords || coords.length < 2) {
-    src.setData({ type: 'FeatureCollection', features: [] })
-    return
-  }
-  src.setData(routeToGeoJSON(coords))
-}
-
-void inAppDirectionsPath

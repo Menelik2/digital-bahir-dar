@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Navigation, Loader2, MapPinOff } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useGeolocation } from '@/hooks/useGeolocation'
-import { formatAccuracy, geoErrorUserMessage, isInsideBahirDar } from '@/services/geolocation'
+import { formatAccuracy, geoErrorUserMessage, isInsideBahirDar, isNearBahirDar } from '@/services/geolocation'
 import { useAppStore } from '@/store'
 import { cn } from '@/lib/utils'
 import { useT } from '@/hooks/useT'
@@ -23,17 +23,28 @@ export function LocationButton({ className, onLocated }: Props) {
     try {
       const pos = await request()
       if (pos) {
+        const near = isNearBahirDar(pos.latitude, pos.longitude, 50_000)
+        const inside = isInsideBahirDar(pos.latitude, pos.longitude)
+        if (!near) {
+          // VPN / wrong country — do not pretend this is the user on the city map
+          setHint(
+            t.map.locationFar ||
+              'GPS is far from Bahir Dar (VPN or wrong location?). Turn off VPN and allow precise location, then try again.'
+          )
+          window.setTimeout(() => setHint(null), 7000)
+          return
+        }
         setMapCenter({ lat: pos.latitude, lng: pos.longitude })
         onLocated?.(pos.latitude, pos.longitude)
-        if (!isInsideBahirDar(pos.latitude, pos.longitude)) {
+        if (!inside) {
           setHint(
             t.map.locationOutside ||
-              'Location found — outside Bahir Dar map area (showing nearest city view)'
+              'Located near Bahir Dar — map shows the closest area on the city map'
           )
         } else {
-          setHint((t.map.locationFound || 'Located') + ` · ${formatAccuracy(pos.accuracy)}`)
+          setHint((t.map.locationFound || 'You are here') + ` · ${formatAccuracy(pos.accuracy)}`)
         }
-        window.setTimeout(() => setHint(null), 3500)
+        window.setTimeout(() => setHint(null), 4000)
       } else {
         setHint(getLastError() || geoErrorUserMessage(errorCode) || geoErrorUserMessage(null))
         window.setTimeout(() => setHint(null), 5000)
