@@ -26,7 +26,6 @@ interface PlaceListPageProps {
   title: string
   subtitle?: string
   categorySlug: string
-  /** Reserved for future chip filters (price tier, stars, tags) */
   filters?: { id: string; label: string }[]
   emptyMessage?: string
   osmCategories?: OsmCategory[]
@@ -116,7 +115,6 @@ export function PlaceListPage({
   } = useOsmPlaces(osmCategories ?? ['all'], mergeOsm)
 
   const places = useMemo(() => {
-    // Curated verified pins first, then DB, then live OSM
     let list: typeof dbPlaces = []
     if (categorySlug === 'hotel' || !categorySlug) {
       list = mergePlaces(list, CURATED_HOTELS as typeof dbPlaces)
@@ -176,7 +174,7 @@ export function PlaceListPage({
 
   if (isError) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:max-w-7xl lg:px-8">
         <StateMessage
           variant="error"
           title={t.common.error}
@@ -192,10 +190,10 @@ export function PlaceListPage({
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-5 sm:py-8">
+    <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8 lg:max-w-7xl lg:px-8 lg:py-10">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3 sm:mb-6">
         <div>
-          <h1 className="text-[28px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-3xl">{title}</h1>
+          <h1 className="text-[28px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-3xl lg:text-4xl">{title}</h1>
           {subtitle && <p className="mt-0.5 text-[14px] text-[#8e8e93] sm:text-[15px]">{subtitle}</p>}
           {mergeOsm && (
             <p className="mt-1 text-xs text-slate-400">
@@ -254,7 +252,7 @@ export function PlaceListPage({
       )}
 
       {sorted.length > 0 && (
-        <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:gap-3 md:grid-cols-2 lg:grid-cols-3 lg:gap-4 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:gap-3 md:grid-cols-2 lg:grid-cols-3 lg:gap-4 xl:grid-cols-4 xl:gap-5">
           {sorted.map(renderCard)}
         </div>
       )}
