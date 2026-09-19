@@ -1,4 +1,4 @@
-import { useMemo, useEffect, lazy, Suspense } from 'react'
+import { useMemo, useEffect } from 'react'
 import {
   MapContainer,
   TileLayer,
@@ -6,6 +6,7 @@ import {
   Popup,
   useMap,
   CircleMarker,
+  Circle,
   ScaleControl,
   ZoomControl,
   useMapEvents,
@@ -27,13 +28,19 @@ import {
 import { placeGuideLinks } from '@/constants/guideSites'
 import { displayPlaceName } from '@/utils/realPlaces'
 import { inAppDirectionsPath } from '@/services/routing'
-import type { MapViewProps } from './MapViewGl'
 import { MapErrorBoundary } from './MapErrorBoundary'
 import 'leaflet/dist/leaflet.css'
 
-const MapViewGlLazy = lazy(() =>
-  import('./MapViewGl').then((m) => ({ default: m.MapViewGl }))
-)
+export type MapViewProps = {
+  places: Place[]
+  selectedPlaceId: string | null
+  userLocation: { lat: number; lng: number; accuracy?: number | null } | null
+  center: { lat: number; lng: number }
+  onPlaceSelect: (place: Place) => void
+  onCenterChange?: (center: { lat: number; lng: number }) => void
+  routeCoordinates?: [number, number][] | null
+  basemap?: 'streets' | 'satellite'
+}
 
 function categoryColor(slug?: string | null): string {
   switch (slug) {
@@ -181,130 +188,72 @@ function LeafletMapView({
 }: MapViewProps) {
   const token = getMapboxToken()
   const useMapboxTiles = !!token
-  const isSatellite = basemap === 'satellite'
-  const markers = useMemo(
-    () => places.filter((p) => isValidLatLng(p.latitude, p.longitude)).slice(0, 500),
-    [places]
-  )
+  const isSat = basemap === 'satellite'
 
-  const safeCenter = isValidLatLng(center.lat, center.lng) ? center : BAHIR_DAR_CENTER
+  const mapCenter: [number, number] = useMemo(() => {
+    if (isValidLatLng(center?.lat, center?.lng)) return [center.lat, center.lng]
+    return [BAHIR_DAR_CENTER.lat, BAHIR_DAR_CENTER.lng]
+  }, [center?.lat, center?.lng])
+
+  const tileUrl = useMapboxTiles
+    ? mapboxTileUrl(isSat ? MAPBOX_RASTER_STYLES.satellite : MAPBOX_RASTER_STYLES.streets)
+    : isSat
+      ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+
+  const attribution = useMapboxTiles
+    ? mapboxAttribution()
+    : isSat
+      ? 'Tiles &copy; Esri'
+      : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 
   return (
     <MapContainer
-      center={[BAHIR_DAR_CENTER.lat, BAHIR_DAR_CENTER.lng]}
+      center={mapCenter}
       zoom={BAHIR_DAR_DEFAULT_ZOOM}
-      minZoom={BAHIR_DAR_MIN_ZOOM}
-      maxZoom={BAHIR_DAR_MAX_ZOOM}
+      className="h-full w-full z-0"
+      style={{ minHeight: 320, background: '#e2e8f0' }}
+      zoomControl={false}
       maxBounds={BAHIR_DAR_MAX_BOUNDS}
       maxBoundsViscosity={0.85}
-      className="h-full w-full z-0"
-      zoomControl={false}
-      attributionControl
-      style={{ height: '100%', width: '100%', minHeight: 320, background: '#e2e8f0' }}
+      minZoom={BAHIR_DAR_MIN_ZOOM}
+      maxZoom={BAHIR_DAR_MAX_ZOOM}
     >
+      <TileLayer url={tileUrl} attribution={attribution} />
       <ZoomControl position="bottomright" />
       <ScaleControl position="bottomleft" imperial={false} />
-      <InvalidateSize />
       <BahirDarLock />
-      <MapCamera center={safeCenter} />
+      <InvalidateSize />
+      <MapCamera center={{ lat: mapCenter[0], lng: mapCenter[1] }} />
       <MapEvents onCenterChange={onCenterChange} />
       {routeCoordinates && routeCoordinates.length > 1 && (
         <>
-          <FitRoute coords={routeCoordinates} />
           <Polyline
             positions={routeCoordinates}
-            pathOptions={{
-              color: '#0b6e99',
-              weight: 5,
-              opacity: 0.9,
-              lineJoin: 'round',
-              lineCap: 'round',
-            }}
+            pathOptions={{ color: '#0b6e99', weight: 5, opacity: 0.9 }}
           />
+          <FitRoute coords={routeCoordinates} />
         </>
       )}
 
-      {isSatellite ? (
-        useMapboxTiles && token ? (
-          <TileLayer
-            key="mb-sat"
-            attribution={mapboxAttribution()}
-            url={mapboxTileUrl(MAPBOX_RASTER_STYLES.satellite, token)}
-            tileSize={512}
-            zoomOffset={-1}
-            maxZoom={BAHIR_DAR_MAX_ZOOM}
-          />
-        ) : (
-          <>
-            <TileLayer
-              key="esri-sat"
-              attribution="Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics"
-              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-              maxZoom={BAHIR_DAR_MAX_ZOOM}
-            />
-            <TileLayer
-              key="sat-labels"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CARTO'
-              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png"
-              subdomains="abcd"
-              maxZoom={BAHIR_DAR_MAX_ZOOM}
-              opacity={0.95}
-              pane="overlayPane"
-            />
-          </>
-        )
-      ) : useMapboxTiles && token ? (
-        <TileLayer
-          key="mb-streets"
-          attribution={mapboxAttribution()}
-          url={mapboxTileUrl(MAPBOX_RASTER_STYLES.streets, token)}
-          tileSize={512}
-          zoomOffset={-1}
-          maxZoom={BAHIR_DAR_MAX_ZOOM}
-        />
-      ) : (
-        <TileLayer
-          key="osm-streets"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          maxZoom={BAHIR_DAR_MAX_ZOOM}
-          crossOrigin
-        />
-      )}
-
-      {markers.map((place) => {
+      {places.map((place) => {
+        if (!isValidLatLng(place.latitude, place.longitude)) return null
         const selected = place.id === selectedPlaceId
         const links = placeGuideLinks(place)
-        const cat = place.category?.slug
-        const inAppDir = inAppDirectionsPath(place, 'walking')
         return (
           <Marker
             key={place.id}
             position={[place.latitude, place.longitude]}
-            icon={pinIcon(selected, !!place.featured, cat)}
+            icon={pinIcon(selected, !!place.featured, place.category?.slug)}
             eventHandlers={{
-              click: (e) => {
-                L.DomEvent.stopPropagation(e)
-                try {
-                  onPlaceSelect(place)
-                } catch (err) {
-                  console.error('onPlaceSelect failed', err)
-                }
-              },
+              click: () => onPlaceSelect(place),
             }}
-            zIndexOffset={selected ? 1000 : 1}
           >
             <Popup>
-              <div style={{ minWidth: 170 }}>
-                <strong>{displayPlaceName(place.name || 'Place')}</strong>
-                {place.category?.name && (
-                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>{place.category.name}</div>
-                )}
-                {place.short_description && (
-                  <div style={{ fontSize: 12, marginTop: 4 }}>{place.short_description}</div>
-                )}
-                <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  <a href={inAppDir} style={{ fontSize: 12, fontWeight: 600 }}>
+              <div style={{ minWidth: 140 }}>
+                <strong>{displayPlaceName(place)}</strong>
+                <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <a href={inAppDirectionsPath(place)} style={{ fontSize: 12 }}>
                     Directions
                   </a>
                   <a href={links.openStreetMap} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12 }}>
@@ -319,12 +268,27 @@ function LeafletMapView({
 
       {userLocation && isValidLatLng(userLocation.lat, userLocation.lng) && (
         <>
+          {userLocation.accuracy != null &&
+            userLocation.accuracy > 0 &&
+            userLocation.accuracy < 2000 && (
+              <Circle
+                center={[userLocation.lat, userLocation.lng]}
+                radius={userLocation.accuracy}
+                pathOptions={{
+                  color: '#0ea5e9',
+                  fillColor: '#0ea5e9',
+                  fillOpacity: 0.12,
+                  weight: 1,
+                }}
+                interactive={false}
+              />
+            )}
           <CircleMarker
             center={[userLocation.lat, userLocation.lng]}
-            radius={9}
+            radius={10}
             pathOptions={{
-              color: '#0369a1',
-              fillColor: '#0ea5e9',
+              color: '#ffffff',
+              fillColor: '#2563eb',
               fillOpacity: 1,
               weight: 3,
             }}
@@ -334,15 +298,20 @@ function LeafletMapView({
               },
             }}
           >
-            <Popup>You are here</Popup>
+            <Popup>
+              You are here
+              {userLocation.accuracy != null
+                ? ` (±${Math.round(userLocation.accuracy)} m)`
+                : ''}
+            </Popup>
           </CircleMarker>
           <CircleMarker
             center={[userLocation.lat, userLocation.lng]}
-            radius={28}
+            radius={22}
             pathOptions={{
-              color: '#0ea5e9',
-              fillColor: '#0ea5e9',
-              fillOpacity: 0.15,
+              color: '#3b82f6',
+              fillColor: '#3b82f6',
+              fillOpacity: 0.18,
               weight: 1,
             }}
             interactive={false}
@@ -354,33 +323,10 @@ function LeafletMapView({
 }
 
 export function MapView(props: MapViewProps) {
-  const token = getMapboxToken()
-
+  // Leaflet path: accurate user marker + accuracy ring
   return (
     <MapErrorBoundary>
-      {token ? (
-        <Suspense
-          fallback={
-            <div className="flex h-full min-h-[320px] items-center justify-center bg-slate-200 text-sm text-slate-500">
-              Loading map…
-            </div>
-          }
-        >
-          <MapViewGlLazy {...props} token={token} />
-        </Suspense>
-      ) : (
-        <LeafletMapView {...props} />
-      )}
+      <LeafletMapView {...props} />
     </MapErrorBoundary>
   )
 }
-
-export function openGoogleMapsDirections(
-  dest: Place,
-  _origin?: { lat: number; lng: number } | null,
-  mode: 'walking' | 'driving' = 'walking'
-) {
-  window.location.assign(inAppDirectionsPath(dest, mode))
-}
-
-export type { MapViewProps }
