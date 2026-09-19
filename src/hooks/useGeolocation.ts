@@ -96,12 +96,24 @@ export function useGeolocation(options?: UseGeolocationOptions | boolean) {
       // Sample GPS for a few seconds — first fix is often inaccurate
       let pos: GeoPosition
       try {
-        pos = await getBestPosition(8_000)
+        pos = await getBestPosition(10_000)
       } catch {
         pos = await getCurrentPositionRobust()
       }
       if (!mounted.current) return pos
-      applyPosition(pos)
+      // Only keep coords that make sense for this city map (avoids VPN / wrong-country pin)
+      if (isNearBahirDar(pos.latitude, pos.longitude, 80_000)) {
+        applyPosition(pos)
+      } else {
+        // Still return pos so callers can show a "far / VPN" message; do not pin on map
+        setLocation({
+          latitude: null,
+          longitude: null,
+          accuracy: null,
+          permission: 'granted',
+          lastUpdated: null,
+        })
+      }
       lastErrorRef.current = null
       return pos
     } catch (e) {
@@ -130,7 +142,9 @@ export function useGeolocation(options?: UseGeolocationOptions | boolean) {
     setError(null)
     watchIdRef.current = watchPosition(
       (pos) => {
-        if (mounted.current) applyPosition(pos)
+        if (mounted.current && isNearBahirDar(pos.latitude, pos.longitude, 80_000)) {
+          applyPosition(pos)
+        }
       },
       (err) => {
         if (mounted.current) {

@@ -15,7 +15,7 @@ interface Props {
 export function LocationButton({ className, onLocated }: Props) {
   const t = useT()
   const { request, loading, hasFix, errorCode, insideBahirDar, getLastError } = useGeolocation(false)
-  const { location, setMapCenter } = useAppStore()
+  const { location, setMapCenter, setLocation } = useAppStore()
   const [hint, setHint] = useState<string | null>(null)
 
   const handleClick = async () => {
@@ -27,6 +27,12 @@ export function LocationButton({ className, onLocated }: Props) {
         const inside = isInsideBahirDar(pos.latitude, pos.longitude)
         if (!near) {
           // VPN / wrong country — do not pretend this is the user on the city map
+          setLocation({
+            latitude: null,
+            longitude: null,
+            accuracy: null,
+            lastUpdated: null,
+          })
           setHint(
             t.map.locationFar ||
               'GPS is far from Bahir Dar (VPN or wrong location?). Turn off VPN and allow precise location, then try again.'
