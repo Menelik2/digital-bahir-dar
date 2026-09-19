@@ -13,6 +13,7 @@ import { useOsmPlaces } from '@/hooks/useOsmPlaces'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useAppStore } from '@/store'
 import { BAHIR_DAR_CENTER } from '@/constants'
+import { isNearBahirDar } from '@/services/geolocation'
 import { distanceMeters } from '@/utils/geo'
 import { filterRealPlaces } from '@/utils/realPlaces'
 import { CURATED_HOTELS } from '@/services/curatedHotels'
@@ -65,7 +66,7 @@ export default function MapPage() {
     request: requestLocation,
     loading: locationLoading,
     getLastError,
-  } = useGeolocation(false)
+  } = useGeolocation({ watch: true })
   const [locationHint, setLocationHint] = useState<string | null>(null)
 
   const [search, setSearch] = useState('')
@@ -201,8 +202,16 @@ export default function MapPage() {
 
   const userPos =
     location.latitude != null && location.longitude != null
-      ? { lat: location.latitude, lng: location.longitude }
+      ? {
+          lat: location.latitude,
+          lng: location.longitude,
+          accuracy: location.accuracy,
+        }
       : null
+
+  // Only show the blue pin when GPS is actually near Bahir Dar (not VPN / wrong country)
+  const mapUserPos =
+    userPos && isNearBahirDar(userPos.lat, userPos.lng, 50_000) ? userPos : null
 
   const selectedDistance =
     selectedPlace && userPos
@@ -378,7 +387,7 @@ export default function MapPage() {
           selectedPlaceId={selectedPlaceId}
           onPlaceSelect={handlePlaceSelect}
           onCenterChange={handleCenterChange}
-          userLocation={userPos}
+          userLocation={mapUserPos}
           routeCoordinates={routeCoords}
           basemap={basemap}
         />
