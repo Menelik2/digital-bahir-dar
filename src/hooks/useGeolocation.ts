@@ -3,6 +3,7 @@ import { useAppStore } from '@/store'
 import {
   clearWatch,
   getCurrentPositionRobust,
+  getBestPosition,
   geoErrorUserMessage,
   isGeolocationSupported,
   isInsideBahirDar,
@@ -23,18 +24,16 @@ export type UseGeolocationOptions = {
  * App-wide geolocation: reads/writes Zustand location state,
  * supports one-shot + continuous watch, and Bahir Dar context flags.
  */
-export function useGeolocation(autoRequestOrOpts: boolean | UseGeolocationOptions = false) {
+export function useGeolocation(options?: UseGeolocationOptions | boolean) {
   const opts: UseGeolocationOptions =
-    typeof autoRequestOrOpts === 'boolean'
-      ? { autoRequest: autoRequestOrOpts, watch: false }
-      : autoRequestOrOpts
+    typeof options === 'boolean' ? { autoRequest: options } : options ?? {}
 
   const { location, setLocation } = useAppStore()
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [errorCode, setErrorCode] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
   const [watching, setWatching] = useState(false)
-  const watchIdRef = useRef<number>(-1)
+  const watchIdRef = useRef(-1)
   const mounted = useRef(true)
   const lastErrorRef = useRef<string | null>(null)
 
@@ -43,7 +42,6 @@ export function useGeolocation(autoRequestOrOpts: boolean | UseGeolocationOption
     return () => {
       mounted.current = false
       clearWatch(watchIdRef.current)
-      watchIdRef.current = -1
     }
   }, [])
 
@@ -54,7 +52,7 @@ export function useGeolocation(autoRequestOrOpts: boolean | UseGeolocationOption
         longitude: pos.longitude,
         accuracy: pos.accuracy,
         permission: 'granted',
-        lastUpdated: pos.timestamp,
+        lastUpdated: Date.now(),
       })
       setError(null)
       setErrorCode(null)
@@ -63,13 +61,12 @@ export function useGeolocation(autoRequestOrOpts: boolean | UseGeolocationOption
   )
 
   const applyError = useCallback(
-    (err: GeoServiceError | Error) => {
-      const code = 'code' in err ? String(err.code) : 'unknown'
-      setErrorCode(code)
-      setError(err.message || geoErrorUserMessage(code))
-      if (code === 'permission_denied') {
+    (err: GeoServiceError) => {
+      setError(err.message)
+      setErrorCode(err.code)
+      if (err.code === 'permission_denied') {
         setLocation({ permission: 'denied' })
-      } else if (code === 'unsupported') {
+      } else if (err.code === 'unsupported') {
         setLocation({ permission: 'unsupported' })
       }
     },
@@ -96,9 +93,13 @@ export function useGeolocation(autoRequestOrOpts: boolean | UseGeolocationOption
     lastErrorRef.current = null
 
     try {
-      // Always call the browser API so the user gets the native prompt.
-      // Permissions API alone is unreliable across Safari / embedded browsers.
-      const pos = await getCurrentPositionRobust()
+      // Sample GPS for a few seconds — first fix is often inaccurate
+      let pos: GeoPosition
+      try {
+        pos = await getBestPosition(8_000)
+      } catch {
+        pos = await getCurrentPositionRobust()
+      }
       if (!mounted.current) return pos
       applyPosition(pos)
       lastErrorRef.current = null
@@ -158,7 +159,7 @@ export function useGeolocation(autoRequestOrOpts: boolean | UseGeolocationOption
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [opts.autoRequest])
 
-  // Optional continuous watch for map pages
+  // Continuous watch
   useEffect(() => {
     if (opts.watch) {
       startWatch()
@@ -177,20 +178,20 @@ export function useGeolocation(autoRequestOrOpts: boolean | UseGeolocationOption
       ? isNearBahirDar(location.latitude, location.longitude)
       : false
 
+  const getLastError = useCallback(() => lastErrorRef.current, [])
+
   return {
     location,
-    request,
-    /** Synchronous last error message from the most recent request() call */
-    getLastError: () => lastErrorRef.current,
-    startWatch,
-    stopWatch,
     loading,
-    watching,
     error,
     errorCode,
+    watching,
     hasFix,
     insideBahirDar,
     nearBahirDar,
-    supported: isGeolocationSupported(),
+    request,
+    startWatch,
+    stopWatch,
+    getLastError,
   }
 }

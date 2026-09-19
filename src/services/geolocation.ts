@@ -38,8 +38,8 @@ export class GeoServiceError extends Error {
 
 const DEFAULT_OPTIONS: PositionOptions = {
   enableHighAccuracy: true,
-  timeout: 12_000,
-  maximumAge: 20_000,
+  timeout: 20_000,
+  maximumAge: 0,
 }
 
 export function isGeolocationSupported(): boolean {
@@ -108,24 +108,77 @@ export function getCurrentPosition(options?: PositionOptions): Promise<GeoPositi
 
 /**
  * Prefer a fresh high-accuracy fix; if it times out (common indoors / weak GPS),
- * fall back to a network-based fix so "Location on" still works.
+ * fall back to a second high-accuracy attempt.
+ * Always uses maximumAge: 0 so VPN/cached coords are not reused.
  */
 export async function getCurrentPositionRobust(): Promise<GeoPosition> {
   try {
     return await getCurrentPosition({
       enableHighAccuracy: true,
-      timeout: 12_000,
-      maximumAge: 15_000,
+      timeout: 20_000,
+      maximumAge: 0,
     })
   } catch (e) {
     const code = e instanceof GeoServiceError ? e.code : 'unknown'
     if (code === 'permission_denied' || code === 'unsupported') throw e
     return getCurrentPosition({
-      enableHighAccuracy: false,
-      timeout: 20_000,
-      maximumAge: 60_000,
+      enableHighAccuracy: true,
+      timeout: 25_000,
+      maximumAge: 0,
     })
   }
+}
+
+/**
+ * Watch GPS briefly and keep the most accurate sample.
+ * Much better than a single getCurrentPosition on mobile (first fix is often coarse).
+ */
+export function getBestPosition(maxWaitMs = 8_000): Promise<GeoPosition> {
+  return new Promise((resolve, reject) => {
+    if (!isGeolocationSupported()) {
+      reject(new GeoServiceError('unsupported', 'Geolocation is not supported on this device.'))
+      return
+    }
+
+    let best: GeoPosition | null = null
+    let done = false
+    let watchId = -1
+
+    const finish = (err?: GeoServiceError) => {
+      if (done) return
+      done = true
+      if (watchId >= 0) clearWatch(watchId)
+      window.clearTimeout(timer)
+      if (best) resolve(best)
+      else if (err) reject(err)
+      else {
+        getCurrentPosition({ enableHighAccuracy: true, timeout: 20_000, maximumAge: 0 })
+          .then(resolve)
+          .catch(reject)
+      }
+    }
+
+    watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const g = toGeoPosition(pos)
+        if (
+          !best ||
+          (g.accuracy != null && (best.accuracy == null || g.accuracy < best.accuracy))
+        ) {
+          best = g
+        }
+        // Good enough for street-level navigation in the city
+        if (g.accuracy != null && g.accuracy <= 35) finish()
+      },
+      (err) => {
+        if (best) finish()
+        else finish(mapPositionError(err))
+      },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: maxWaitMs }
+    )
+
+    const timer = window.setTimeout(() => finish(), maxWaitMs)
+  })
 }
 
 export function watchPosition(
