@@ -128,7 +128,7 @@ export default function PlaceDetailsPage() {
 
   return (
     <div className="min-h-full bg-[#f2f2f7] dark:bg-black">
-      <div className="relative h-56 w-full overflow-hidden sm:h-72">
+      <div className="relative h-56 w-full overflow-hidden sm:h-72 lg:h-80 xl:h-96">
         {cover ? (
           <img src={cover} alt={placeImageAlt(place)} className="h-full w-full object-cover" />
         ) : (
@@ -143,18 +143,18 @@ export default function PlaceDetailsPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+        <div className="absolute bottom-0 left-0 right-0 p-4 text-white sm:p-6">
           {category && (
             <span className="mb-1 inline-block rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-semibold backdrop-blur">
               {category}
             </span>
           )}
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{name}</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">{name}</h1>
           {secondary && <p className="text-sm text-white/80">{secondary}</p>}
         </div>
       </div>
 
-      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 lg:max-w-5xl lg:px-8 lg:py-8">
         <div className="mb-4 flex flex-wrap gap-2">
           <Button onClick={() => goDirections('walking')}>
             <Navigation className="h-4 w-4" /> {isAm ? 'አቅጣጫ' : 'Directions'}
@@ -170,14 +170,14 @@ export default function PlaceDetailsPage() {
 
         {description && (
           <Card className="mb-4">
-            <CardContent className="p-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+            <CardContent className="p-4 text-sm leading-relaxed text-slate-600 dark:text-slate-300 sm:text-[15px]">
               {description}
             </CardContent>
           </Card>
         )}
 
         {(info.highlights || info.tips || info.howTo) && (
-          <section className="mb-6 space-y-3">
+          <section className="mb-6 space-y-3 lg:grid lg:grid-cols-3 lg:gap-3 lg:space-y-0">
             {info.highlights && (
               <Card>
                 <CardContent className="p-4">
@@ -260,7 +260,7 @@ export default function PlaceDetailsPage() {
                 {isAm ? 'በአይነት እና በርቀት የቀረቡ' : 'Nearby matches by type'}
               </p>
             </div>
-            <div className="flex flex-col gap-2.5 sm:grid sm:grid-cols-2 sm:gap-3">
+            <div className="flex flex-col gap-2.5 sm:grid sm:grid-cols-2 sm:gap-3 lg:gap-4">
               {similar.map((p) => {
                 const cat = categoryLabel(p.category, language)
                 const short = placeShortDescription(p, language) || p.short_description
