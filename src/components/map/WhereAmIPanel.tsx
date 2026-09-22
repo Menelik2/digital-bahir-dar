@@ -35,28 +35,57 @@ export function WhereAmIPanel({ className, onLocated, onNearFilter }: Props) {
   }
 
   if (!hasFix || location.latitude == null || location.longitude == null) {
+    if (collapsed) {
+      return (
+        <button
+          type="button"
+          onClick={() => setCollapsed(false)}
+          className={cn(
+            'pointer-events-auto flex w-full items-center gap-2 rounded-full border border-black/[0.08] bg-white/95 px-3 py-2 shadow-lg backdrop-blur-xl dark:border-white/12 dark:bg-[#1c1c1e]/95',
+            className
+          )}
+        >
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#0b6e99]/15 text-[#0b6e99]">
+            <Crosshair className="h-3.5 w-3.5" />
+          </span>
+          <span className="min-w-0 flex-1 truncate text-left text-[13px] font-semibold text-[#1c1c1e] dark:text-white">
+            {am ? 'ቦታዎን ያሳዩ' : 'Show your location'}
+          </span>
+          <span className="text-[11px] font-medium text-[#078930]">{am ? 'ክፈት' : 'Open'}</span>
+        </button>
+      )
+    }
     return (
       <div
         className={cn(
-          'pointer-events-auto rounded-2xl border border-black/[0.06] bg-white/95 p-4 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-[#1c1c1e]/95',
+          'pointer-events-auto rounded-2xl border border-black/[0.06] bg-white/95 p-3 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-[#1c1c1e]/95 sm:p-4',
           className
         )}
       >
         <div className="flex gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0b6e99]/15 text-[#0b6e99]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b6e99]/15 text-[#0b6e99] sm:h-11 sm:w-11">
             <Crosshair className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[16px] font-bold tracking-tight text-[#1c1c1e] dark:text-white">
-              {am ? 'አሁን የት ነዎት?' : 'Where are you now?'}
-            </p>
-            <p className="mt-1 text-[13px] leading-snug text-[#8e8e93]">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[15px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-[16px]">
+                {am ? 'አሁን የት ነዎት?' : 'Where are you now?'}
+              </p>
+              <button
+                type="button"
+                className="shrink-0 text-[11px] font-medium text-[#8e8e93] underline"
+                onClick={() => setCollapsed(true)}
+              >
+                {am ? 'ደብቅ' : 'Hide'}
+              </button>
+            </div>
+            <p className="mt-1 text-[12px] leading-snug text-[#8e8e93] sm:text-[13px]">
               {am
                 ? 'ከተማውን ካላወቁ — ቦታዎን አንዴ ይክፈቱ። ካርታው ሰማያዊ ነጥብ ያሳያል።'
                 : 'New in town? Turn on location once. A blue dot shows you on the map.'}
             </p>
             <Button
-              className="mt-3 h-11 w-full rounded-full bg-[#078930] text-[15px] font-semibold hover:bg-[#056b24] sm:w-auto sm:px-6"
+              className="mt-2.5 h-10 w-full rounded-full bg-[#078930] text-[14px] font-semibold hover:bg-[#056b24] sm:mt-3 sm:h-11 sm:w-auto sm:px-6 sm:text-[15px]"
               onClick={() => void showMe()}
               disabled={loading}
             >
