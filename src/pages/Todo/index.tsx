@@ -27,7 +27,7 @@ export default function TodoPage() {
   const pillars = Object.keys(PILLAR_LABEL) as TodoPillar[]
 
   return (
-    <div className="mx-auto max-w-3xl bg-[#f2f2f7] px-4 py-8 dark:bg-black">
+    <div className="mx-auto max-w-3xl bg-[#f2f2f7] px-4 py-6 dark:bg-black sm:px-6 sm:py-8 lg:max-w-4xl lg:px-8 lg:py-10">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#0b6e99]/12 px-3 py-1 text-xs font-semibold text-[#0b6e99] dark:bg-[#0b6e99]/25 dark:text-[#7dd3fc]">
