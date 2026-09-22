@@ -16,6 +16,7 @@ import {
 import { downloadCsv } from '@/services/admin'
 import { EventsCmsPanel } from '@/components/admin/EventsCmsPanel'
 import { TripsCmsPanel } from '@/components/admin/TripsCmsPanel'
+import { CategoriesCmsPanel } from '@/components/admin/CategoriesCmsPanel'
 import { cn } from '@/lib/utils'
 
 type Tab = 'metrics' | 'places' | 'reviews' | 'claims' | 'businesses' | 'reports' | 'users' | 'categories' | 'transport' | 'events' | 'trips'
@@ -345,7 +346,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {tab === 'categories' && <p className="text-sm text-slate-500">Categories managed via Places editor.</p>}
+          {tab === 'categories' && <CategoriesCmsPanel />}
           {tab === 'transport' && <p className="text-sm text-slate-500">Transport list loads when expanded in a future update.</p>}
         </main>
       </div>
