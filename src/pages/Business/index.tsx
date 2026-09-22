@@ -90,7 +90,7 @@ export default function BusinessPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="mx-auto max-w-md px-4 py-16 text-center">
+      <div className="mx-auto max-w-md px-4 py-16 text-center sm:px-6">
         <Building2 className="mx-auto mb-4 h-12 w-12 text-slate-300" />
         <h1 className="mb-2 text-2xl font-bold">Business portal</h1>
         <p className="mb-6 text-slate-500">
@@ -159,7 +159,7 @@ export default function BusinessPage() {
   ]
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:max-w-4xl lg:px-8">
       <div className="mb-6">
         <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl">
           <Building2 className="h-7 w-7 text-sky-600" /> Business portal
@@ -179,7 +179,7 @@ export default function BusinessPage() {
 
       {tab === 'overview' && (
         <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             <Card><CardContent className="flex items-center gap-3 p-4">
               <BarChart3 className="h-8 w-8 text-sky-500" />
               <div>
@@ -259,7 +259,7 @@ export default function BusinessPage() {
       )}
 
       {tab === 'profile' && (
-        <form onSubmit={handleSaveProfile} className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+        <form onSubmit={handleSaveProfile} className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 sm:p-5">
           <p className="text-sm text-slate-500">
             {profile ? 'Update your business details. Status changes require admin review.' : 'Submit a profile. Status starts as pending until an admin approves.'}
           </p>
