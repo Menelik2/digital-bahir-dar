@@ -28,7 +28,7 @@ export default function ExpensesPage() {
   const cats = byCategory()
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
+    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:max-w-3xl lg:px-8">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl">
