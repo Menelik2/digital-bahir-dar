@@ -11,13 +11,14 @@ import { useAuth } from '@/hooks/useAuth'
 import {
   useIsStaff, useAdminMetrics, useModerationPlaces, useModerationReviews,
   usePendingClaims, usePendingBusinesses, useOpenReports, useAdminUsers,
-  useAdminActions, useAdminCategories, useAdminTransport, useAdminActivity,
+  useAdminActions, useAdminActivity,
 } from '@/hooks/useAdmin'
 import { downloadCsv } from '@/services/admin'
 import { EventsCmsPanel } from '@/components/admin/EventsCmsPanel'
+import { TripsCmsPanel } from '@/components/admin/TripsCmsPanel'
 import { cn } from '@/lib/utils'
 
-type Tab = 'metrics' | 'places' | 'reviews' | 'claims' | 'businesses' | 'reports' | 'users' | 'categories' | 'transport' | 'events'
+type Tab = 'metrics' | 'places' | 'reviews' | 'claims' | 'businesses' | 'reports' | 'users' | 'categories' | 'transport' | 'events' | 'trips'
 
 export default function AdminDashboard() {
   const { isAuthenticated, loading: authLoading } = useAuth()
@@ -85,6 +86,7 @@ export default function AdminDashboard() {
     { id: 'businesses', label: 'Business', icon: Building2, badge: metrics?.businessesPending || undefined },
     { id: 'reports', label: 'Reports', icon: Flag, badge: metrics?.reportsOpen || undefined },
     { id: 'events', label: 'Events', icon: CalendarDays },
+    { id: 'trips', label: 'Trips', icon: CalendarDays },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'categories', label: 'Categories', icon: Tags },
     { id: 'transport', label: 'Transport', icon: Bus },
@@ -227,6 +229,8 @@ export default function AdminDashboard() {
           )}
 
           {tab === 'events' && <EventsCmsPanel />}
+
+          {tab === 'trips' && <TripsCmsPanel />}
 
           {tab === 'places' && (
             <div className="space-y-3">
