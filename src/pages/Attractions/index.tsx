@@ -8,7 +8,7 @@ export default function AttractionsPage() {
 
   return (
     <div>
-      <section className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:max-w-7xl lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
         <LocalTourismPanel amharic={isAm} />
       </section>
 
