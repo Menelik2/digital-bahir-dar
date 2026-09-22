@@ -67,7 +67,7 @@ export default function TodayPage() {
   const extraBody = isAm ? plan.optionalExtra.bodyAm : plan.optionalExtra.body
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
+    <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 sm:py-8 lg:max-w-3xl lg:px-8 lg:py-10">
       <div className="mb-6">
         <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-950 dark:text-amber-200">
           <Sun className="h-3.5 w-3.5" /> {t.today.badge}
