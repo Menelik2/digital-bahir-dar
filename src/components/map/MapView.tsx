@@ -196,7 +196,7 @@ function LeafletMapView({
   }, [center?.lat, center?.lng])
 
   const tileUrl = useMapboxTiles
-    ? mapboxTileUrl(isSat ? MAPBOX_RASTER_STYLES.satellite : MAPBOX_RASTER_STYLES.streets)
+    ? mapboxTileUrl(isSat ? MAPBOX_RASTER_STYLES.satellite : MAPBOX_RASTER_STYLES.streets, token!)
     : isSat
       ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
       : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
@@ -251,7 +251,7 @@ function LeafletMapView({
           >
             <Popup>
               <div style={{ minWidth: 140 }}>
-                <strong>{displayPlaceName(place)}</strong>
+                <strong>{displayPlaceName(place.name)}</strong>
                 <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <a href={inAppDirectionsPath(place)} style={{ fontSize: 12 }}>
                     Directions
@@ -323,7 +323,6 @@ function LeafletMapView({
 }
 
 export function MapView(props: MapViewProps) {
-  // Leaflet path: accurate user marker + accuracy ring
   return (
     <MapErrorBoundary>
       <LeafletMapView {...props} />
