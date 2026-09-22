@@ -222,7 +222,7 @@ export function Header() {
       </div>
 
       <div className="hidden border-t border-black/[0.04] bg-[#f8f8fa]/95 dark:border-white/[0.06] dark:bg-black/40 lg:block">
-        <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-6 py-2 xl:px-8">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-6 py-2 scrollbar-none xl:gap-2.5 xl:px-8">
           <span className="mr-1 shrink-0 text-[12px] font-semibold text-[#8e8e93]">
             {t.nav.find || 'Find'}:
           </span>
