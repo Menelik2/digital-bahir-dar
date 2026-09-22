@@ -19,9 +19,12 @@ export function MobileNav() {
     { path: '/profile', icon: User, label: t.nav.profile },
   ]
 
+  const onAiGuide = location.pathname === '/ai-guide' || location.pathname.startsWith('/ai-guide/')
+
   return (
     <>
-      {/* Floating AI — elevated control above tab bar */}
+      {/* Floating AI — hide while already on AI Guide */}
+      {!onAiGuide && (
       <Link
         to="/ai-guide"
         className="bottom-fab-safe fixed right-3 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#078930] via-[#0b6e99] to-[#d4a017] text-white shadow-[0_6px_24px_rgba(7,137,48,0.4)] ring-[3px] ring-white/50 transition-transform active:scale-90 lg:hidden dark:ring-white/15"
@@ -30,6 +33,7 @@ export function MobileNav() {
       >
         <Sparkles className="h-[22px] w-[22px]" strokeWidth={2.25} />
       </Link>
+      )}
 
       {/* iOS-style tab bar */}
       <nav
