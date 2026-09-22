@@ -58,7 +58,7 @@ export default function SpendGuidePage() {
   const dayPlanTotal = guide.sampleDay.reduce((s, i) => s + i.estCost, 0)
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
+    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:max-w-3xl lg:px-8">
       <div className="mb-6">
         <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl">
           <Sparkles className="h-7 w-7 text-sky-600" /> Spend Guide
