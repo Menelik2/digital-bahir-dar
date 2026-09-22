@@ -73,7 +73,7 @@ function HowDoISection() {
   )
 
   return (
-    <section className="mx-auto max-w-6xl px-4 pb-4 pt-8">
+    <section className="mx-auto max-w-7xl px-4 pb-4 pt-6 sm:px-6 sm:pt-8 lg:px-8">
       <div className="mb-4">
         <h2 className="text-xl font-bold sm:text-2xl">{t.transportPage.howDoI}</h2>
         <p className="text-sm text-slate-500">{t.transportPage.howDoISub}</p>
@@ -160,7 +160,7 @@ export default function TransportPage() {
         emptyMessage={t.pages.transportEmpty}
       />
 
-      <section className="mx-auto max-w-6xl px-4 pb-12">
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
         <h2 className="mb-3 text-lg font-semibold">{t.pages.typicalFares}</h2>
         <div className="mb-8 grid gap-3 sm:grid-cols-2">
           {TRANSPORT_FARES.map((f) => (
