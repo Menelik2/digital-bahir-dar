@@ -66,7 +66,7 @@ export default function HelpPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-3xl space-y-10 px-4 py-8 sm:px-6 lg:max-w-4xl lg:py-12">
+      <div className="mx-auto max-w-3xl space-y-10 px-4 py-8 sm:px-6 lg:max-w-5xl lg:px-8 lg:py-12">
         <section>
           <h2 className="mb-3 text-[18px] font-bold text-[#1c1c1e] dark:text-white sm:text-xl">
             {am ? 'በፍጥነት ይሂዱ' : 'Go quickly'}
