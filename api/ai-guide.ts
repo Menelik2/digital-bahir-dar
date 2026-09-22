@@ -159,14 +159,19 @@ export default async function handler(req: EnvReq, res: EnvRes) {
       lastStatus = result.status
       lastDetail = result.body.slice(0, 400)
 
-      // Retry next model on not-found / model-retired errors only
+      // Retry next model on not-found, retired, or temporary capacity errors
       const detailLower = result.body.toLowerCase()
-      const modelGone =
+      const retryable =
         result.status === 404 ||
+        result.status === 429 ||
+        result.status === 503 ||
         detailLower.includes('no longer available') ||
         detailLower.includes('not found') ||
-        detailLower.includes('is not found')
-      if (!modelGone) break
+        detailLower.includes('is not found') ||
+        detailLower.includes('high demand') ||
+        detailLower.includes('unavailable') ||
+        detailLower.includes('resource_exhausted')
+      if (!retryable) break
       console.error('AI model failed, trying next', model, result.status)
     }
 
@@ -182,7 +187,9 @@ export default async function handler(req: EnvReq, res: EnvRes) {
           ? 'AI API key was rejected. Update AI_API_KEY on Vercel (Gemini key from aistudio.google.com).'
           : lastStatus === 404
             ? 'Model not available. Set AI_MODEL=gemini-3.6-flash on Vercel and redeploy.'
-            : 'AI provider returned an error. Offline tips still work in the app.',
+            : lastStatus === 503 || lastStatus === 429
+              ? 'Live AI is busy right now. Please try again in a moment — offline tips still work.'
+              : 'AI provider returned an error. Offline tips still work in the app.',
     })
   } catch (e) {
     console.error('ai-guide handler', e)
