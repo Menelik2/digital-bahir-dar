@@ -106,7 +106,7 @@ function RecommendationsBanner() {
   const safety = isAm ? FOOD_SAFETY_AM : FOOD_SAFETY
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-2 pt-4">
+    <div className="mx-auto max-w-7xl px-4 pb-2 pt-4 sm:px-6 lg:px-8 lg:pt-8">
       <div className="mb-4">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400">
           {t.food.localGuide}
@@ -234,7 +234,7 @@ function RecommendationsBanner() {
       {rest.length > 0 && mode === 'all' && (
         <>
           <h3 className="mb-2 text-[15px] font-semibold">{t.food.moreIdeas}</h3>
-          <div className="mb-6 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mb-6 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {rest.map((r) => (
               <Card key={r.id}>
                 <CardContent className="p-3.5">
