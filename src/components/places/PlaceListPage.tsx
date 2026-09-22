@@ -174,7 +174,7 @@ export function PlaceListPage({
 
   if (isError) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:max-w-7xl lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <StateMessage
           variant="error"
           title={t.common.error}
@@ -190,7 +190,7 @@ export function PlaceListPage({
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8 lg:max-w-7xl lg:px-8 lg:py-10">
+    <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3 sm:mb-6">
         <div>
           <h1 className="text-[28px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-3xl lg:text-4xl">{title}</h1>
