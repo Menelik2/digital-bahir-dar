@@ -27,19 +27,95 @@ export default function ProfilePage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="mx-auto max-w-md px-4 py-16 text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#f2f2f7] dark:bg-[#1c1c1e]">
-          <User className="h-8 w-8 text-[#8e8e93]" />
+      <div className="mx-auto max-w-3xl bg-[#f2f2f7] px-4 py-8 pb-nav-safe dark:bg-black sm:px-6 sm:py-10 lg:max-w-4xl lg:px-8">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1c1c1e] dark:ring-white/10">
+            <User className="h-8 w-8 text-[#8e8e93]" />
+          </div>
+          <h1 className="ios-large-title mb-2 text-[#1c1c1e] dark:text-white sm:text-2xl sm:font-bold">
+            {t.profile.title}
+          </h1>
+          <p className="mx-auto mb-6 max-w-md text-[15px] leading-relaxed text-[#8e8e93]">
+            {t.profile.signInPrompt || t.profile.subtitle}
+          </p>
+          <Link to="/auth?redirect=%2Fprofile">
+            <Button size="lg" className="min-h-[48px] w-full max-w-xs rounded-full">
+              {t.profile.loginRegister}
+            </Button>
+          </Link>
         </div>
-        <h1 className="ios-large-title mb-2 text-[#1c1c1e] dark:text-white sm:text-2xl sm:font-bold">
-          {t.profile.title}
-        </h1>
-        <p className="mb-6 text-[15px] text-[#8e8e93]">{t.profile.signInPrompt}</p>
-        <Link to="/auth?redirect=%2Fprofile">
-          <Button size="lg" className="min-h-[48px] w-full max-w-xs rounded-full">
-            {t.profile.loginRegister}
-          </Button>
-        </Link>
+
+        <section className="ios-section">
+          <p className="ios-section-label">{t.profile.preferences}</p>
+          <div className="ios-group">
+            <div className="ios-group-row justify-between">
+              <span className="ios-group-icon bg-[#0b6e99]/12 text-[#0b6e99]">
+                <Globe />
+              </span>
+              <span className="ios-group-label">{t.profile.language}</span>
+              <div className="flex shrink-0 gap-1.5">
+                {(['en', 'am'] as const).map((l) => (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => setLanguage(l)}
+                    className={cn(
+                      'min-h-[32px] rounded-full px-3 text-[13px] font-semibold transition',
+                      language === l
+                        ? 'bg-[#078930] text-white'
+                        : 'bg-black/[0.05] text-[#3c3c43] dark:bg-white/10 dark:text-white/80'
+                    )}
+                  >
+                    {l === 'en' ? 'EN' : 'አማ'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="ios-group-row justify-between">
+              <span className="ios-group-icon bg-[#f5c518]/25 text-[#8a6d0b]">
+                <Coins />
+              </span>
+              <span className="ios-group-label">{t.profile.currency}</span>
+              <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                {(['ETB', 'USD', 'EUR', 'GBP'] as const).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCurrency(c)}
+                    className={cn(
+                      'min-h-[28px] rounded-full px-2.5 text-[12px] font-semibold',
+                      currency === c
+                        ? 'bg-[#078930] text-white'
+                        : 'bg-black/[0.05] text-[#3c3c43] dark:bg-white/10 dark:text-white/80'
+                    )}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="ios-section">
+          <p className="ios-section-label">{t.profile.quickLinks}</p>
+          <div className="ios-group">
+            {[
+              { to: '/trips', label: t.profile.myTrips, icon: Route, tint: 'bg-[#078930]/12 text-[#078930]' },
+              { to: '/map', label: t.nav.map, icon: MapIcon, tint: 'bg-[#0b6e99]/12 text-[#0b6e99]' },
+              { to: '/explore', label: t.nav.explore, icon: Compass, tint: 'bg-[#0b6e99]/10 text-[#0a5a7e]' },
+              { to: '/ai-guide', label: t.nav.aiGuide, icon: Bot, tint: 'bg-gradient-to-br from-[#078930]/15 to-[#0b6e99]/15 text-[#056b24]' },
+            ].map((l) => (
+              <Link key={l.to} to={l.to} className="ios-group-row">
+                <span className={cn('ios-group-icon', l.tint)}>
+                  <l.icon />
+                </span>
+                <span className="ios-group-label font-normal">{l.label}</span>
+                <ChevronRight className="ios-group-chevron" strokeWidth={2.25} />
+              </Link>
+            ))}
+          </div>
+        </section>
       </div>
     )
   }
