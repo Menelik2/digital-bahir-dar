@@ -48,13 +48,15 @@ export function Layout() {
   const t = useT()
   const { pathname } = useLocation()
   const isMap = pathname === '/map' || pathname.startsWith('/map/')
+  const isAiGuide = pathname === '/ai-guide' || pathname.startsWith('/ai-guide/')
+  const isImmersive = isMap || isAiGuide
   const noFooter = hideFooter(pathname)
 
   return (
     <div
       className={cn(
         'flex min-h-full flex-col bg-[#f2f2f7] dark:bg-black',
-        isMap && 'h-dvh max-h-dvh overflow-hidden'
+        isImmersive && 'h-dvh max-h-dvh overflow-hidden'
       )}
     >
       <a
@@ -69,7 +71,7 @@ export function Layout() {
         id="main-content"
         className={cn(
           'page-enter flex-1',
-          isMap ? 'min-h-0 overflow-hidden pb-0' : 'pb-nav-safe lg:pb-8'
+          isImmersive ? 'min-h-0 overflow-hidden pb-0' : 'pb-nav-safe lg:pb-8'
         )}
         tabIndex={-1}
       >
@@ -86,12 +88,7 @@ export function Layout() {
           </div>
         </footer>
       )}
-      {!isMap && <MobileNav />}
-      {isMap && (
-        <div className="lg:hidden">
-          <MobileNav />
-        </div>
-      )}
+      <MobileNav />
       <InstallPrompt />
     </div>
   )
