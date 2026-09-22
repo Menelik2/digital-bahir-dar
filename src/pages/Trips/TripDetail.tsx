@@ -58,7 +58,7 @@ export default function TripDetailPage() {
 
   if (error || !trip) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-20 text-center">
+      <div className="mx-auto max-w-lg px-4 py-20 text-center sm:px-6">
         <AlertCircle className="mx-auto mb-3 h-10 w-10 text-red-400" />
         <h1 className="mb-2 text-xl font-semibold">{t.trips.notFound}</h1>
         <Link to="/trips">
@@ -97,7 +97,7 @@ export default function TripDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6 pb-nav-safe">
+    <div className="mx-auto max-w-3xl px-4 py-6 pb-nav-safe sm:px-6 lg:max-w-4xl lg:px-8">
       <div className="mb-6 flex items-start gap-3">
         <Link to="/trips">
           <Button variant="ghost" size="icon" className="mt-1 shrink-0" aria-label={t.trips.backToTrips}>
