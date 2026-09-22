@@ -98,7 +98,7 @@ export default function DiscoverPage() {
   const showInitialSpinner = isLoading && places.length === 0
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="mb-1 flex items-center gap-2">
@@ -170,7 +170,7 @@ export default function DiscoverPage() {
           {t.discover.guideSites}
         </h2>
         <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">{t.discover.guideSitesBody}</p>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {GUIDE_SITES.map((s) => (
             <a
               key={s.id}
@@ -235,7 +235,7 @@ export default function DiscoverPage() {
         <p className="py-12 text-center text-slate-500">{t.discover.empty}</p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {places.map((p) => {
           const links = placeGuideLinks(p)
           return (
