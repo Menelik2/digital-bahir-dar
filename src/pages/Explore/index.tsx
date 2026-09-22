@@ -142,8 +142,7 @@ export default function ExplorePage() {
   const isLoading = dbLoading && places.length === 0 && osmLoading
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-5 sm:py-8">
-      {/* Real Bahir Dar photo strip */}
+    <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {EXPLORE_HERO_IMAGES.map((src, i) => (
           <div
@@ -163,7 +162,6 @@ export default function ExplorePage() {
         ))}
       </div>
 
-      {/* Large title */}
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3 sm:mb-6">
         <div>
           <h1 className="text-[28px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-3xl">
@@ -190,7 +188,6 @@ export default function ExplorePage() {
         </Button>
       </div>
 
-      {/* Search + near me */}
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="flex min-h-[48px] flex-1 items-center gap-2 rounded-[1rem] border border-black/[0.06] bg-white px-3.5 dark:border-white/[0.08] dark:bg-[#1c1c1e]">
           <Search className="h-5 w-5 shrink-0 text-[#8e8e93]" />
@@ -262,7 +259,6 @@ export default function ExplorePage() {
         )}
       </div>
 
-      {/* Filter chips with real photo thumbs */}
       <div className="mobile-chips mb-5 gap-2">
         <button
           type="button"
@@ -310,7 +306,7 @@ export default function ExplorePage() {
         </p>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5 xl:grid-cols-4">
         {places.map((p) => (
           <PlaceCard key={p.id} place={p} />
         ))}
