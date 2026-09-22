@@ -83,7 +83,7 @@ export default function BudgetPage() {
     .replace('{travelers}', String(travelers))
 
   return (
-    <div className="mx-auto max-w-2xl bg-[#f2f2f7] px-4 pb-nav-safe pt-6 dark:bg-black sm:pt-8">
+    <div className="mx-auto max-w-2xl bg-[#f2f2f7] px-4 pb-nav-safe pt-6 dark:bg-black sm:px-6 sm:pt-8 lg:max-w-3xl lg:px-8 lg:pt-10">
       <div className="mb-5">
         <h1 className="ios-large-title flex items-center gap-2 text-[#1c1c1e] dark:text-white">
           <Calculator className="h-7 w-7 shrink-0 text-[#0b6e99]" /> {b.title}
