@@ -48,8 +48,7 @@ export default function ProfilePage() {
     (user?.user_metadata?.full_name as string) || user?.email?.split('@')[0] || t.profile.traveler
 
   return (
-    <div className="mx-auto max-w-3xl bg-[#f2f2f7] px-4 py-6 pb-nav-safe dark:bg-black sm:py-8">
-      {/* Large title + avatar */}
+    <div className="mx-auto max-w-3xl bg-[#f2f2f7] px-4 py-6 pb-nav-safe dark:bg-black sm:px-6 sm:py-8 lg:max-w-4xl lg:px-8 lg:py-10">
       <div className="mb-7 flex items-center gap-3.5">
         <div className="flex h-[64px] w-[64px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#078930] to-[#0b6e99] text-[22px] font-bold text-white shadow-md">
           {displayName.charAt(0).toUpperCase()}
@@ -62,7 +61,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Preferences */}
       <section className="ios-section">
         <p className="ios-section-label">{t.profile.preferences}</p>
         <div className="ios-group">
@@ -115,7 +113,6 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* Quick links */}
       <section className="ios-section">
         <p className="ios-section-label">{t.profile.quickLinks}</p>
         <div className="ios-group">
@@ -156,7 +153,6 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* Saved places */}
       <section className="ios-section">
         <div className="mb-1.5 flex items-center justify-between px-4">
           <p className="ios-section-label !m-0 flex items-center gap-1.5">
@@ -185,7 +181,6 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* Log out */}
       <div className="ios-group mb-2">
         <button type="button" onClick={() => signOut()} className="ios-group-row ios-group-row-destructive">
           <LogOut className="h-4 w-4" /> {t.profile.logOut}
