@@ -113,7 +113,7 @@ export default function TripPlannerPage() {
   )
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-5 pb-nav-safe sm:py-8">
+    <div className="mx-auto max-w-3xl px-4 py-5 pb-nav-safe sm:px-6 sm:py-8 lg:max-w-4xl lg:px-8 lg:py-10">
       <div className="mb-5 sm:mb-6">
         <div className="mb-1 flex items-center gap-3">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#078930] via-[#0b6e99] to-[#d4a017] text-white shadow-md">
@@ -243,30 +243,16 @@ export default function TripPlannerPage() {
 
             <section className="flex flex-col gap-3 sm:flex-row sm:gap-6">
               <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5 text-[15px]">
-                <input
-                  type="checkbox"
-                  checked={includeBoat}
-                  onChange={(e) => setIncludeBoat(e.target.checked)}
-                  className="h-5 w-5 rounded border-slate-300 text-[#078930]"
-                />
+                <input type="checkbox" checked={includeBoat} onChange={(e) => setIncludeBoat(e.target.checked)} className="h-5 w-5 rounded border-slate-300 text-[#078930]" />
                 {t.planner.includeBoat}
               </label>
               <label className="flex min-h-[44px] cursor-pointer items-center gap-2.5 text-[15px]">
-                <input
-                  type="checkbox"
-                  checked={includeFalls}
-                  onChange={(e) => setIncludeFalls(e.target.checked)}
-                  className="h-5 w-5 rounded border-slate-300 text-[#078930]"
-                />
+                <input type="checkbox" checked={includeFalls} onChange={(e) => setIncludeFalls(e.target.checked)} className="h-5 w-5 rounded border-slate-300 text-[#078930]" />
                 {t.planner.includeFalls}
               </label>
             </section>
 
-            <Button
-              size="lg"
-              className="mobile-cta min-h-[52px] w-full rounded-full text-[16px] shadow-md shadow-[#078930]/25"
-              onClick={generate}
-            >
+            <Button size="lg" className="mobile-cta min-h-[52px] w-full rounded-full text-[16px] shadow-md shadow-[#078930]/25" onClick={generate}>
               <Sparkles className="h-5 w-5" /> {t.planner.buildPlan}
             </Button>
             <p className="text-xs text-slate-400">{t.planner.offlineNote}</p>
@@ -321,10 +307,7 @@ export default function TripPlannerPage() {
               </div>
               <CardContent className="space-y-0 p-0">
                 {d.stops.map((s, i) => (
-                  <div
-                    key={i}
-                    className="flex gap-3 border-t border-black/[0.04] px-4 py-3 first:border-t-0 dark:border-white/[0.06]"
-                  >
+                  <div key={i} className="flex gap-3 border-t border-black/[0.04] px-4 py-3 first:border-t-0 dark:border-white/[0.06]">
                     <span className="w-12 shrink-0 text-[11px] font-semibold text-[#8e8e93]">{s.time || '—'}</span>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-[#1c1c1e] dark:text-white">{s.name}</p>
