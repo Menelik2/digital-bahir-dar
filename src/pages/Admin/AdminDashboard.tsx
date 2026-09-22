@@ -286,8 +286,8 @@ export default function AdminDashboard() {
                     <p className="text-sm font-medium">{c.place?.name ?? 'Claim'}</p>
                     <p className="text-xs text-slate-500">{c.message}</p>
                     <div className="mt-2 flex gap-2">
-                      <Button size="sm" onClick={async () => { await actions.resolveClaim.mutateAsync({ claimId: c.id, approve: true }); flash('Approved') }}>Approve</Button>
-                      <Button size="sm" variant="outline" onClick={async () => { await actions.resolveClaim.mutateAsync({ claimId: c.id, approve: false }); flash('Rejected') }}>Reject</Button>
+                      <Button size="sm" onClick={async () => { await actions.claim.mutateAsync({ claimId: c.id, approve: true }); flash('Approved') }}>Approve</Button>
+                      <Button size="sm" variant="outline" onClick={async () => { await actions.claim.mutateAsync({ claimId: c.id, approve: false }); flash('Rejected') }}>Reject</Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -304,8 +304,8 @@ export default function AdminDashboard() {
                   <CardContent className="flex items-center justify-between p-3">
                     <p className="text-sm font-medium">{b.name ?? (b as { business_name?: string }).business_name ?? 'Business'}</p>
                     <div className="flex gap-1">
-                      <Button size="sm" onClick={async () => { await actions.businessStatus.mutateAsync({ businessId: b.id, status: 'approved' }); flash('Approved') }}>Approve</Button>
-                      <Button size="sm" variant="outline" onClick={async () => { await actions.businessStatus.mutateAsync({ businessId: b.id, status: 'suspended' }); flash('Suspended') }}>Suspend</Button>
+                      <Button size="sm" onClick={async () => { await actions.business.mutateAsync({ businessId: b.id, status: 'approved' }); flash('Approved') }}>Approve</Button>
+                      <Button size="sm" variant="outline" onClick={async () => { await actions.business.mutateAsync({ businessId: b.id, status: 'suspended' }); flash('Suspended') }}>Suspend</Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -322,8 +322,8 @@ export default function AdminDashboard() {
                     <p className="text-sm font-medium">{r.reason}</p>
                     <p className="text-xs text-slate-500">{r.details}</p>
                     <div className="mt-2 flex gap-2">
-                      <Button size="sm" onClick={async () => { await actions.resolveReport.mutateAsync({ reportId: r.id, status: 'resolved' }); flash('Resolved') }}>Resolve</Button>
-                      <Button size="sm" variant="outline" onClick={async () => { await actions.resolveReport.mutateAsync({ reportId: r.id, status: 'dismissed' }); flash('Dismissed') }}>Dismiss</Button>
+                      <Button size="sm" onClick={async () => { await actions.report.mutateAsync({ reportId: r.id, status: 'resolved' }); flash('Resolved') }}>Resolve</Button>
+                      <Button size="sm" variant="outline" onClick={async () => { await actions.report.mutateAsync({ reportId: r.id, status: 'dismissed' }); flash('Dismissed') }}>Dismiss</Button>
                     </div>
                   </CardContent>
                 </Card>
