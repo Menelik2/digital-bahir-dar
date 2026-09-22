@@ -373,7 +373,7 @@ export default function MapPage() {
   }, [directionsPlace, userPos?.lat, userPos?.lng, travelMode])
 
   return (
-    <div className="relative h-[calc(100dvh-3rem)] w-full overflow-hidden bg-slate-100 dark:bg-slate-900 sm:h-[calc(100dvh-3.5rem)] lg:h-[calc(100dvh-4rem)]">
+    <div className="relative h-[calc(100dvh-3rem)] w-full overflow-hidden bg-slate-100 dark:bg-slate-900 sm:h-[calc(100dvh-3.5rem)] lg:h-[calc(100dvh-4rem)] max-lg:h-[calc(100dvh-3rem-env(safe-area-inset-bottom,0px))]">
       <div className="absolute inset-0 z-0">
         <MapView
           places={places}
@@ -488,9 +488,9 @@ export default function MapPage() {
         />
       )}
 
-      <div className="absolute bottom-[calc(5.5rem+env(safe-area-inset-bottom,0px))] left-0 right-0 z-[1000] px-3 sm:px-4 lg:bottom-6 lg:left-1/2 lg:right-auto lg:w-full lg:max-w-4xl lg:-translate-x-1/2 lg:px-6">
+      <div className="bottom-fab-safe absolute left-0 right-0 z-[1000] px-3 sm:px-4 lg:bottom-6 lg:left-1/2 lg:right-auto lg:w-full lg:max-w-4xl lg:-translate-x-1/2 lg:px-6">
         <MapFilter active={filter} onChange={setFilter} />
-        <p className="mt-2 text-center text-[10px] text-slate-700 drop-shadow-sm dark:text-slate-200">
+        <p className="mt-1.5 hidden text-center text-[10px] text-slate-600 drop-shadow-sm dark:text-slate-300 sm:block">
           {t.map.footer}
         </p>
       </div>
