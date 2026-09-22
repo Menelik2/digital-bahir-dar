@@ -116,8 +116,8 @@ export default function AIGuidePage() {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-3.5rem)] flex-col bg-[#f2f2f7] dark:bg-black sm:h-[calc(100dvh-4rem)] lg:h-[calc(100dvh-4rem)]">
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-black/[0.06] bg-white/90 px-3 py-2.5 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#1c1c1e]/90 sm:px-4">
+    <div className="flex h-full min-h-0 flex-col bg-[#f2f2f7] dark:bg-black">
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-black/[0.06] bg-white/95 px-3 py-2.5 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#1c1c1e]/95 sm:px-4 lg:px-6">
         <div className="flex min-w-0 items-center gap-2.5">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#078930] via-[#0b6e99] to-[#d4a017] text-white shadow-sm">
             <Sparkles className="h-4 w-4" strokeWidth={2.25} />
@@ -158,7 +158,8 @@ export default function AIGuidePage() {
         </div>
       </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto overscroll-contain px-3 py-4 sm:px-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-4 lg:px-6">
+        <div className="mx-auto flex max-w-3xl flex-col space-y-3">
         {messages.map((m) => (
           <div key={m.id} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
             <div
@@ -188,24 +189,23 @@ export default function AIGuidePage() {
           </div>
         )}
         <div ref={bottomRef} className="h-1" />
+        </div>
       </div>
 
       <div
-        className="shrink-0 border-t border-black/[0.06] bg-white/95 px-3 pt-2 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#1c1c1e]/95 sm:px-4"
-        style={{
-          paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))',
-          WebkitBackdropFilter: 'saturate(180%) blur(20px)',
-        }}
+        className="shrink-0 border-t border-black/[0.06] bg-white/95 px-3 pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))] pt-2 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#1c1c1e]/95 sm:px-4 lg:px-6 lg:pb-4"
+        style={{ WebkitBackdropFilter: 'saturate(180%) blur(20px)' }}
       >
+        <div className="mx-auto max-w-3xl">
         {messages.length <= 2 && (
-          <div className="mb-2.5 flex flex-wrap gap-1.5">
+          <div className="mb-2.5 flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {getSuggestedPrompts(language).map((p) => (
               <button
                 key={p}
                 type="button"
                 disabled={sending}
                 onClick={() => send(p)}
-                className="rounded-full border border-black/[0.08] bg-[#f2f2f7] px-3 py-1.5 text-[12px] font-medium text-[#1c1c1e] active:bg-black/[0.06] dark:border-white/10 dark:bg-white/10 dark:text-white/80"
+                className="shrink-0 rounded-full border border-black/[0.08] bg-[#f2f2f7] px-3 py-1.5 text-[12px] font-medium text-[#1c1c1e] active:bg-black/[0.06] dark:border-white/10 dark:bg-white/10 dark:text-white/80"
               >
                 {p}
               </button>
@@ -244,6 +244,7 @@ export default function AIGuidePage() {
             {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
           </Button>
         </form>
+        </div>
       </div>
     </div>
   )
