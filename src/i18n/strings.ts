@@ -112,9 +112,11 @@ function withFixes(lang: Lang, pack: Record<string, unknown>): Strings {
     ...((pack.profile as Record<string, unknown>) ?? {}),
     ...profileFixes[lang],
   }
-  const planner = {
-    ...plannerFixes[lang],
-    ...((pack.planner as Record<string, unknown>) ?? {}),
+  const fromPack = (pack.planner as Record<string, unknown>) ?? {}
+  const base = plannerFixes[lang] as Record<string, string>
+  const planner: Record<string, string> = { ...base }
+  for (const [k, v] of Object.entries(fromPack)) {
+    if (typeof v === 'string' && v.trim().length > 2) planner[k] = v
   }
   return { ...pack, profile, planner }
 }
