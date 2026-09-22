@@ -8,7 +8,7 @@ import { TOUR_GUIDES } from '@/data/cityLife'
 export default function GuidesPage() {
   const t = useT()
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="mb-2 text-2xl font-bold sm:text-3xl">{t.guidesPage.title}</h1>
