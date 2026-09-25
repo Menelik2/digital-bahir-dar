@@ -1,1 +1,206 @@
-PLACEHOLDER
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { MapPin, Star, BadgeCheck, Navigation, ExternalLink } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import type { Place } from '@/types/place'
+import { formatDistance } from '@/utils/geo'
+import { isOsmPlaceId, cacheOsmPlaceForDetail } from '@/services/osmPlaces'
+import { placeGuideLinks } from '@/constants/guideSites'
+import { placeCoverImage, placeImageAlt, BAHIR_DAR_CITY_COVER, EXPLORE_HERO_IMAGES } from '@/utils/placeImage'
+import {
+  placeName,
+  placeNameSecondary,
+  placeShortDescription,
+  categoryLabel,
+} from '@/utils/placeLocale'
+import { useLang } from '@/hooks/useT'
+import { cn } from '@/lib/utils'
+
+interface PlaceCardProps {
+  place: Place
+  variant?: 'default' | 'compact' | 'horizontal'
+  showDirections?: boolean
+  onDirections?: (place: Place) => void
+  className?: string
+}
+
+function CoverImage({ place, className }: { place: Place; className?: string }) {
+  const primary = placeCoverImage(place)
+  const fallbacks = [primary, BAHIR_DAR_CITY_COVER, ...EXPLORE_HERO_IMAGES]
+  const [idx, setIdx] = useState(0)
+  const [failed, setFailed] = useState(false)
+  useEffect(() => {
+    setIdx(0)
+    setFailed(false)
+  }, [place.id, primary])
+  const src = fallbacks[Math.min(idx, fallbacks.length - 1)]
+
+  if (failed) {
+    return (
+      <div
+        className={cn('bg-gradient-to-br from-sky-500 via-teal-600 to-emerald-700', className)}
+        role="img"
+        aria-label={placeImageAlt(place)}
+      />
+    )
+  }
+
+  return (
+    <img
+      src={src}
+      alt={placeImageAlt(place)}
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+      className={cn('object-cover', className)}
+      onError={() => {
+        if (idx < fallbacks.length - 1) setIdx((i) => i + 1)
+        else setFailed(true)
+      }}
+    />
+  )
+}
+
+export function PlaceCard({
+  place,
+  variant = 'default',
+  showDirections,
+  onDirections,
+  className,
+}: PlaceCardProps) {
+  const { language, isAm } = useLang()
+  const isDemo = place.name.includes('(DEMO)')
+  const isOsm = isOsmPlaceId(place.id) || place.slug.startsWith('osm-')
+  const name = placeName(place, language)
+  const secondary = placeNameSecondary(place, language)
+  const shortDesc = placeShortDescription(place, language)
+  const cat = categoryLabel(place.category, language)
+  const guides = placeGuideLinks(place)
+  const detailTo = `/places/${place.slug}`
+
+  const onNavigateDetail = () => {
+    if (isOsm) cacheOsmPlaceForDetail(place)
+  }
+
+  if (variant === 'compact') {
+    return (
+      <Link to={detailTo} onClick={onNavigateDetail} className="block ios-press">
+        <Card className={cn('overflow-hidden', className)}>
+          <CardContent className="flex min-h-[64px] items-center gap-3 p-3 sm:p-3.5">
+            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-sky-100 sm:h-12 sm:w-12 sm:rounded-lg">
+              <CoverImage place={place} className="h-full w-full" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <p className="truncate text-[15px] font-semibold tracking-tight sm:text-sm sm:font-medium">{name}</p>
+                {place.verified && <BadgeCheck className="h-4 w-4 shrink-0 text-emerald-500" />}
+                {isOsm && (
+                  <span className="shrink-0 rounded-md bg-slate-100 px-1.5 text-[10px] font-medium text-slate-500 dark:bg-slate-800">
+                    OSM
+                  </span>
+                )}
+              </div>
+              <p className="truncate text-[13px] text-[#8e8e93]">
+                {cat}
+                {place.distance_m != null && ` · ${formatDistance(place.distance_m)}`}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+    )
+  }
+
+  return (
+    <Card className={cn('place-card-mobile overflow-hidden ios-press', className)}>
+      <Link to={detailTo} onClick={onNavigateDetail} className="block">
+        <div className="relative h-44 bg-slate-200 sm:h-40 dark:bg-slate-800">
+          <CoverImage place={place} className="h-full w-full" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-black/5 to-transparent" />
+          {place.featured && (
+            <span className="absolute left-2.5 top-2.5 rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-bold text-amber-950 shadow-sm">
+              {isAm ? 'ተለይቶ' : 'Featured'}
+            </span>
+          )}
+          {isDemo && (
+            <span className="absolute right-2.5 top-2.5 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-medium text-white">
+              DEMO
+            </span>
+          )}
+        </div>
+        <CardContent className="p-3.5 sm:p-4">
+          <div className="mb-1 flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="truncate text-[16px] font-semibold tracking-tight text-[#1c1c1e] dark:text-white">
+                {name}
+              </h3>
+              {secondary && (
+                <p className="truncate text-[12px] text-[#8e8e93]">{secondary}</p>
+              )}
+            </div>
+            {place.verified && <BadgeCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />}
+          </div>
+          <p className="mb-1 text-[12px] font-medium text-[#078930] dark:text-[#30d158]">{cat}</p>
+          {shortDesc && (
+            <p className="mb-3 line-clamp-2 text-[14px] leading-relaxed text-[#8e8e93]">{shortDesc}</p>
+          )}
+          <div className="flex flex-wrap items-center gap-2 text-[12px] text-[#8e8e93]">
+            {place.distance_m != null && (
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" />
+                {formatDistance(place.distance_m)}
+              </span>
+            )}
+            {(place.rating != null || place.hotel?.star_rating) && (
+              <span className="flex items-center gap-0.5 font-medium text-[#1c1c1e] dark:text-white">
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                {place.rating != null
+                  ? Number(place.rating).toFixed(1)
+                  : `${place.hotel!.star_rating}★`}
+              </span>
+            )}
+            {place.hotel?.minimum_price != null && (
+              <span className="font-semibold text-[#078930] dark:text-[#30d158]">
+                {isAm ? 'ከ' : 'from'} ETB {place.hotel.minimum_price.toLocaleString()}
+              </span>
+            )}
+            {place.restaurant?.cuisine_type && <span>{place.restaurant.cuisine_type}</span>}
+            {place.attraction?.attraction_type && (
+              <span className="capitalize">{place.attraction.attraction_type}</span>
+            )}
+          </div>
+        </CardContent>
+      </Link>
+      {(showDirections && onDirections) || isOsm ? (
+        <div className="flex flex-wrap gap-2 border-t border-black/[0.06] px-3 py-2.5 dark:border-white/[0.08]">
+          {showDirections && onDirections && (
+            <Button variant="ghost" size="sm" className="min-h-[40px] flex-1" onClick={() => onDirections(place)}>
+              <Navigation className="h-4 w-4" /> {isAm ? 'አቅጣጫ' : 'Directions'}
+            </Button>
+          )}
+          {isOsm && (
+            <>
+              <a
+                href={guides.googleMaps}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-1 rounded-full px-2 text-[13px] font-semibold text-sky-700 active:bg-sky-50 dark:text-sky-300 dark:active:bg-sky-950"
+              >
+                <ExternalLink className="h-3.5 w-3.5" /> {isAm ? 'ካርታ' : 'Maps'}
+              </a>
+              <a
+                href={guides.googleDirections}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-1 rounded-full px-2 text-[13px] font-semibold text-teal-700 active:bg-teal-50 dark:text-teal-300 dark:active:bg-teal-950"
+              >
+                <Navigation className="h-3.5 w-3.5" /> {isAm ? 'ሂድ' : 'Go'}
+              </a>
+            </>
+          )}
+        </div>
+      ) : null}
+    </Card>
+  )
+}
