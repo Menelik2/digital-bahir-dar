@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import * as THREE from 'three'
 import { CITY_BOUNDS } from '@/lib/geo3d'
 
 type BuildingInstance = {
