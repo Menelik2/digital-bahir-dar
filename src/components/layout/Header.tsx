@@ -17,6 +17,7 @@ import {
   Building,
   Bot,
   Wallet,
+  Box,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -49,6 +50,7 @@ export function Header() {
   ]
 
   const exploreNav = [
+    { path: '/explore-3d', label: '3D Tour', icon: Box },
     { path: '/help', label: t.nav.help || 'Help', icon: Compass },
     { path: '/discover', label: t.nav.discover, icon: Compass },
     { path: '/trip-planner', label: t.nav.planner, icon: Sparkles },
@@ -235,6 +237,7 @@ export function Header() {
             { path: '/budget', label: t.home.budget },
             { path: '/help', label: t.nav.help || 'Help' },
             { path: '/directory', label: t.nav.directory },
+            { path: '/explore-3d', label: '3D Tour' },
           ].map((item) => (
             <Link
               key={item.path}
