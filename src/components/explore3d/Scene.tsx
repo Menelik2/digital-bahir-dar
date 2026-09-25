@@ -17,24 +17,26 @@ type Props = {
   places: Place[]
   selectedId: string | null
   onSelect: (place: Place) => void
-  flyTo: FlyTarget | null
-  night: boolean
-  heightGrid: HeightGrid | null
-  osmBuildings: OsmBuilding[] | null
-  fallsSelected: boolean
-  onSelectFalls: () => void
+  /** Accept Place or FlyTarget so older call sites still typecheck */
+  flyTo: FlyTarget | Place | null
+  night?: boolean
+  heightGrid?: HeightGrid | null
+  osmBuildings?: OsmBuilding[] | null
+  fallsSelected?: boolean
+  onSelectFalls?: () => void
 }
 
-function CameraRig({ flyTo }: { flyTo: FlyTarget | null }) {
+function CameraRig({ flyTo }: { flyTo: FlyTarget | Place | null }) {
   const controls = useThree((s) => s.controls) as OrbitControlsImpl | null
   const { camera } = useThree()
 
   useEffect(() => {
     if (!flyTo || !controls) return
     const { x, z } = latLngToLocal(flyTo.latitude, flyTo.longitude)
-    const lookY = flyTo.lookAtY ?? 0.5
+    const lookY = 'lookAtY' in flyTo && flyTo.lookAtY != null ? flyTo.lookAtY : 0.5
     const target = new THREE.Vector3(x, lookY, z)
-    const off = flyTo.cameraOffset ?? [10, 12, 12]
+    const off =
+      'cameraOffset' in flyTo && flyTo.cameraOffset ? flyTo.cameraOffset : ([10, 12, 12] as [number, number, number])
     const endCam = new THREE.Vector3(x + off[0], off[1], z + off[2])
 
     const startCam = camera.position.clone()
@@ -99,10 +101,10 @@ export function Explore3DScene({
   selectedId,
   onSelect,
   flyTo,
-  night,
-  heightGrid,
-  osmBuildings,
-  fallsSelected,
+  night = false,
+  heightGrid = null,
+  osmBuildings = null,
+  fallsSelected = false,
   onSelectFalls,
 }: Props) {
   return (
