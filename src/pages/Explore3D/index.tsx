@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -9,16 +9,23 @@ import {
   Play,
   Square,
   ExternalLink,
+  Moon,
+  Sun,
+  Waves,
 } from 'lucide-react'
 import { Explore3DScene } from '@/components/explore3d/Scene'
 import { usePlaces } from '@/hooks/usePlaces'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Place } from '@/types/place'
+import { BLUE_NILE_FALLS, type FlyTarget } from '@/lib/geo3d'
+import { fetchSrtmHeightGrid, type HeightGrid } from '@/services/elevation3d'
+import { fetchOsmBuildings, type OsmBuilding } from '@/services/osmBuildings'
 
 const TOUR_SLUGS_HINT = [
   'blue-nile-falls',
   'tis-isat',
+  'tis abay',
   'lake-tana',
   'zege',
   'monastery',
@@ -40,15 +47,60 @@ export default function Explore3DPage() {
   }, [attractions, hotels])
 
   const [selected, setSelected] = useState<Place | null>(null)
-  const [flyTo, setFlyTo] = useState<Place | null>(null)
+  const [flyTo, setFlyTo] = useState<FlyTarget | null>(null)
   const [tourIndex, setTourIndex] = useState<number | null>(null)
   const [panelOpen, setPanelOpen] = useState(true)
+  const [night, setNight] = useState(false)
+  const [fallsSelected, setFallsSelected] = useState(false)
+  const [heightGrid, setHeightGrid] = useState<HeightGrid | null>(null)
+  const [osmBuildings, setOsmBuildings] = useState<OsmBuilding[] | null>(null)
+  const [terrainStatus, setTerrainStatus] = useState<'loading' | 'ready' | 'fallback'>('loading')
+  const [buildingsStatus, setBuildingsStatus] = useState<'loading' | 'ready' | 'fallback'>('loading')
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const grid = await fetchSrtmHeightGrid()
+        if (!cancelled) {
+          setHeightGrid(grid)
+          setTerrainStatus('ready')
+        }
+      } catch {
+        if (!cancelled) setTerrainStatus('fallback')
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const b = await fetchOsmBuildings()
+        if (!cancelled) {
+          setOsmBuildings(b.length ? b : null)
+          setBuildingsStatus(b.length ? 'ready' : 'fallback')
+        }
+      } catch {
+        if (!cancelled) setBuildingsStatus('fallback')
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const tourStops = useMemo(() => {
     const scored = places.map((p) => {
       const name = p.name.toLowerCase()
       const hit = TOUR_SLUGS_HINT.some((h) => name.includes(h) || (p.slug || '').includes(h))
-      return { p, score: (p.featured ? 2 : 0) + (hit ? 3 : 0) + (p.category?.slug === 'attraction' ? 1 : 0) }
+      return {
+        p,
+        score: (p.featured ? 2 : 0) + (hit ? 3 : 0) + (p.category?.slug === 'attraction' ? 1 : 0),
+      }
     })
     return scored
       .filter((s) => s.score > 0)
@@ -59,25 +111,73 @@ export default function Explore3DPage() {
 
   const onSelect = useCallback((place: Place) => {
     setSelected(place)
-    setFlyTo(place)
+    setFallsSelected(false)
+    setFlyTo({
+      latitude: place.latitude,
+      longitude: place.longitude,
+      label: place.name,
+    })
+    setPanelOpen(true)
+    setTourIndex(null)
+  }, [])
+
+  const flyToFalls = useCallback(() => {
+    setSelected(null)
+    setFallsSelected(true)
+    setFlyTo({
+      latitude: BLUE_NILE_FALLS.lat,
+      longitude: BLUE_NILE_FALLS.lng,
+      label: BLUE_NILE_FALLS.name,
+      lookAtY: 2,
+      cameraOffset: [14, 16, 18],
+    })
     setPanelOpen(true)
     setTourIndex(null)
   }, [])
 
   const startTour = () => {
-    if (tourStops.length === 0) return
+    if (tourStops.length === 0) {
+      flyToFalls()
+      return
+    }
     setTourIndex(0)
+    setFallsSelected(false)
     setSelected(tourStops[0])
-    setFlyTo(tourStops[0])
+    setFlyTo({
+      latitude: tourStops[0].latitude,
+      longitude: tourStops[0].longitude,
+      label: tourStops[0].name,
+    })
     setPanelOpen(true)
   }
 
   const nextTourStop = () => {
-    if (tourIndex === null || tourStops.length === 0) return
-    const next = (tourIndex + 1) % tourStops.length
+    if (tourIndex === null) return
+    if (tourIndex >= tourStops.length - 1) {
+      flyToFalls()
+      setTourIndex(tourStops.length)
+      return
+    }
+    if (tourIndex >= tourStops.length) {
+      setTourIndex(0)
+      setFallsSelected(false)
+      setSelected(tourStops[0])
+      setFlyTo({
+        latitude: tourStops[0].latitude,
+        longitude: tourStops[0].longitude,
+        label: tourStops[0].name,
+      })
+      return
+    }
+    const next = tourIndex + 1
     setTourIndex(next)
+    setFallsSelected(false)
     setSelected(tourStops[next])
-    setFlyTo(tourStops[next])
+    setFlyTo({
+      latitude: tourStops[next].latitude,
+      longitude: tourStops[next].longitude,
+      label: tourStops[next].name,
+    })
   }
 
   const stopTour = () => setTourIndex(null)
@@ -95,6 +195,11 @@ export default function Explore3DPage() {
             selectedId={selected?.id ?? null}
             onSelect={onSelect}
             flyTo={flyTo}
+            night={night}
+            heightGrid={heightGrid}
+            osmBuildings={osmBuildings}
+            fallsSelected={fallsSelected}
+            onSelectFalls={flyToFalls}
           />
         )}
       </div>
@@ -116,11 +221,29 @@ export default function Explore3DPage() {
           </div>
         </div>
         <div className="pointer-events-auto flex flex-wrap items-center justify-end gap-2">
+          <Button
+            size="sm"
+            variant="secondary"
+            className="bg-white/90 shadow-md"
+            onClick={() => setNight((v) => !v)}
+            title={night ? 'Switch to day' : 'Switch to night'}
+          >
+            {night ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+            <span className="hidden sm:inline">{night ? 'Day' : 'Night'}</span>
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="bg-cyan-700 text-white shadow-md hover:bg-cyan-800"
+            onClick={flyToFalls}
+          >
+            <Waves className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Blue Nile Falls</span>
+          </Button>
           {tourIndex === null ? (
             <Button
               size="sm"
               onClick={startTour}
-              disabled={tourStops.length === 0}
               className="bg-emerald-600 text-white shadow-md hover:bg-emerald-700"
             >
               <Play className="h-3.5 w-3.5" />
@@ -148,6 +271,25 @@ export default function Explore3DPage() {
         </div>
       </header>
 
+      <div className="pointer-events-none absolute left-3 top-16 z-20 flex flex-col gap-1 sm:top-[4.5rem]">
+        <span className="rounded-full bg-black/45 px-2 py-0.5 text-[10px] text-white/90 backdrop-blur">
+          Terrain:{' '}
+          {terrainStatus === 'loading'
+            ? 'loading SRTM…'
+            : terrainStatus === 'ready'
+              ? 'SRTM90m'
+              : 'synthetic'}
+        </span>
+        <span className="rounded-full bg-black/45 px-2 py-0.5 text-[10px] text-white/90 backdrop-blur">
+          Buildings:{' '}
+          {buildingsStatus === 'loading'
+            ? 'loading OSM…'
+            : buildingsStatus === 'ready'
+              ? `${osmBuildings?.length ?? 0} OSM`
+              : 'procedural'}
+        </span>
+      </div>
+
       <aside
         className={cn(
           'absolute z-20 flex max-h-[46vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white/95 shadow-2xl backdrop-blur transition-transform dark:bg-slate-900/95 sm:bottom-4 sm:right-4 sm:max-h-[70vh] sm:w-80 sm:rounded-2xl',
@@ -163,7 +305,20 @@ export default function Explore3DPage() {
           <span className="text-xs text-slate-500">{places.length}</span>
         </div>
 
-        {selected && (
+        {fallsSelected && (
+          <div className="border-b border-cyan-100 bg-cyan-50/90 px-3 py-3 dark:border-cyan-900 dark:bg-cyan-950/50">
+            <p className="font-medium text-slate-900 dark:text-white">{BLUE_NILE_FALLS.name}</p>
+            <p className="text-sm text-slate-600 dark:text-slate-300">{BLUE_NILE_FALLS.nameAm} · Tis Abay</p>
+            <p className="mt-1 text-xs text-slate-500">
+              ~30 km southeast of Bahir Dar. 42 m falls on the Blue Nile — one of Ethiopia's iconic sights.
+            </p>
+            <Button size="sm" className="mt-2" variant="outline" onClick={flyToFalls}>
+              <MapPin className="h-3.5 w-3.5" /> Refocus camera
+            </Button>
+          </div>
+        )}
+
+        {selected && !fallsSelected && (
           <div className="border-b border-slate-100 bg-sky-50/80 px-3 py-3 dark:border-slate-800 dark:bg-sky-950/40">
             <p className="font-medium text-slate-900 dark:text-white">{selected.name}</p>
             {selected.name_am && (
@@ -182,14 +337,18 @@ export default function Explore3DPage() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => {
-                  setFlyTo(selected)
-                }}
+                onClick={() =>
+                  setFlyTo({
+                    latitude: selected.latitude,
+                    longitude: selected.longitude,
+                    label: selected.name,
+                  })
+                }
               >
                 <MapPin className="h-3.5 w-3.5" /> Fly to
               </Button>
             </div>
-            {tourIndex !== null && (
+            {tourIndex !== null && tourIndex < tourStops.length && (
               <p className="mt-2 text-[11px] text-emerald-700 dark:text-emerald-300">
                 Tour stop {tourIndex + 1} of {tourStops.length}
               </p>
@@ -198,6 +357,22 @@ export default function Explore3DPage() {
         )}
 
         <ul className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <li>
+            <button
+              type="button"
+              onClick={flyToFalls}
+              className={cn(
+                'flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm transition hover:bg-cyan-50 dark:hover:bg-cyan-950/40',
+                fallsSelected && 'bg-cyan-50 dark:bg-cyan-950/50'
+              )}
+            >
+              <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-cyan-500" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-medium">{BLUE_NILE_FALLS.name}</span>
+                <span className="block truncate text-xs text-slate-500">Tis Abay · waterfall</span>
+              </span>
+            </button>
+          </li>
           {places.slice(0, 40).map((p) => (
             <li key={p.id}>
               <button
@@ -205,7 +380,7 @@ export default function Explore3DPage() {
                 onClick={() => onSelect(p)}
                 className={cn(
                   'flex w-full items-start gap-2 px-3 py-2.5 text-left text-sm transition hover:bg-slate-50 dark:hover:bg-slate-800/80',
-                  selected?.id === p.id && 'bg-sky-50 dark:bg-sky-950/50'
+                  selected?.id === p.id && !fallsSelected && 'bg-sky-50 dark:bg-sky-950/50'
                 )}
               >
                 <span
@@ -232,7 +407,7 @@ export default function Explore3DPage() {
       </aside>
 
       <p className="pointer-events-none absolute bottom-2 left-1/2 z-10 hidden -translate-x-1/2 rounded-full bg-black/40 px-3 py-1 text-[11px] text-white/90 sm:block">
-        Drag to orbit · Scroll to zoom · Tap markers
+        Drag to orbit · Scroll to zoom · Tap markers · Day/Night
       </p>
     </div>
   )
