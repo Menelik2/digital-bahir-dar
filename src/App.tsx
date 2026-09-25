@@ -37,6 +37,7 @@ const BusinessPage = lazy(() => import('@/pages/Business'))
 const AdminPage = lazy(() => import('@/pages/Admin'))
 const AdminEventsPage = lazy(() => import('@/pages/Admin/Events'))
 const PlaceDetailsPage = lazy(() => import('@/pages/PlaceDetails'))
+const Explore3DPage = lazy(() => import('@/pages/Explore3D'))
 const NotFoundPage = lazy(() => import('@/pages/NotFound'))
 
 function PageFallback() {
@@ -69,6 +70,7 @@ export default function App() {
                   <Route path="/explore" element={<ExplorePage />} />
                   <Route path="/discover" element={<DiscoverPage />} />
                   <Route path="/map" element={<MapPage />} />
+                  <Route path="/explore-3d" element={<Explore3DPage />} />
                   <Route path="/hotels" element={<HotelsPage />} />
                   <Route path="/restaurants" element={<RestaurantsPage />} />
                   <Route path="/attractions" element={<AttractionsPage />} />
