@@ -1,41 +1,49 @@
-import { Suspense, useEffect, useRef } from 'react'
+import { Suspense, useEffect } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
-import { OrbitControls, Sky, Environment, PerspectiveCamera } from '@react-three/drei'
+import { OrbitControls, Sky, Environment, PerspectiveCamera, Stars } from '@react-three/drei'
 import * as THREE from 'three'
 import { Terrain } from './Terrain'
 import { Water } from './Water'
-import { CityBuildings } from './CityBuildings'
+import { OsmBuildings } from './OsmBuildings'
 import { AttractionMarkers } from './AttractionMarkers'
-import { latLngToLocal } from '@/lib/geo3d'
+import { BlueNileFalls } from './BlueNileFalls'
+import { latLngToLocal, type FlyTarget } from '@/lib/geo3d'
 import type { Place } from '@/types/place'
+import type { HeightGrid } from '@/services/elevation3d'
+import type { OsmBuilding } from '@/services/osmBuildings'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
 type Props = {
   places: Place[]
   selectedId: string | null
   onSelect: (place: Place) => void
-  flyTo: Place | null
+  flyTo: FlyTarget | null
+  night: boolean
+  heightGrid: HeightGrid | null
+  osmBuildings: OsmBuilding[] | null
+  fallsSelected: boolean
+  onSelectFalls: () => void
 }
 
-function CameraRig({ flyTo }: { flyTo: Place | null }) {
+function CameraRig({ flyTo }: { flyTo: FlyTarget | null }) {
   const controls = useThree((s) => s.controls) as OrbitControlsImpl | null
   const { camera } = useThree()
-  const targetRef = useRef(new THREE.Vector3(0, 0, 0))
 
   useEffect(() => {
     if (!flyTo || !controls) return
     const { x, z } = latLngToLocal(flyTo.latitude, flyTo.longitude)
-    const target = new THREE.Vector3(x, 0.5, z)
-    targetRef.current.copy(target)
+    const lookY = flyTo.lookAtY ?? 0.5
+    const target = new THREE.Vector3(x, lookY, z)
+    const off = flyTo.cameraOffset ?? [10, 12, 12]
+    const endCam = new THREE.Vector3(x + off[0], off[1], z + off[2])
 
     const startCam = camera.position.clone()
-    const endCam = new THREE.Vector3(x + 8, 10, z + 10)
     const startTarget = controls.target.clone()
     let t = 0
     let raf = 0
 
     const animate = () => {
-      t += 0.025
+      t += 0.022
       const k = Math.min(1, t)
       const ease = k * k * (3 - 2 * k)
       camera.position.lerpVectors(startCam, endCam, ease)
@@ -50,7 +58,23 @@ function CameraRig({ flyTo }: { flyTo: Place | null }) {
   return null
 }
 
-function Lights() {
+function Lights({ night }: { night: boolean }) {
+  if (night) {
+    return (
+      <>
+        <ambientLight intensity={0.12} />
+        <directionalLight
+          castShadow
+          position={[-30, 40, -20]}
+          intensity={0.25}
+          color="#a8b8d8"
+          shadow-mapSize={[1024, 1024]}
+        />
+        <hemisphereLight args={['#1a2744', '#0a0a12', 0.2]} />
+        <pointLight position={[5, 8, -5]} intensity={0.4} color="#ffb347" distance={40} />
+      </>
+    )
+  }
   return (
     <>
       <ambientLight intensity={0.45} />
@@ -70,25 +94,46 @@ function Lights() {
   )
 }
 
-export function Explore3DScene({ places, selectedId, onSelect, flyTo }: Props) {
+export function Explore3DScene({
+  places,
+  selectedId,
+  onSelect,
+  flyTo,
+  night,
+  heightGrid,
+  osmBuildings,
+  fallsSelected,
+  onSelectFalls,
+}: Props) {
   return (
     <Canvas
       shadows
       dpr={[1, 1.75]}
       gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
       className="h-full w-full touch-none"
-      style={{ background: '#87b5d4' }}
+      style={{ background: night ? '#0a1020' : '#87b5d4' }}
     >
-      <PerspectiveCamera makeDefault position={[28, 22, 32]} fov={48} near={0.5} far={1200} />
-      <Lights />
-      <Sky sunPosition={[80, 40, 20]} turbidity={4} rayleigh={1.2} mieCoefficient={0.005} />
-      <Environment preset="park" environmentIntensity={0.35} />
-      <fog attach="fog" args={['#a8c8e0', 80, 420]} />
+      <PerspectiveCamera makeDefault position={[28, 22, 32]} fov={48} near={0.5} far={2000} />
+      <Lights night={night} />
+      {night ? (
+        <>
+          <color attach="background" args={['#0a1020']} />
+          <Stars radius={300} depth={80} count={2500} factor={3} saturation={0} fade speed={0.4} />
+          <fog attach="fog" args={['#0a1020', 40, 280]} />
+        </>
+      ) : (
+        <>
+          <Sky sunPosition={[80, 40, 20]} turbidity={4} rayleigh={1.2} mieCoefficient={0.005} />
+          <Environment preset="park" environmentIntensity={0.35} />
+          <fog attach="fog" args={['#a8c8e0', 80, 520]} />
+        </>
+      )}
 
       <Suspense fallback={null}>
-        <Terrain />
+        <Terrain heightGrid={heightGrid} night={night} />
         <Water />
-        <CityBuildings />
+        <OsmBuildings buildings={osmBuildings} night={night} />
+        <BlueNileFalls night={night} selected={fallsSelected} onSelect={onSelectFalls} />
         <AttractionMarkers places={places} selectedId={selectedId} onSelect={onSelect} />
       </Suspense>
 
@@ -97,8 +142,8 @@ export function Explore3DScene({ places, selectedId, onSelect, flyTo }: Props) {
         enableDamping
         dampingFactor={0.08}
         minDistance={6}
-        maxDistance={160}
-        maxPolarAngle={Math.PI / 2.15}
+        maxDistance={420}
+        maxPolarAngle={Math.PI / 2.12}
         target={[0, 0, 0]}
       />
       <CameraRig flyTo={flyTo} />
