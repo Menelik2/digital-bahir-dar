@@ -52,7 +52,7 @@ export function formatEtbRange(min: number | null | undefined, max: number | nul
 
 export function googleMapsPlaceUrl(lat: number, lng: number, name?: string): string {
   const q = name ? encodeURIComponent(name) : `${lat},${lng}`
-  return `https://www.google.com/maps/search/?api=1&query=${q}&query_place_id=&center=${lat},${lng}`
+  return `https://www.google.com/maps/search/?api=1&query=${q}&query_place_id=`
 }
 
 export async function sharePlace(opts: {
@@ -62,16 +62,23 @@ export async function sharePlace(opts: {
 }): Promise<'shared' | 'copied' | 'failed'> {
   try {
     if (typeof navigator !== 'undefined' && navigator.share) {
-      await navigator.share({ title: opts.title, text: opts.text, url: opts.url })
+      await navigator.share({
+        title: opts.title,
+        text: opts.text,
+        url: opts.url,
+      })
       return 'shared'
     }
   } catch {
-    /* user cancelled or unsupported */
+    /* user cancelled or share failed — fall through to clipboard */
   }
   try {
-    await navigator.clipboard.writeText(opts.url)
-    return 'copied'
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(opts.url)
+      return 'copied'
+    }
   } catch {
-    return 'failed'
+    /* ignore */
   }
+  return 'failed'
 }

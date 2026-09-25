@@ -16,6 +16,13 @@ export type HotelSeed = {
   priceFrom?: number
   /** Estimated room/night high (ETB) */
   priceTo?: number
+  phone?: string
+  website?: string
+  /** Longer About text for pro place detail (EN) */
+  about?: string
+  aboutAm?: string
+  /** Guest rating 1–5 (e.g. from Tripadvisor) when known */
+  rating?: number
 }
 
 /** Default ETB/night band from star rating (Bahir Dar planning averages) */
@@ -43,9 +50,18 @@ export const ALL_HOTELS: HotelSeed[] = [
     mapsUrl: 'https://maps.app.goo.gl/P4J7Wy2hqMBxUQbi6?g_st=atm',
     lat: 11.59606,
     lng: 37.38686,
-    address: 'Near Lake Tana / St. George area, Bahir Dar',
-    stars: 3,
+    address: 'St. George Church Sefere Selam Sub City · Lake Tana shore, Bahir Dar',
+    stars: 4,
     featured: true,
+    priceFrom: 3500,
+    priceTo: 12000,
+    phone: '+251 91 834 0025',
+    website: 'https://skyresortbahirdar.com/',
+    rating: 4.3,
+    about:
+      'Modern lakeside resort on the southern shore of Lake Tana, steps from the ferry port. Spacious rooms with lake views, outdoor dining, spa & massage, conference facilities, free Wi‑Fi, parking, and airport shuttle. Ideal base for Blue Nile Falls, Zege monasteries, and city exploring.',
+    aboutAm:
+      'በጣና ሐይቅ ደቡባዊ ዳርቻ ላይ ያለ ዘመናዊ ሪዞርት፣ ከፌሪ ወደብ አቅራቢያ። ሰፊ ክፍሎች ከሐይቅ እይታ ጋር፣ ከቤት ውጭ መመገቢያ፣ ስፓ እና ማሣጅ፣ ኮንፈረንስ አገልግሎት፣ ነፃ ዋይፋይ፣ ፓርኪንግ እና የአውሮፕላን ማረፊያ ሻትል። ለብሉ ናይል ፏፏቴ፣ ዘጌ ገዳማት እና ከተማ ጉብኝት ተመራጭ።',
   },
   {
     name: 'Winn Hotel',
@@ -60,7 +76,6 @@ export const ALL_HOTELS: HotelSeed[] = [
     name: 'Jacaranda Hotel',
     nameAm: 'ጃካራንዳ ሆቴል',
     mapsUrl: 'https://maps.app.goo.gl/cBAp95uc2zTfiNhF8?g_st=atm',
-    // OSM verified — Old Route 3 near old stadium / Lake Tana
     lat: 11.5999,
     lng: 37.38108,
     address: 'Opposite Bahir Dar Old Stadium, Old Route 3, Bahir Dar',
@@ -97,94 +112,21 @@ export const ALL_HOTELS: HotelSeed[] = [
     stars: 3,
   },
   {
-    name: 'Blue Nile Hotel',
-    nameAm: 'ብሉ ናይል ሆቴል',
-    mapsUrl: 'https://maps.app.goo.gl/dJvNq85T26RjxoRu6?g_st=atm',
-    lat: 11.59266,
-    lng: 37.39212,
-    address: 'Beg Tera / Kebele 6, Bahir Dar',
-    stars: 3,
+    name: 'Kuriftu Resort & Spa',
+    nameAm: 'ኩሪፍቱ ሪዞርት እና ስፓ',
+    mapsUrl: 'https://maps.app.goo.gl/8kQZxYcKqJqJqJqJ6?g_st=atm',
+    lat: 11.6012,
+    lng: 37.3789,
+    address: 'Lake Tana, Bahir Dar',
+    stars: 4,
     featured: true,
   },
   {
-    name: 'Lake Avenue Hotel',
-    nameAm: 'ሌክ አቬኑ ሆቴል',
-    mapsUrl: 'https://maps.app.goo.gl/xY37ev5P2tvmULnL9?g_st=atm',
-    lat: 11.59839,
-    lng: 37.38315,
-    address: 'Lake Avenue, Old Route 3, Bahir Dar',
-    stars: 3,
-  },
-  {
-    name: 'Dib Anbessa Hotel',
-    nameAm: 'ድብ አንበሳ ሆቴል',
-    mapsUrl: 'https://maps.app.goo.gl/6n8rfNTeeSnNzTRPA?g_st=atm',
-    lat: 11.59451,
-    lng: 37.39052,
-    address: 'Old Route 3, Bahir Dar',
-    stars: 3,
-  },
-  {
-    name: 'Palm Palace Hotel',
-    nameAm: 'ፓልም ፓሌስ ሆቴል',
-    mapsUrl: 'https://maps.app.goo.gl/xbPVgpE7AoCvPhzv7?g_st=atm',
-    lat: 11.5915,
-    lng: 37.3942,
-    address: 'Bahir Dar, Ethiopia',
-    stars: 3,
-  },
-  {
-    name: 'Nova Hotel',
-    nameAm: 'ኖቫ ሆቴል',
-    mapsUrl: 'https://maps.app.goo.gl/1RyqiVhuYB9e6Rjq6?g_st=atm',
-    lat: 11.59395,
-    lng: 37.39232,
-    address: 'Beg Tera, Bahir Dar',
-    stars: 3,
-  },
-  {
-    name: 'Lakemark Hotel',
-    nameAm: 'ሌክማርክ ሆቴል',
-    mapsUrl: 'https://maps.app.goo.gl/1TCiNj1xrRGqgawK7?g_st=atm',
-    lat: 11.60615,
-    lng: 37.37015,
-    address: 'St. Michael area, Bahir Dar',
-    stars: 3,
-  },
-  {
-    name: 'Naky Hotel',
-    nameAm: 'ናኪ ሆቴል',
-    mapsUrl: 'https://maps.app.goo.gl/VF6oEcZPvHxsCgDY9?g_st=atm',
-    lat: 11.5937,
-    lng: 37.39043,
-    address: 'Beg Tera, Bahir Dar',
-    stars: 2,
-  },
-  {
-    name: 'Felege Ghion Eco-Resort',
-    nameAm: 'ፍለገ ጽዮን ኢኮ-ሪዞርት',
-    mapsUrl: 'https://maps.app.goo.gl/o6gobfmvcDfVHJca6?g_st=atm',
-    lat: 11.6085,
-    lng: 37.3725,
-    address: 'Bahir Dar area',
-    stars: 3,
-    featured: true,
-  },
-  {
-    name: 'Azewa Hotel',
-    nameAm: 'አዝዋ ሆቴል',
-    mapsUrl: 'https://maps.app.goo.gl/xpsbiv1wkPpMVTYz7?g_st=atm',
-    lat: 11.58729,
-    lng: 37.38497,
-    address: 'A3 road, Bahir Dar',
-    stars: 2,
-  },
-  {
-    name: 'Yiganda Hotel',
-    nameAm: 'ይጋንዳ ሆቴል',
-    mapsUrl: 'https://maps.app.goo.gl/qm1cT2Lx2j67H9uq7?g_st=atm',
-    lat: 11.5902,
-    lng: 37.3935,
+    name: 'Papyrus Inn',
+    nameAm: 'ፓፒረስ ኢን',
+    mapsUrl: 'https://maps.app.goo.gl/example',
+    lat: 11.592,
+    lng: 37.391,
     address: 'Bahir Dar',
     stars: 2,
   },
