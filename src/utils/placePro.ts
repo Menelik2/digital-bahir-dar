@@ -52,7 +52,7 @@ export function formatEtbRange(min: number | null | undefined, max: number | nul
 
 export function googleMapsPlaceUrl(lat: number, lng: number, name?: string): string {
   const q = name ? encodeURIComponent(name) : `${lat},${lng}`
-  return `https://www.google.com/maps/search/?api=1&query=${q}&query_place_id=`
+  return `https://www.google.com/maps/search/?api=1&query=${q}`
 }
 
 export async function sharePlace(opts: {
