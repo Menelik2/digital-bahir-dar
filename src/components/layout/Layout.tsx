@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 /** Routes where the site footer is hidden (places, map, browse, tools). */
 function hideFooter(pathname: string): boolean {
   if (pathname === '/map' || pathname.startsWith('/map/')) return true
+  if (pathname === '/explore-3d' || pathname.startsWith('/explore-3d/')) return true
   if (pathname.startsWith('/places/')) return true
   const noFooter = [
     '/hotels',
@@ -49,7 +50,8 @@ export function Layout() {
   const { pathname } = useLocation()
   const isMap = pathname === '/map' || pathname.startsWith('/map/')
   const isAiGuide = pathname === '/ai-guide' || pathname.startsWith('/ai-guide/')
-  const isImmersive = isMap || isAiGuide
+  const isExplore3D = pathname === '/explore-3d' || pathname.startsWith('/explore-3d/')
+  const isImmersive = isMap || isAiGuide || isExplore3D
   const noFooter = hideFooter(pathname)
 
   return (
@@ -65,7 +67,7 @@ export function Layout() {
       >
         {t.common.skipToContent}
       </a>
-      <Header />
+      {!isExplore3D && <Header />}
       <OfflineBanner />
       <main
         id="main-content"
@@ -88,7 +90,7 @@ export function Layout() {
           </div>
         </footer>
       )}
-      <MobileNav />
+      {!isExplore3D && <MobileNav />}
       <InstallPrompt />
     </div>
   )
