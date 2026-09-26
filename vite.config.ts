@@ -15,9 +15,18 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // Faster Vercel builds + smaller uploads in production
+    sourcemap: process.env.VERCEL_ENV === 'production' ? false : true,
     commonjsOptions: {
       include: [/mapbox-gl/, /node_modules/],
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          three: ['three', '@react-three/fiber', '@react-three/drei'],
+          map: ['mapbox-gl', 'leaflet', 'react-leaflet'],
+        },
+      },
     },
   },
   server: {
