@@ -8,6 +8,7 @@ import { formatDistance } from '@/utils/geo'
 import { isOsmPlaceId, cacheOsmPlaceForDetail } from '@/services/osmPlaces'
 import { placeGuideLinks } from '@/constants/guideSites'
 import { placeCoverImage, placeImageAlt, BAHIR_DAR_CITY_COVER, EXPLORE_HERO_IMAGES } from '@/utils/placeImage'
+import { fetchGooglePlacePhotoUrl, googlePlacesApiEnabled } from '@/utils/googlePlacePhoto'
 import {
   placeName,
   placeNameSecondary,
@@ -27,13 +28,31 @@ interface PlaceCardProps {
 
 function CoverImage({ place, className }: { place: Place; className?: string }) {
   const primary = placeCoverImage(place)
-  const fallbacks = [primary, BAHIR_DAR_CITY_COVER, ...EXPLORE_HERO_IMAGES]
+  const [googleUrl, setGoogleUrl] = useState<string | null>(null)
+  const fallbacks = [googleUrl, primary, BAHIR_DAR_CITY_COVER, ...EXPLORE_HERO_IMAGES].filter(
+    Boolean,
+  ) as string[]
   const [idx, setIdx] = useState(0)
   const [failed, setFailed] = useState(false)
   useEffect(() => {
     setIdx(0)
     setFailed(false)
-  }, [place.id, primary])
+    setGoogleUrl(null)
+    if (!googlePlacesApiEnabled() || !place.name) return
+    let cancelled = false
+    fetchGooglePlacePhotoUrl(place.name, {
+      lat: place.latitude ?? undefined,
+      lng: place.longitude ?? undefined,
+    }).then((url) => {
+      if (!cancelled && url) {
+        setGoogleUrl(url)
+        setIdx(0)
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [place.id, place.name, place.latitude, place.longitude, primary])
   const src = fallbacks[Math.min(idx, fallbacks.length - 1)]
 
   if (failed) {
