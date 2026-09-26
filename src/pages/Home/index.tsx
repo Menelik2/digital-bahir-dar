@@ -12,7 +12,7 @@ import {
   Camera,
   Waves,
 } from 'lucide-react'
-import { useTranslation } from 'react-i18next'
+import { useT } from '@/hooks/useT'
 import { CURATED_HOTELS } from '@/services/curatedHotels'
 import { placeCoverImage } from '@/utils/placeImage'
 import { formatEtbRange } from '@/utils/placePro'
@@ -22,10 +22,10 @@ const STATS = [
   { key: 'attractions', icon: Landmark, value: '25+' },
   { key: 'restaurants', icon: UtensilsCrossed, value: '60+' },
   { key: 'islands', icon: Waves, value: '7' },
-]
+] as const
 
 export default function Home() {
-  const { t } = useTranslation()
+  const t = useT()
   const featured = CURATED_HOTELS.slice(0, 8)
 
   return (
@@ -36,16 +36,14 @@ export default function Home() {
         <div className="relative mx-auto max-w-6xl px-4 pt-10 pb-8 sm:pt-14 sm:pb-12">
           <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100/80 px-3 py-1 text-xs font-medium text-emerald-800 ring-1 ring-emerald-200/60 mb-4">
             <Sparkles className="h-3.5 w-3.5" />
-            {t('home.proBadge', 'Bahir Dar · Lake Tana · Blue Nile')}
+            {t.home?.proBadge || 'Bahir Dar · Lake Tana · Blue Nile'}
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 max-w-2xl leading-tight">
-            {t('home.heroTitle', 'Discover Bahir Dar')}
+            {t.home?.heroTitle || 'Discover Bahir Dar'}
           </h1>
           <p className="mt-3 text-base sm:text-lg text-slate-600 max-w-xl">
-            {t(
-              'home.heroSubtitle',
-              'Hotels, islands, waterfalls, and lakeside culture — plan your trip with maps, 3D tours, and local guides.'
-            )}
+            {t.home?.heroSubtitle ||
+              'Hotels, islands, waterfalls, and lakeside culture — plan your trip with maps, 3D tours, and local guides.'}
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
@@ -54,21 +52,21 @@ export default function Home() {
               className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-600/25 hover:bg-sky-700 transition"
             >
               <MapPin className="h-4 w-4" />
-              {t('home.quickMap', 'Open Map')}
+              {t.home?.quickMap || 'Open Map'}
             </Link>
             <Link
               to="/explore-3d"
               className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 ring-1 ring-slate-200 shadow-sm hover:bg-slate-50 transition"
             >
               <Globe2 className="h-4 w-4 text-emerald-600" />
-              {t('home.explore3d', '3D City Tour')}
+              {t.home?.explore3d || '3D City Tour'}
             </Link>
             <Link
               to="/trip-planner"
               className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition"
             >
               <Compass className="h-4 w-4" />
-              {t('home.planTrip', 'Plan a Trip')}
+              {t.home?.planTrip || 'Plan a Trip'}
             </Link>
           </div>
         </div>
@@ -85,7 +83,7 @@ export default function Home() {
               <div>
                 <div className="text-lg font-bold text-slate-900 leading-none">{value}</div>
                 <div className="text-xs text-slate-500 mt-0.5">
-                  {t(`home.stats.${key}`, key)}
+                  {t.home?.stats?.[key] || key}
                 </div>
               </div>
             </div>
@@ -98,33 +96,28 @@ export default function Home() {
         <div className="flex items-end justify-between gap-4 mb-5">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-              {t('home.featuredHotels', 'Featured hotels')}
+              {t.home?.featuredHotels || 'Featured hotels'}
             </h2>
             <p className="text-sm text-slate-500 mt-1">
-              {t('home.featuredHotelsSub', 'Lakeside stays and city favorites')}
+              {t.home?.featuredHotelsSub || 'Lakeside stays and city favorites'}
             </p>
           </div>
           <Link
             to="/hotels"
             className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-sky-700 hover:text-sky-900"
           >
-            {t('common.seeAll', 'See all')}
+            {t.common?.seeAll || 'See all'}
             <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
 
         <div className="flex gap-4 overflow-x-auto pb-3 -mx-1 px-1 snap-x snap-mandatory scrollbar-thin">
-          {featured.map((h, i) => {
-            const cover = placeCoverImage({
-              name: h.name,
-              category: 'hotel',
-              image_url: h.image_url,
-              slug: h.slug,
-            } as any)
+          {featured.map((h) => {
+            const cover = placeCoverImage(h)
+            const minP = h.hotel?.minimum_price
+            const maxP = h.hotel?.maximum_price
             const price =
-              h.price_min != null || h.price_max != null
-                ? formatEtbRange(h.price_min, h.price_max)
-                : null
+              minP != null || maxP != null ? formatEtbRange(minP ?? null, maxP ?? null) : null
             return (
               <Link
                 key={h.slug || h.name}
@@ -149,15 +142,15 @@ export default function Home() {
                   <h3 className="font-semibold text-slate-900 text-sm leading-snug line-clamp-2 group-hover:text-sky-800">
                     {h.name}
                   </h3>
-                  {h.area && (
+                  {h.address && (
                     <p className="mt-1 text-xs text-slate-500 flex items-center gap-1">
                       <MapPin className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{h.area}</span>
+                      <span className="truncate">{h.address}</span>
                     </p>
                   )}
                   {price && (
                     <p className="mt-2 text-xs font-medium text-emerald-700">
-                      {t('common.from', 'From')} {price}
+                      {t.common?.from || 'From'} {price}
                     </p>
                   )}
                 </div>
@@ -171,7 +164,7 @@ export default function Home() {
             to="/hotels"
             className="inline-flex items-center gap-1 text-sm font-medium text-sky-700"
           >
-            {t('common.seeAll', 'See all hotels')}
+            {t.common?.seeAll || 'See all hotels'}
             <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
@@ -180,18 +173,18 @@ export default function Home() {
       {/* Quick links grid */}
       <section className="mx-auto max-w-6xl px-4 pb-12">
         <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-5">
-          {t('home.explore', 'Explore')}
+          {t.home?.explore || 'Explore'}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { to: '/hotels', icon: Hotel, label: t('nav.hotels', 'Hotels'), color: 'bg-sky-50 text-sky-700' },
-            { to: '/attractions', icon: Landmark, label: t('nav.attractions', 'Attractions'), color: 'bg-amber-50 text-amber-700' },
-            { to: '/restaurants', icon: UtensilsCrossed, label: t('nav.restaurants', 'Food'), color: 'bg-rose-50 text-rose-700' },
-            { to: '/map', icon: MapPin, label: t('nav.map', 'Map'), color: 'bg-emerald-50 text-emerald-700' },
-            { to: '/explore-3d', icon: Globe2, label: t('home.explore3d', '3D Tour'), color: 'bg-violet-50 text-violet-700' },
-            { to: '/trip-planner', icon: Compass, label: t('nav.tripPlanner', 'Trip Planner'), color: 'bg-cyan-50 text-cyan-700' },
-            { to: '/ai-guide', icon: Sparkles, label: t('nav.aiGuide', 'AI Guide'), color: 'bg-fuchsia-50 text-fuchsia-700' },
-            { to: '/photos', icon: Camera, label: t('nav.photos', 'Photos'), color: 'bg-orange-50 text-orange-700' },
+            { to: '/hotels', icon: Hotel, label: t.nav?.hotels || 'Hotels', color: 'bg-sky-50 text-sky-700' },
+            { to: '/attractions', icon: Landmark, label: t.nav?.attractions || 'Attractions', color: 'bg-amber-50 text-amber-700' },
+            { to: '/restaurants', icon: UtensilsCrossed, label: t.nav?.restaurants || 'Food', color: 'bg-rose-50 text-rose-700' },
+            { to: '/map', icon: MapPin, label: t.nav?.map || 'Map', color: 'bg-emerald-50 text-emerald-700' },
+            { to: '/explore-3d', icon: Globe2, label: t.home?.explore3d || '3D Tour', color: 'bg-violet-50 text-violet-700' },
+            { to: '/trip-planner', icon: Compass, label: t.nav?.planner || t.nav?.tripPlanner || 'Trip Planner', color: 'bg-cyan-50 text-cyan-700' },
+            { to: '/ai-guide', icon: Sparkles, label: t.nav?.aiGuide || 'AI Guide', color: 'bg-fuchsia-50 text-fuchsia-700' },
+            { to: '/photos', icon: Camera, label: t.nav?.photos || 'Photos', color: 'bg-orange-50 text-orange-700' },
           ].map((item) => (
             <Link
               key={item.to}
@@ -212,13 +205,11 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-4 py-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div>
             <h2 className="text-lg font-semibold">
-              {t('home.gmapsCta', 'Explore on Google Maps')}
+              {t.home?.gmapsCta || 'Explore on Google Maps'}
             </h2>
             <p className="mt-1 text-sm text-slate-300 max-w-md">
-              {t(
-                'home.gmapsCtaSub',
-                'Open Bahir Dar hotels, attractions, and lakeside spots with real reviews and photos.'
-              )}
+              {t.home?.gmapsCtaSub ||
+                'Open Bahir Dar hotels, attractions, and lakeside spots with real reviews and photos.'}
             </p>
           </div>
           <a
