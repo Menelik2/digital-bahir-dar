@@ -4,6 +4,9 @@
   "version": "1.0.4",
   "type": "module",
   "description": "Digital Bahir Dar — Smart City Tourism, Navigation & AI Travel Platform for Bahir Dar, Ethiopia",
+  "allowScripts": {
+    "esbuild": true
+  },
   "scripts": {
     "dev": "vite",
     "prebuild": "python3 scripts/generate-pwa-icons.py",
