@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import {
   LogOut, Heart, MapPin, User, Globe, Coins, Loader2, ChevronRight,
-  Route, Compass, Bot, Map as MapIcon,
+  Route, Compass, Bot, Map as MapIcon, Camera, Hotel, Calendar,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PlaceCard } from '@/components/places/PlaceCard'
@@ -104,6 +104,9 @@ export default function ProfilePage() {
               { to: '/trips', label: t.profile.myTrips, icon: Route, tint: 'bg-[#078930]/12 text-[#078930]' },
               { to: '/map', label: t.nav.map, icon: MapIcon, tint: 'bg-[#0b6e99]/12 text-[#0b6e99]' },
               { to: '/explore', label: t.nav.explore, icon: Compass, tint: 'bg-[#0b6e99]/10 text-[#0a5a7e]' },
+              { to: '/hotels', label: t.nav.hotels || t.home.stay || 'Hotels', icon: Hotel, tint: 'bg-sky-100 text-sky-700' },
+              { to: '/photos', label: t.nav.photos || 'Photos', icon: Camera, tint: 'bg-orange-100 text-orange-700' },
+              { to: '/trip-planner', label: t.nav.planner || 'Trip planner', icon: Calendar, tint: 'bg-cyan-100 text-cyan-800' },
               { to: '/ai-guide', label: t.nav.aiGuide, icon: Bot, tint: 'bg-gradient-to-br from-[#078930]/15 to-[#0b6e99]/15 text-[#056b24]' },
             ].map((l) => (
               <Link key={l.to} to={l.to} className="ios-group-row">
@@ -210,6 +213,24 @@ export default function ProfilePage() {
               label: t.nav.explore,
               icon: Compass,
               tint: 'bg-[#0b6e99]/10 text-[#0a5a7e]',
+            },
+            {
+              to: '/hotels',
+              label: t.nav.hotels || t.home.stay || 'Hotels',
+              icon: Hotel,
+              tint: 'bg-sky-100 text-sky-700',
+            },
+            {
+              to: '/photos',
+              label: t.nav.photos || 'Photos',
+              icon: Camera,
+              tint: 'bg-orange-100 text-orange-700',
+            },
+            {
+              to: '/trip-planner',
+              label: t.nav.planner || 'Trip planner',
+              icon: Calendar,
+              tint: 'bg-cyan-100 text-cyan-800',
             },
             {
               to: '/ai-guide',
