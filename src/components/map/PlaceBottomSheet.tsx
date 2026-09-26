@@ -7,7 +7,6 @@ import { placeGuideLinks } from '@/constants/guideSites'
 import { cn } from '@/lib/utils'
 import { useT, useLang } from '@/hooks/useT'
 import { placeName, placeNameSecondary, placeShortDescription, categoryLabel } from '@/utils/placeLocale'
-import { placeCoverImage, placeImageAlt } from '@/utils/placeImage'
 import { PlaceCoverImage } from '@/components/places/PlaceCoverImage'
 
 interface Props {
