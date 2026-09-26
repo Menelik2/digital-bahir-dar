@@ -1,4 +1,5 @@
 import type { Place } from '@/types/place'
+import { hotelCoverImage } from '@/data/hotelImages'
 
 /**
  * Explore / place cards — real Bahir Dar photography only (Wikimedia Commons).
@@ -193,8 +194,8 @@ export const BAHIR_DAR_CITY_COVER = url('city')
 
 /**
  * Prefer real Wikimedia Bahir Dar photos for every Explore / place card.
- * Uses slug → name hints → category pools → hash variety so cards don't all look identical.
- * When place.image_url is set (curated hotels), use that first.
+ * Hotels use hotelCoverImage (stable per property). Landmarks use slug/name maps.
+ * When place.image_url is set (CMS), use that first.
  */
 export function placeCoverImage(place: {
   id?: string
@@ -209,10 +210,15 @@ export function placeCoverImage(place: {
   }
 
   const seed = `${place.id || ''}|${place.slug || ''}|${place.name || ''}`
+  const name = place.name || ''
+
+  // Known hotels → curated per-property cover (not random lake stock)
+  if (name && /hotel|resort|lodge|spa|eco-?resort/i.test(name)) {
+    return hotelCoverImage(name)
+  }
 
   if (place.slug && SLUG_MAP[place.slug]) return url(SLUG_MAP[place.slug])
 
-  const name = place.name || ''
   for (const h of NAME_HINTS) {
     if (h.test.test(name)) return pick(h.pool, seed)
   }
