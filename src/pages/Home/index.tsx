@@ -15,15 +15,21 @@ import {
   AlertTriangle,
   ArrowRight,
   Shield,
+  Star,
+  Box,
+  ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { CITY_EVENTS } from '@/data/cityLife'
 import { CITY_TODOS } from '@/data/thingsToDo'
 import { useTodoStore } from '@/store/todoStore'
-import { useT } from '@/hooks/useT'
+import { useT, useLang } from '@/hooks/useT'
 import { cn } from '@/lib/utils'
 import { HERO_BLUE_NILE_DATA_URL } from '@/data/heroBlueNile'
+import { CURATED_HOTELS } from '@/services/curatedHotels'
+import { placeCoverImage, placeImageAlt } from '@/utils/placeImage'
+import { placeName } from '@/utils/placeLocale'
 
 /** Path cards — real Bahir Dar photos (Wikimedia Commons) */
 const IMG = {
@@ -78,9 +84,13 @@ function PathPhoto({
 
 export default function HomePage() {
   const t = useT()
+  const { language, isAm } = useLang()
   const completed = useTodoStore((s) => s.completed)
   const done = CITY_TODOS.filter((x) => completed[x.id]).length
   const featuredEvents = CITY_EVENTS.filter((e) => e.featured).slice(0, 3)
+
+  const featuredHotels = CURATED_HOTELS.filter((h) => h.featured).slice(0, 8)
+  const hotelCount = CURATED_HOTELS.length
 
   const primaryPaths = [
     {
@@ -152,7 +162,7 @@ export default function HomePage() {
         <div className="relative mx-auto max-w-7xl px-4 pb-10 pt-12 sm:px-6 sm:pb-14 sm:pt-16 lg:px-8 lg:pb-16 lg:pt-20">
           <div className="max-w-2xl">
             <p className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[12px] font-medium text-white/95 backdrop-blur-sm">
-              <MapPin className="h-3.5 w-3.5" /> Bahir Dar Smart Digital City
+              <MapPin className="h-3.5 w-3.5" /> {t.home.proBadge ?? 'Pro city guide'} · Bahir Dar
             </p>
             <h1 className="text-[34px] font-bold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl">
               {t.home.title}
@@ -174,11 +184,136 @@ export default function HomePage() {
             </div>
             <p className="mt-3 text-[13px] text-white/70">{t.home.simpleHint}</p>
           </div>
+
+          <div className="mt-8 grid max-w-lg grid-cols-3 gap-2 sm:gap-3">
+            {[
+              { n: String(hotelCount), label: t.home.statsHotels ?? 'Hotels' },
+              { n: '20+', label: t.home.statsAttractions ?? 'Sights' },
+              { n: '3D', label: t.home.statsReady ?? 'Ready' },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="rounded-2xl bg-white/12 px-3 py-2.5 text-center backdrop-blur-md ring-1 ring-white/15"
+              >
+                <p className="text-lg font-bold text-white sm:text-xl">{s.n}</p>
+                <p className="text-[11px] font-medium text-white/80 sm:text-[12px]">{s.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       <div className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-16 lg:px-8">
-        <section className="-mt-2 mb-8 sm:mb-10">
+        {featuredHotels.length > 0 && (
+          <section className="-mt-1 mb-8 sm:mb-10">
+            <div className="mb-3 flex items-end justify-between gap-2">
+              <div>
+                <h2 className="text-[20px] font-bold tracking-tight text-[#1c1c1e] dark:text-white sm:text-2xl">
+                  {t.home.featuredHotels ?? 'Featured hotels'}
+                </h2>
+                <p className="mt-0.5 text-[13px] text-[#8e8e93]">
+                  {t.home.featuredHotelsSub ?? 'Lakeside stays with maps, prices & photos'}
+                </p>
+              </div>
+              <Link to="/hotels" className="shrink-0 text-[13px] font-semibold text-[#078930]">
+                {t.home.viewAllHotels ?? 'All hotels'} →
+              </Link>
+            </div>
+            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-none sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4">
+              {featuredHotels.map((h) => {
+                const name = placeName(h, language)
+                const cover = placeCoverImage(h)
+                const stars = h.hotel?.star_rating
+                const from = h.hotel?.minimum_price
+                return (
+                  <Link
+                    key={h.id}
+                    to={`/places/${encodeURIComponent(h.slug)}`}
+                    className="group w-[72%] shrink-0 sm:w-auto"
+                  >
+                    <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/[0.04] transition active:scale-[0.99] group-hover:shadow-md dark:bg-[#1c1c1e] dark:ring-white/10">
+                      <div className="relative aspect-[16/10] overflow-hidden bg-slate-200">
+                        <img
+                          src={cover}
+                          alt={placeImageAlt(h)}
+                          loading="lazy"
+                          decoding="async"
+                          referrerPolicy="no-referrer"
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        />
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                        {stars != null && (
+                          <span className="absolute left-2 top-2 inline-flex items-center gap-0.5 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
+                            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                            {stars}★
+                          </span>
+                        )}
+                        {h.rating != null && (
+                          <span className="absolute right-2 top-2 rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-bold text-[#1c1c1e]">
+                            {Number(h.rating).toFixed(1)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <p className="truncate text-[15px] font-bold text-[#1c1c1e] dark:text-white">{name}</p>
+                        <p className="mt-0.5 truncate text-[12px] text-[#8e8e93]">{h.address}</p>
+                        <div className="mt-2 flex items-center justify-between gap-2">
+                          {from != null ? (
+                            <span className="text-[13px] font-semibold text-[#078930] dark:text-[#30d158]">
+                              {t.home.fromPrice ?? 'from'} ETB {from.toLocaleString()}
+                            </span>
+                          ) : (
+                            <span className="text-[12px] text-[#8e8e93]">Hotel</span>
+                          )}
+                          <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-[#0b6e99]">
+                            <MapPin className="h-3 w-3" /> Map
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        <section className="mb-8 grid grid-cols-1 gap-3 sm:mb-10 sm:grid-cols-2">
+          <Link to="/map?category=hotel" className="group block">
+            <Card className="h-full overflow-hidden border-0 bg-gradient-to-br from-[#0b6e99] to-[#078930] shadow-md transition group-hover:shadow-lg">
+              <CardContent className="flex items-center gap-4 p-4 sm:p-5">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white">
+                  <MapPin className="h-6 w-6" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[16px] font-bold text-white">{t.home.quickMap ?? 'Hotels on map'}</p>
+                  <p className="mt-0.5 text-[12px] text-white/85 sm:text-[13px]">
+                    {t.home.quickMapBody ?? 'Photo pins · directions · Google Maps'}
+                  </p>
+                </div>
+                <ArrowRight className="h-5 w-5 shrink-0 text-white/80 transition group-hover:translate-x-0.5" />
+              </CardContent>
+            </Card>
+          </Link>
+          <Link to="/explore-3d" className="group block">
+            <Card className="h-full overflow-hidden border-0 bg-gradient-to-br from-[#5b4b8a] to-[#0b6e99] shadow-md transition group-hover:shadow-lg">
+              <CardContent className="flex items-center gap-4 p-4 sm:p-5">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white">
+                  <Box className="h-6 w-6" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[16px] font-bold text-white">{t.home.explore3d ?? '3D city tour'}</p>
+                  <p className="mt-0.5 text-[12px] text-white/85 sm:text-[13px]">
+                    {t.home.explore3dBody ?? 'Walk Bahir Dar in interactive 3D'}
+                  </p>
+                </div>
+                <ArrowRight className="h-5 w-5 shrink-0 text-white/80 transition group-hover:translate-x-0.5" />
+              </CardContent>
+            </Card>
+          </Link>
+        </section>
+
+        <section className="mb-8 sm:mb-10">
           <p className="mb-2 inline-flex items-center rounded-full bg-[#078930]/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#078930]">
             {t.home.startHere}
           </p>
@@ -186,7 +321,6 @@ export default function HomePage() {
             {t.home.whatNeed}
           </h2>
           <p className="mt-1 max-w-2xl text-[14px] text-[#8e8e93] sm:text-[15px]">{t.home.whatNeedSub}</p>
-          <p className="mt-1 text-[13px] text-[#8e8e93]">{t.home.startHereSub}</p>
 
           <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-4 md:gap-3 lg:gap-4">
             {primaryPaths.map((item) => {
@@ -309,6 +443,30 @@ export default function HomePage() {
                 </Card>
               </Link>
             ))}
+          </div>
+        </section>
+
+        <section className="mt-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-black/[0.04] dark:bg-[#1c1c1e] dark:ring-white/10 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[15px] font-bold text-[#1c1c1e] dark:text-white">
+                {isAm ? 'ሆቴሎችን በ Google Maps ይመልከቱ' : 'Browse hotels on Google Maps'}
+              </p>
+              <p className="mt-0.5 text-[13px] text-[#8e8e93]">
+                {isAm
+                  ? 'ሙሉ ፎቶ ጋለሪ፣ ግምገማዎች እና አቅጣጫ'
+                  : 'Full photo galleries, reviews, and turn-by-turn directions'}
+              </p>
+            </div>
+            <a
+              href="https://www.google.com/maps/search/hotels+in+Bahir+Dar"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#0b6e99] px-5 text-sm font-semibold text-white shadow-sm"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Google Maps
+            </a>
           </div>
         </section>
       </div>
