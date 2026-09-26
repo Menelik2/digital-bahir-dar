@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { useT, useLang } from '@/hooks/useT'
 import { placeName, placeNameSecondary, placeShortDescription, categoryLabel } from '@/utils/placeLocale'
 import { placeCoverImage, placeImageAlt } from '@/utils/placeImage'
+import { PlaceCoverImage } from '@/components/places/PlaceCoverImage'
 
 interface Props {
   place: Place | null
@@ -37,7 +38,6 @@ export function PlaceBottomSheet({ place, distanceM, onClose, onDirections, clas
 
   const walkMin = distanceM != null && Number.isFinite(distanceM) ? walkingMinutes(distanceM) : null
   const driveMin = distanceM != null && Number.isFinite(distanceM) ? drivingMinutes(distanceM) : null
-  const cover = placeCoverImage(place)
   const stars = place.hotel?.star_rating
   const fromPrice = place.hotel?.minimum_price
 
@@ -57,16 +57,9 @@ export function PlaceBottomSheet({ place, distanceM, onClose, onDirections, clas
         <div className="h-1 w-10 rounded-full bg-black/15 dark:bg-white/25" />
       </div>
 
-      {/* Cover photo — Google Maps style */}
+      {/* Cover photo — upgrades to Google Places photo when API key is set */}
       <div className="relative mx-3 mt-1 overflow-hidden rounded-xl sm:mx-4 lg:mx-4">
-        <img
-          src={cover}
-          alt={placeImageAlt(place)}
-          className="h-28 w-full object-cover sm:h-32"
-          loading="lazy"
-          decoding="async"
-          referrerPolicy="no-referrer"
-        />
+        <PlaceCoverImage place={place} className="h-28 w-full object-cover sm:h-32" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
         {(stars != null || fromPrice != null) && (
           <div className="absolute bottom-2 left-2 flex flex-wrap items-center gap-1.5">
