@@ -1,5 +1,6 @@
 import type { Place } from '@/types/place'
 import { ALL_HOTELS, estimateHotelPriceEtb } from '@/data/allHotels'
+import { hotelCoverImage } from '@/data/hotelImages'
 
 function slugify(name: string): string {
   return name
@@ -76,6 +77,7 @@ export const CURATED_HOTELS: Place[] = ALL_HOTELS.map((h, i) => {
     website: h.website ?? h.mapsUrl,
     price_level: h.stars && h.stars >= 4 ? 4 : h.stars && h.stars >= 3 ? 3 : 2,
     rating: h.rating ?? null,
+    image_url: h.image ?? hotelCoverImage(h.name, i),
     entrance_fee: null,
     currency: 'ETB',
     verified: true,

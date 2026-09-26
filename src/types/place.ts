@@ -36,6 +36,8 @@ export interface Place {
   tags?: string[] | null
   /** Aggregate rating when available (reviews / OSM) */
   rating?: number | null
+  /** Optional cover photo URL (curated hotel / CMS) */
+  image_url?: string | null
   /** Amharic display name when available */
   name_am?: string | null
   /** Amharic long description */
