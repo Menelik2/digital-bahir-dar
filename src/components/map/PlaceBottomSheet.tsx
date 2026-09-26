@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { MapPin, Navigation, X, ExternalLink } from 'lucide-react'
+import { MapPin, Navigation, X, ExternalLink, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Place } from '@/types/place'
 import { formatDistance, walkingMinutes, drivingMinutes } from '@/utils/geo'
@@ -7,6 +7,7 @@ import { placeGuideLinks } from '@/constants/guideSites'
 import { cn } from '@/lib/utils'
 import { useT, useLang } from '@/hooks/useT'
 import { placeName, placeNameSecondary, placeShortDescription, categoryLabel } from '@/utils/placeLocale'
+import { placeCoverImage, placeImageAlt } from '@/utils/placeImage'
 
 interface Props {
   place: Place | null
@@ -36,6 +37,9 @@ export function PlaceBottomSheet({ place, distanceM, onClose, onDirections, clas
 
   const walkMin = distanceM != null && Number.isFinite(distanceM) ? walkingMinutes(distanceM) : null
   const driveMin = distanceM != null && Number.isFinite(distanceM) ? drivingMinutes(distanceM) : null
+  const cover = placeCoverImage(place)
+  const stars = place.hotel?.star_rating
+  const fromPrice = place.hotel?.minimum_price
 
   return (
     <div
@@ -51,6 +55,34 @@ export function PlaceBottomSheet({ place, distanceM, onClose, onDirections, clas
     >
       <div className="flex justify-center pt-2.5 lg:hidden" aria-hidden>
         <div className="h-1 w-10 rounded-full bg-black/15 dark:bg-white/25" />
+      </div>
+
+      {/* Cover photo — Google Maps style */}
+      <div className="relative mx-3 mt-1 overflow-hidden rounded-xl sm:mx-4 lg:mx-4">
+        <img
+          src={cover}
+          alt={placeImageAlt(place)}
+          className="h-28 w-full object-cover sm:h-32"
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
+        />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        {(stars != null || fromPrice != null) && (
+          <div className="absolute bottom-2 left-2 flex flex-wrap items-center gap-1.5">
+            {stars != null && (
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
+                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                {stars}★
+              </span>
+            )}
+            {fromPrice != null && (
+              <span className="rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
+                from ETB {fromPrice.toLocaleString()}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex items-start justify-between px-4 pb-1 pt-2 lg:p-4 lg:pb-2">
@@ -121,12 +153,25 @@ export function PlaceBottomSheet({ place, distanceM, onClose, onDirections, clas
             </Button>
           </Link>
         </div>
-        <a href={links.mapcarta} target="_blank" rel="noopener noreferrer" className="w-full">
-          <Button variant="secondary" className="min-h-[44px] w-full" size="sm">
-            <ExternalLink className="h-3.5 w-3.5" />
-            {t.map.viewMapcarta}
-          </Button>
-        </a>
+        <div className="flex gap-2">
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((place.name || name) + ' Bahir Dar')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1"
+          >
+            <Button variant="secondary" className="min-h-[44px] w-full" size="sm">
+              <ExternalLink className="h-3.5 w-3.5" />
+              Google Maps
+            </Button>
+          </a>
+          <a href={links.mapcarta} target="_blank" rel="noopener noreferrer" className="flex-1">
+            <Button variant="secondary" className="min-h-[44px] w-full" size="sm">
+              <ExternalLink className="h-3.5 w-3.5" />
+              {t.map.viewMapcarta}
+            </Button>
+          </a>
+        </div>
       </div>
     </div>
   )
