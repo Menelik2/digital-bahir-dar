@@ -194,6 +194,7 @@ export const BAHIR_DAR_CITY_COVER = url('city')
 /**
  * Prefer real Wikimedia Bahir Dar photos for every Explore / place card.
  * Uses slug → name hints → category pools → hash variety so cards don't all look identical.
+ * When place.image_url is set (curated hotels), use that first.
  */
 export function placeCoverImage(place: {
   id?: string
@@ -201,7 +202,12 @@ export function placeCoverImage(place: {
   category?: { slug?: string } | null
   category_id?: string
   name?: string
+  image_url?: string | null
 }): string {
+  if (place.image_url && /^https?:\/\//i.test(place.image_url)) {
+    return place.image_url
+  }
+
   const seed = `${place.id || ''}|${place.slug || ''}|${place.name || ''}`
 
   if (place.slug && SLUG_MAP[place.slug]) return url(SLUG_MAP[place.slug])
