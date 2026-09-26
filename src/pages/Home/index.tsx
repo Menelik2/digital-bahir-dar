@@ -15,6 +15,7 @@ import { useT } from '@/hooks/useT'
 import { CURATED_HOTELS } from '@/services/curatedHotels'
 import { placeCoverImage } from '@/utils/placeImage'
 import { formatEtbRange } from '@/utils/placePro'
+import { HERO_BLUE_NILE_DATA_URL } from '@/data/heroBlueNile'
 
 const STATS = [
   { key: 'hotels', icon: Hotel, value: '40+' },
@@ -29,18 +30,33 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-emerald-50/40">
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-sky-200/60 via-transparent to-transparent" />
-        <div className="relative mx-auto max-w-6xl px-4 pt-10 pb-8 sm:pt-14 sm:pb-12">
-          <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100/80 px-3 py-1 text-xs font-medium text-emerald-800 ring-1 ring-emerald-200/60 mb-4">
-            <Sparkles className="h-3.5 w-3.5" />
+      {/* Hero — Blue Nile Falls photo */}
+      <section className="relative isolate overflow-hidden min-h-[420px] sm:min-h-[480px] md:min-h-[520px]">
+        <img
+          src={HERO_BLUE_NILE_DATA_URL}
+          alt="Blue Nile Falls near Bahir Dar, Ethiopia"
+          className="absolute inset-0 h-full w-full object-cover object-center"
+          fetchPriority="high"
+        />
+        {/* Readable overlay */}
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/55 to-slate-900/25"
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-slate-900/30"
+          aria-hidden
+        />
+
+        <div className="relative mx-auto flex min-h-[420px] sm:min-h-[480px] md:min-h-[520px] max-w-6xl flex-col justify-end px-4 pb-10 pt-16 sm:pb-14 sm:pt-20">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white ring-1 ring-white/25 backdrop-blur-sm mb-4">
+            <Sparkles className="h-3.5 w-3.5 text-amber-300" />
             {t.home?.proBadge || 'Bahir Dar · Lake Tana · Blue Nile'}
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 max-w-2xl leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white max-w-2xl leading-tight drop-shadow-sm">
             {t.home?.heroTitle || 'Discover Bahir Dar'}
           </h1>
-          <p className="mt-3 text-base sm:text-lg text-slate-600 max-w-xl">
+          <p className="mt-3 text-base sm:text-lg text-white/90 max-w-xl">
             {t.home?.heroSubtitle ||
               'Hotels, islands, waterfalls, and lakeside culture — plan your trip with maps and local guides.'}
           </p>
@@ -48,16 +64,16 @@ export default function Home() {
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               to="/map"
-              className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-600/25 hover:bg-sky-700 transition"
+              className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-sky-900/30 hover:bg-sky-400 transition"
             >
               <MapPin className="h-4 w-4" />
               {t.home?.quickMap || 'Open Map'}
             </Link>
             <Link
               to="/trip-planner"
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition"
+              className="inline-flex items-center gap-2 rounded-xl bg-white/95 px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-lg hover:bg-white transition"
             >
-              <Compass className="h-4 w-4" />
+              <Compass className="h-4 w-4 text-emerald-600" />
               {t.home?.planTrip || 'Plan a Trip'}
             </Link>
           </div>
