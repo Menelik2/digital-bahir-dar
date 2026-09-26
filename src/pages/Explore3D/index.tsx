@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Compass,
@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { Place } from '@/types/place'
 import { BLUE_NILE_FALLS, type FlyTarget } from '@/lib/geo3d'
+import { BAHIR_DAR_CENTER } from '@/constants'
 import { fetchSrtmHeightGrid, type HeightGrid } from '@/services/elevation3d'
 import { fetchOsmBuildings, type OsmBuilding } from '@/services/osmBuildings'
 
@@ -35,6 +36,7 @@ const TOUR_SLUGS_HINT = [
 ]
 
 export default function Explore3DPage() {
+  const [searchParams] = useSearchParams()
   const { data: attractions = [], isLoading: loadingAttr } = usePlaces('attraction')
   const { data: hotels = [], isLoading: loadingHotels } = usePlaces('hotel')
   const loading = loadingAttr || loadingHotels
@@ -181,6 +183,55 @@ export default function Explore3DPage() {
   }
 
   const stopTour = () => setTourIndex(null)
+
+  const deepLinkDone = useRef(false)
+
+  // Deep links from Home: ?fly=falls|city|tour  or  ?place=slug
+  useEffect(() => {
+    if (deepLinkDone.current) return
+    const fly = (searchParams.get('fly') || '').toLowerCase()
+    const placeSlug = (searchParams.get('place') || '').toLowerCase()
+    if (!fly && !placeSlug) return
+
+    if (fly === 'falls' || fly === 'waterfall' || fly === 'tis-abay') {
+      deepLinkDone.current = true
+      flyToFalls()
+      return
+    }
+    if (fly === 'city' || fly === 'center') {
+      deepLinkDone.current = true
+      setSelected(null)
+      setFallsSelected(false)
+      setFlyTo({
+        latitude: BAHIR_DAR_CENTER.lat,
+        longitude: BAHIR_DAR_CENTER.lng,
+        label: 'Bahir Dar city',
+        lookAtY: 0,
+        cameraOffset: [22, 28, 26],
+      })
+      setPanelOpen(true)
+      setTourIndex(null)
+      return
+    }
+    if (fly === 'tour' || fly === 'auto') {
+      if (loading) return
+      deepLinkDone.current = true
+      startTour()
+      return
+    }
+    if (placeSlug) {
+      if (loading) return
+      const match = places.find(
+        (p) =>
+          (p.slug || '').toLowerCase() === placeSlug ||
+          p.name.toLowerCase().includes(placeSlug.replace(/-/g, ' '))
+      )
+      if (match) {
+        deepLinkDone.current = true
+        onSelect(match)
+      }
+    }
+  }, [searchParams, loading, places, flyToFalls, onSelect])
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-slate-900">
