@@ -8,10 +8,6 @@ import {
   ArrowLeft,
   Loader2,
   AlertCircle,
-  Lightbulb,
-  Footprints,
-  Landmark,
-  ChevronRight,
   Share2,
   ExternalLink,
   Wifi,
@@ -59,27 +55,6 @@ import {
   sharePlace,
   priceLevelDots,
 } from '@/utils/placePro'
-import { cn } from '@/lib/utils'
-
-function parseInfoBlocks(text: string | null | undefined) {
-  if (!text) return { highlights: '', tips: '', howTo: '', bring: '', nearby: '', rest: text || '' }
-  const blocks = text.split(/\n\n+/)
-  let highlights = ''
-  let tips = ''
-  let howTo = ''
-  let bring = ''
-  let nearby = ''
-  const rest: string[] = []
-  for (const b of blocks) {
-    if (b.startsWith('Highlights:')) highlights = b.replace(/^Highlights:\s*/, '')
-    else if (b.startsWith('Tips:')) tips = b.replace(/^Tips:\s*/, '')
-    else if (b.startsWith('How to get there:')) howTo = b.replace(/^How to get there:\s*/, '')
-    else if (b.startsWith('Bring:')) bring = b.replace(/^Bring:\s*/, '')
-    else if (b.startsWith('Nearby:')) nearby = b.replace(/^Nearby:\s*/, '')
-    else rest.push(b)
-  }
-  return { highlights, tips, howTo, bring, nearby, rest: rest.join('\n\n') }
-}
 
 function amenityIcon(label: string) {
   const l = label.toLowerCase()
@@ -139,11 +114,6 @@ export default function PlaceDetailsPage() {
     if (!place || !userPos) return null
     return distanceMeters(userPos.lat, userPos.lng, place.latitude, place.longitude)
   }, [place, userPos])
-
-  const info = useMemo(
-    () => parseInfoBlocks(place?.attraction?.historical_information),
-    [place?.attraction?.historical_information]
-  )
 
   const { data: catalogPlaces = [] } = usePlaces()
 
@@ -493,7 +463,8 @@ export default function PlaceDetailsPage() {
           </section>
         )}
 
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-black/[0.06] bg-white/95 p-3 backdrop-blur dark:border-white/10 dark:bg-[#1c1c1e]/95 lg:hidden"
+        <div
+          className="fixed bottom-0 left-0 right-0 z-40 border-t border-black/[0.06] bg-white/95 p-3 backdrop-blur dark:border-white/10 dark:bg-[#1c1c1e]/95 lg:hidden"
           style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}
         >
           <div className="mx-auto flex max-w-lg gap-2">
