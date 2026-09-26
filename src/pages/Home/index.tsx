@@ -8,15 +8,8 @@ import {
   Star,
   ChevronRight,
   Sparkles,
-  Globe2,
   Camera,
   Waves,
-  Moon,
-  Sun,
-  Play,
-  Mountain,
-  Building2,
-  Navigation,
 } from 'lucide-react'
 import { useT } from '@/hooks/useT'
 import { CURATED_HOTELS } from '@/services/curatedHotels'
@@ -28,59 +21,6 @@ const STATS = [
   { key: 'attractions', icon: Landmark, value: '25+' },
   { key: 'restaurants', icon: UtensilsCrossed, value: '60+' },
   { key: 'islands', icon: Waves, value: '7' },
-] as const
-
-/** Featured 3D landmarks — deep-link into /explore-3d */
-const PLACES_3D = [
-  {
-    id: 'falls',
-    title: 'Blue Nile Falls',
-    titleAm: 'ጢስ አባይ',
-    blurb: 'Fly over Tis Abay — waterfall ledge camera, real SRTM terrain',
-    to: '/explore-3d?fly=falls',
-    icon: Mountain,
-    accent: 'from-cyan-500/90 to-sky-700/90',
-    badge: 'Waterfall',
-  },
-  {
-    id: 'city',
-    title: 'Bahir Dar city',
-    titleAm: 'ባሕር ዳር ከተማ',
-    blurb: 'Orbit the lakeside city with OSM building footprints',
-    to: '/explore-3d?fly=city',
-    icon: Building2,
-    accent: 'from-violet-500/90 to-indigo-700/90',
-    badge: 'City',
-  },
-  {
-    id: 'lake',
-    title: 'Lake Tana',
-    titleAm: 'ጣና ሐይቅ',
-    blurb: 'Interactive lake surface and islands around the 3D map',
-    to: '/explore-3d?fly=city',
-    icon: Waves,
-    accent: 'from-sky-400/90 to-blue-700/90',
-    badge: 'Lake',
-  },
-  {
-    id: 'tour',
-    title: 'Guided 3D tour',
-    titleAm: '3D ጉብኝት',
-    blurb: 'Auto-fly through top attractions, then to the falls',
-    to: '/explore-3d?fly=tour',
-    icon: Play,
-    accent: 'from-emerald-500/90 to-teal-700/90',
-    badge: 'Tour',
-  },
-] as const
-
-const FEATURES_3D = [
-  { icon: Mountain, label: 'SRTM terrain', desc: 'Real elevation' },
-  { icon: Building2, label: 'OSM buildings', desc: 'City footprints' },
-  { icon: Sun, label: 'Day mode', desc: 'Bright lake light' },
-  { icon: Moon, label: 'Night mode', desc: 'City glow' },
-  { icon: Navigation, label: 'Fly-to places', desc: 'Tap markers' },
-  { icon: Waves, label: 'Lake & falls', desc: 'Tis Abay camera' },
 ] as const
 
 export default function Home() {
@@ -102,7 +42,7 @@ export default function Home() {
           </h1>
           <p className="mt-3 text-base sm:text-lg text-slate-600 max-w-xl">
             {t.home?.heroSubtitle ||
-              'Hotels, islands, waterfalls, and lakeside culture — plan your trip with maps, 3D tours, and local guides.'}
+              'Hotels, islands, waterfalls, and lakeside culture — plan your trip with maps and local guides.'}
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
@@ -114,17 +54,10 @@ export default function Home() {
               {t.home?.quickMap || 'Open Map'}
             </Link>
             <Link
-              to="/explore-3d"
-              className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-600/25 hover:bg-violet-700 transition"
-            >
-              <Globe2 className="h-4 w-4" />
-              {t.home?.explore3d || '3D City Tour'}
-            </Link>
-            <Link
               to="/trip-planner"
-              className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 ring-1 ring-slate-200 shadow-sm hover:bg-slate-50 transition"
+              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition"
             >
-              <Compass className="h-4 w-4 text-emerald-600" />
+              <Compass className="h-4 w-4" />
               {t.home?.planTrip || 'Plan a Trip'}
             </Link>
           </div>
@@ -147,121 +80,6 @@ export default function Home() {
               </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* 3D interactive city / places */}
-      <section className="mx-auto max-w-6xl px-4 py-10">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5">
-          <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-violet-800 mb-2">
-              <Globe2 className="h-3 w-3" />
-              {t.home?.explore3dBadge || '3D model'}
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-              {t.home?.explore3dTitle || 'Explore Bahir Dar in 3D'}
-            </h2>
-            <p className="text-sm text-slate-500 mt-1 max-w-xl">
-              {t.home?.explore3dBody ||
-                'Realistic terrain, lake, OSM buildings, and Blue Nile Falls — fly to any place and toggle day or night.'}
-            </p>
-          </div>
-          <Link
-            to="/explore-3d"
-            className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-violet-600/20 hover:bg-violet-700 transition"
-          >
-            <Play className="h-4 w-4" />
-            {t.home?.explore3dCta || 'Launch 3D tour'}
-          </Link>
-        </div>
-
-        {/* Feature chips */}
-        <div className="mb-5 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-thin">
-          {FEATURES_3D.map(({ icon: Icon, label, desc }) => (
-            <div
-              key={label}
-              className="flex shrink-0 items-center gap-2 rounded-xl bg-white px-3 py-2 ring-1 ring-slate-200/80 shadow-sm"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 text-violet-700">
-                <Icon className="h-4 w-4" />
-              </div>
-              <div>
-                <div className="text-xs font-semibold text-slate-800">{label}</div>
-                <div className="text-[11px] text-slate-500">{desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* 3D place cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {PLACES_3D.map((place) => {
-            const Icon = place.icon
-            return (
-              <Link
-                key={place.id}
-                to={place.to}
-                className="group relative overflow-hidden rounded-2xl bg-slate-900 text-white shadow-md ring-1 ring-black/5 hover:shadow-lg transition"
-              >
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br ${place.accent} opacity-90 group-hover:opacity-100 transition`}
-                />
-                <div className="relative p-4 min-h-[160px] flex flex-col">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur ring-1 ring-white/20">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
-                      {place.badge}
-                    </span>
-                  </div>
-                  <div className="mt-auto pt-6">
-                    <h3 className="font-bold text-base leading-snug">{place.title}</h3>
-                    <p className="text-xs text-white/80 mt-0.5">{place.titleAm}</p>
-                    <p className="text-xs text-white/75 mt-2 leading-relaxed line-clamp-2">
-                      {place.blurb}
-                    </p>
-                    <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-white/95">
-                      Fly there
-                      <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            )
-          })}
-        </div>
-
-        {/* Secondary CTA row */}
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Link
-            to="/explore-3d?fly=falls"
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-800 ring-1 ring-slate-200 shadow-sm hover:bg-slate-50"
-          >
-            <Mountain className="h-3.5 w-3.5 text-cyan-600" />
-            Blue Nile Falls
-          </Link>
-          <Link
-            to="/explore-3d?fly=city"
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-800 ring-1 ring-slate-200 shadow-sm hover:bg-slate-50"
-          >
-            <Building2 className="h-3.5 w-3.5 text-violet-600" />
-            City overview
-          </Link>
-          <Link
-            to="/explore-3d?fly=tour"
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-800 ring-1 ring-slate-200 shadow-sm hover:bg-slate-50"
-          >
-            <Play className="h-3.5 w-3.5 text-emerald-600" />
-            Start guided tour
-          </Link>
-          <Link
-            to="/map"
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-800 ring-1 ring-slate-200 shadow-sm hover:bg-slate-50"
-          >
-            <MapPin className="h-3.5 w-3.5 text-sky-600" />
-            2D map
-          </Link>
         </div>
       </section>
 
@@ -355,7 +173,6 @@ export default function Home() {
             { to: '/attractions', icon: Landmark, label: t.nav?.attractions || 'Attractions', color: 'bg-amber-50 text-amber-700' },
             { to: '/restaurants', icon: UtensilsCrossed, label: t.nav?.restaurants || 'Food', color: 'bg-rose-50 text-rose-700' },
             { to: '/map', icon: MapPin, label: t.nav?.map || 'Map', color: 'bg-emerald-50 text-emerald-700' },
-            { to: '/explore-3d', icon: Globe2, label: t.home?.explore3d || '3D Tour', color: 'bg-violet-50 text-violet-700' },
             { to: '/trip-planner', icon: Compass, label: t.nav?.planner || t.nav?.tripPlanner || 'Trip Planner', color: 'bg-cyan-50 text-cyan-700' },
             { to: '/ai-guide', icon: Sparkles, label: t.nav?.aiGuide || 'AI Guide', color: 'bg-fuchsia-50 text-fuchsia-700' },
             { to: '/photos', icon: Camera, label: t.nav?.photos || 'Photos', color: 'bg-orange-50 text-orange-700' },
